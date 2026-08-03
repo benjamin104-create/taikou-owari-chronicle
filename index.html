@@ -485,14 +485,23 @@
       background: #070909;
       box-shadow: 0 22px 70px #000;
     }
-    .play-column { padding: clamp(12px, 3vw, 25px) clamp(18px, 5vw, 53px) 18px; background: #030505; }
+    .play-column {
+      padding: clamp(66px, 8vw, 78px) clamp(18px, 5vw, 53px) 18px;
+      background:
+        repeating-linear-gradient(90deg, rgba(255,255,255,.012) 0 1px, transparent 1px 7px),
+        #030505;
+    }
     .canvas-wrap {
       overflow: visible;
       aspect-ratio: 4 / 3;
       border: 7px ridge #aaa476;
       border-radius: 1px;
       background: #828458;
-      box-shadow: inset 0 0 0 3px #4b5134, 0 0 0 2px #191b13, 0 10px 25px #000;
+      box-shadow:
+        inset 0 0 0 3px #4b5134,
+        inset 0 0 26px rgba(26,31,18,.5),
+        0 0 0 2px #191b13,
+        0 12px 28px #000;
       image-rendering: pixelated;
     }
     .canvas-wrap::before,
@@ -513,50 +522,44 @@
     .canvas-wrap::after { right: -17px; }
     canvas { background: #86905a; }
 
-    .mode-ribbon {
-      top: 8px;
-      left: 50%;
-      z-index: 5;
-      padding: 3px 13px;
-      translate: -50% 0;
-      border: 1px solid #494c32;
-      border-radius: 0;
-      background: #d8d2aa;
-      color: #1a211d;
-      font-size: 12px;
-      box-shadow: 2px 2px rgba(29,34,25,.5);
-      backdrop-filter: none;
-    }
+    .mode-ribbon { display: none; }
     .mode-ribbon::before { display: none; }
 
     .rank-strip {
       position: absolute;
       z-index: 6;
-      top: 31px;
+      top: -58px;
       left: 50%;
       display: flex;
-      gap: 5px;
+      gap: 4px;
       translate: -50% 0;
       pointer-events: none;
     }
     .rank-plaque {
-      width: 39px;
-      height: 90px;
+      width: 68px;
+      height: 40px;
       display: grid;
       place-items: center;
-      padding: 5px 7px;
+      padding: 4px 7px;
       border: 2px outset #b9b289;
       background:
+        linear-gradient(90deg, rgba(255,255,255,.35), transparent 16% 84%, rgba(67,62,42,.13)),
         repeating-linear-gradient(90deg, rgba(70,65,44,.05) 0 1px, transparent 1px 5px),
         #e3dec1;
       color: #202622;
-      font-size: clamp(15px, 2.1vw, 23px);
-      line-height: 1.03;
+      font-size: 15px;
+      line-height: 1;
       text-align: center;
-      writing-mode: vertical-rl;
-      box-shadow: 2px 3px rgba(36,40,28,.46);
+      white-space: nowrap;
+      box-shadow: 2px 3px rgba(36,40,28,.52), inset 0 -3px rgba(104,95,60,.08);
     }
-    .rank-plaque.current { color: #b2292d; background: #f1e8c9; text-shadow: 1px 1px #fff; }
+    .rank-plaque.current {
+      color: #a91f25;
+      border-color: #d5c582;
+      background: linear-gradient(#fff7d6, #e7d6a0);
+      text-shadow: 1px 1px #fff;
+      box-shadow: 0 0 0 2px #6e5d32, 0 0 13px rgba(230,198,99,.35);
+    }
     .rank-plaque.locked { color: #6d705e; filter: saturate(.55); }
 
     .retro-tabs {
@@ -578,7 +581,7 @@
       font-size: 17px;
       line-height: 1;
       writing-mode: vertical-rl;
-      box-shadow: 2px 2px rgba(21,24,17,.48);
+      box-shadow: 3px 3px rgba(21,24,17,.55), inset 1px 1px rgba(255,255,255,.42);
     }
     .retro-tab:hover, .retro-tab:focus-visible { background: #f1e6b8; color: #a42629; }
 
@@ -590,9 +593,11 @@
       width: min(430px, calc(100% - 92px));
       translate: -50% 0;
       border: 4px ridge #b9b58b;
-      background: #102931;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 4px),
+        linear-gradient(135deg, #173945, #0c2229);
       color: #eff0de;
-      box-shadow: 9px 10px rgba(20,25,19,.52);
+      box-shadow: 9px 10px rgba(20,25,19,.52), inset 0 0 22px rgba(80,139,141,.14);
     }
     .retro-info-header {
       display: flex;
@@ -600,7 +605,9 @@
       justify-content: space-between;
       padding: 7px 11px;
       border-bottom: 2px solid #6d846e;
-      background: #e3dfca;
+      background:
+        repeating-linear-gradient(90deg, rgba(83,75,45,.06) 0 1px, transparent 1px 5px),
+        linear-gradient(#eee9ce, #cec8a6);
       color: #22271f;
       font-size: 20px;
     }
@@ -648,7 +655,7 @@
       background:
         repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 4px),
         #102a32;
-      box-shadow: inset 0 0 0 2px #243f42;
+      box-shadow: inset 0 0 0 2px #243f42, inset 0 0 30px rgba(61,117,119,.12), 0 8px 18px #000;
     }
     .speaker { color: #f2e5a8; font-size: 17px; }
     #message { min-height: 42px; color: #f0f1df; font-size: 15px; text-shadow: 1px 1px #000; }
@@ -677,10 +684,10 @@
     @media (max-width: 640px) {
       .app-shell { width: 100%; padding: 0; }
       .topbar { padding: 6px 9px; }
-      .play-column { padding: 12px 19px 10px; }
+      .play-column { padding: 53px 19px 10px; }
       .canvas-wrap { aspect-ratio: 4 / 3; border-width: 5px; }
-      .rank-strip { top: 23px; gap: 2px; }
-      .rank-plaque { width: 27px; height: 66px; padding: 3px; font-size: 14px; border-width: 1px; }
+      .rank-strip { top: -42px; gap: 2px; width: calc(100% - 4px); justify-content: center; }
+      .rank-plaque { width: calc((100% - 14px) / 8); height: 31px; padding: 2px; font-size: clamp(9px, 2.7vw, 12px); border-width: 1px; }
       .retro-tabs { top: 36px; }
       .retro-tab { width: 24px; min-height: 34px; padding: 2px; font-size: 13px; border-width: 1px; }
       .mode-ribbon { display: none; }
@@ -2078,8 +2085,10 @@
       ctx.fillStyle = "rgba(229, 208, 157, .10)";
       for (const dot of terrainDots) {
         if (dot.x < camera.x - 5 || dot.x > camera.x + VIEW.w + 5 || dot.y < camera.y - 5 || dot.y > camera.y + VIEW.h + 5) continue;
-        ctx.globalAlpha = dot.a;
-        ctx.beginPath(); ctx.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = .22 + dot.a;
+        ctx.fillStyle = (Math.floor(dot.x + dot.y) % 3) ? "#b3ad6a" : "#6f7d46";
+        const size = Math.max(2, Math.round(dot.r));
+        ctx.fillRect(Math.round(dot.x), Math.round(dot.y), size, size);
       }
       ctx.globalAlpha = 1;
 
@@ -2109,7 +2118,10 @@
       ctx.strokeStyle = "#d4c985"; ctx.lineWidth = 9; ctx.stroke();
       ctx.strokeStyle = "rgba(194,232,219,.24)"; ctx.lineWidth = 2;
       for (let y = 35; y < WORLD.h; y += 34) {
-        ctx.beginPath(); ctx.moveTo(18, y); ctx.lineTo(260 + Math.sin(y) * 30, y); ctx.stroke();
+        const length = 210 + Math.sin(y * .11) * 46;
+        for (let x = 18; x < length; x += 32) {
+          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 14, y); ctx.stroke();
+        }
       }
     }
 
@@ -2150,10 +2162,14 @@
     function drawMountains() {
       mountains.forEach(m => {
         ctx.save(); ctx.translate(m.x, m.y); ctx.scale(m.scale, m.scale);
-        ctx.fillStyle = "#8ca733";
-        ctx.beginPath(); ctx.moveTo(-58, 38); ctx.lineTo(0, -42); ctx.lineTo(64, 38); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = "#c8cf58";
-        ctx.beginPath(); ctx.moveTo(0, -42); ctx.lineTo(18, -18); ctx.lineTo(8, -22); ctx.lineTo(-2, -10); ctx.lineTo(-14, -25); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "rgba(46,55,27,.25)"; ctx.fillRect(-58, 31, 122, 12);
+        ctx.fillStyle = "#5f782b";
+        ctx.beginPath(); ctx.moveTo(-58, 37); ctx.lineTo(-25, -13); ctx.lineTo(-5, 8); ctx.lineTo(16, -43); ctx.lineTo(65, 37); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#91ad36";
+        ctx.beginPath(); ctx.moveTo(-49, 31); ctx.lineTo(-24, -7); ctx.lineTo(-8, 12); ctx.lineTo(16, -37); ctx.lineTo(28, -12); ctx.lineTo(12, -2); ctx.lineTo(19, 12); ctx.lineTo(-3, 31); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#cbd552";
+        ctx.beginPath(); ctx.moveTo(16, -37); ctx.lineTo(27, -14); ctx.lineTo(18, -17); ctx.lineTo(8, 1); ctx.lineTo(-1, 3); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#405d29"; ctx.fillRect(-42, 30, 94, 5);
         ctx.restore();
       });
     }
@@ -2200,23 +2216,28 @@
 
     function drawCastleIcon(fort = false) {
       ctx.fillStyle = "rgba(31,24,17,.25)"; ctx.beginPath(); ctx.ellipse(0, 24, 50, 13, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = fort ? "#706455" : "#d9d3c4";
+      ctx.fillStyle = "#6f7351"; ctx.fillRect(-42, 22, 84, 7);
+      ctx.fillStyle = fort ? "#8b806a" : "#e2dfc8";
       ctx.fillRect(-34, -5, 68, 32); ctx.fillRect(-25, -25, 50, 22); ctx.fillRect(-15, -42, 30, 19);
       ctx.fillStyle = "#3a2b22";
       ctx.beginPath(); ctx.moveTo(-43, -5); ctx.lineTo(43, -5); ctx.lineTo(30, -17); ctx.lineTo(-30, -17); ctx.closePath(); ctx.fill();
       ctx.beginPath(); ctx.moveTo(-33, -25); ctx.lineTo(33, -25); ctx.lineTo(21, -35); ctx.lineTo(-21, -35); ctx.closePath(); ctx.fill();
       ctx.beginPath(); ctx.moveTo(-22, -42); ctx.lineTo(22, -42); ctx.lineTo(11, -51); ctx.lineTo(-11, -51); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = "#17120d"; [-23, 0, 23].forEach(x => ctx.fillRect(x - 3, 8, 6, 9));
+      ctx.fillStyle = "#1f2727"; [-23, 0, 23].forEach(x => ctx.fillRect(x - 3, 8, 6, 9));
+      [-13, 13].forEach(x => { ctx.fillRect(x - 2, -17, 4, 6); ctx.fillRect(x - 2, -34, 4, 5); });
+      ctx.strokeStyle = "#625744"; ctx.lineWidth = 2; ctx.strokeRect(-34, -5, 68, 32);
       ctx.fillStyle = fort ? "#b64036" : "#bda04f"; ctx.fillRect(26, -51, 2, 31); ctx.fillRect(28, -49, 18, 9);
     }
 
     function drawTownIcon(market = false) {
       ctx.fillStyle = "rgba(31,24,17,.24)"; ctx.beginPath(); ctx.ellipse(0, 19, 48, 12, 0, 0, Math.PI * 2); ctx.fill();
       [-27, 0, 27].forEach((x, i) => {
-        ctx.fillStyle = i === 1 ? "#d6c49a" : "#bca77e"; ctx.fillRect(x - 15, -10 + (i % 2) * 5, 30, 28);
+        ctx.fillStyle = i === 1 ? "#e0d4ac" : "#c7b384"; ctx.fillRect(x - 15, -10 + (i % 2) * 5, 30, 28);
         ctx.fillStyle = i === 1 && market ? "#8e2e2e" : "#4c3427";
         ctx.beginPath(); ctx.moveTo(x - 20, -10 + (i % 2) * 5); ctx.lineTo(x + 20, -10 + (i % 2) * 5); ctx.lineTo(x + 12, -20 + (i % 2) * 5); ctx.lineTo(x - 12, -20 + (i % 2) * 5); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#283438"; ctx.fillRect(x - 9, 1 + (i % 2) * 5, 5, 7); ctx.fillRect(x + 5, 1 + (i % 2) * 5, 5, 7);
       });
+      ctx.fillStyle = market ? "#b32b2e" : "#8c713a"; ctx.fillRect(-3, -37, 6, 17);
     }
 
     function drawGambleIcon() {
@@ -2246,11 +2267,13 @@
       ctx.fillStyle = "rgba(25,20,15,.32)"; ctx.beginPath(); ctx.ellipse(0, 14, 15, 6, 0, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#9f2f2d";
       ctx.beginPath(); ctx.moveTo(-10, -6); ctx.lineTo(10, -6); ctx.lineTo(13, 14); ctx.lineTo(-13, 14); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#e1c88c"; ctx.fillRect(-10, -4, 20, 3);
       ctx.fillStyle = "#d0a66f"; ctx.beginPath(); ctx.arc(0, -13, 8, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#24201c"; ctx.beginPath(); ctx.moveTo(-10, -16); ctx.lineTo(10, -16); ctx.lineTo(0, -25); ctx.closePath(); ctx.fill();
       const flip = player.facing === "left" ? -1 : 1;
       ctx.strokeStyle = "#e5dfd2"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(7 * flip, -1); ctx.lineTo(23 * flip, -17); ctx.stroke();
-      ctx.fillStyle = "#e9c36d"; ctx.beginPath(); ctx.arc(0, -34, 3 + Math.sin(scenePulse * 5) * .4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#fff0a0"; ctx.fillRect(-3, -37, 6, 6);
+      ctx.strokeStyle = "rgba(255,238,135,.55)"; ctx.lineWidth = 2; ctx.strokeRect(-7, -41, 14, 14);
       ctx.restore();
     }
 
