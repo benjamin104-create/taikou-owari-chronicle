@@ -920,6 +920,10 @@
     const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const mapSpriteAtlas = new Image();
     mapSpriteAtlas.src = "map-sprites-v1.png";
+    const battleBackground = new Image();
+    battleBackground.src = "battle-road-v1.png";
+    const battleFighterAtlas = new Image();
+    battleFighterAtlas.src = "battle-fighters-v1.png";
 
     const weaponLoot = [
       { name: "打刀", atk: 5 },
@@ -978,6 +982,7 @@
       rank: "浪人",
       merit: 0,
       completedMissions: 0,
+      combatWins: 0,
       mission: null,
       inventory: { rice: 0, firearms: 0 },
       weapon: { name: "無名打刀", atk: 0 },
@@ -1029,11 +1034,36 @@
       enemyDef: 2,
       rewardGold: 14,
       guarding: false,
+      enemyGuarding: false,
       resolved: false,
       flash: 0,
       slash: 0,
-      enemyFlash: 0
+      enemyFlash: 0,
+      enemySlash: 0,
+      enemyKi: 1,
+      enemyMaxKi: 6,
+      enemyTitle: "無名",
+      enemyTechnique: "逆袈裟",
+      enemySkillCost: 3,
+      enemySkillPower: 1.45,
+      enemySkillChance: .18,
+      enemyGuardChance: .08,
+      enemySprite: "ronin",
+      legendary: false,
+      sparring: false,
+      turn: 1
     };
+
+    const enemyRoster = [
+      { name: "落魄浪人", title: "無名·一段", hp: 58, atk: 14, def: 3, reward: 12, unlock: 0, weight: 34, sprite: "ronin", technique: "逆袈裟", cost: 3, power: 1.35, skillChance: .12, guardChance: .05, intro: "「留下路錢！」衣衫破舊的浪人拔刀逼近。" },
+      { name: "海道試刀客", title: "熟練·三段", hp: 82, atk: 18, def: 6, reward: 24, unlock: 0, weight: 28, sprite: "ronin", technique: "虎振", cost: 3, power: 1.5, skillChance: .22, guardChance: .1, intro: "「你的架勢不差。正好替我試刀。」刀客壓低重心。" },
+      { name: "伊賀抜忍", title: "上忍·四段", hp: 76, atk: 20, def: 5, reward: 30, unlock: 12, weight: 19, sprite: "ronin", technique: "影縫斬", cost: 3, power: 1.65, skillChance: .3, guardChance: .08, intro: "黑影自草叢落下。對手的刀鋒沒有半點聲息。" },
+      { name: "諸國修行劍客", title: "名手·五段", hp: 108, atk: 23, def: 9, reward: 45, unlock: 24, weight: 13, sprite: "swordmaster", technique: "霞返", cost: 4, power: 1.72, skillChance: .32, guardChance: .18, intro: "「只論一刀，不問生死。」修行劍客以刀尖劃地為界。" },
+      { name: "寶藏院胤榮", title: "槍術流祖", hp: 138, atk: 27, def: 11, reward: 72, unlock: 36, weight: 5, sprite: "monk", technique: "十文字槍·石突返", cost: 4, power: 1.86, skillChance: .38, guardChance: .2, legendary: true, sparring: true, intro: "「劍有劍理，槍亦有槍理。來，讓老僧看看你的步法。」" },
+      { name: "柳生宗嚴", title: "新陰流兵法者", hp: 154, atk: 29, def: 13, reward: 88, unlock: 48, weight: 4, sprite: "swordmaster", technique: "無刀取", cost: 4, power: 1.95, skillChance: .42, guardChance: .28, legendary: true, sparring: true, intro: "柳生宗嚴不發一語，只以刀背輕敲刀鞘，示意你先攻。" },
+      { name: "上泉信綱", title: "劍聖·新陰流祖", hp: 182, atk: 33, def: 16, reward: 120, unlock: 62, weight: 3, sprite: "swordmaster", technique: "奧義·轉", cost: 5, power: 2.08, skillChance: .5, guardChance: .34, legendary: true, sparring: true, intro: "「勝負不在刀快，而在心先。」劍聖的氣息使四周草浪靜了下來。" },
+      { name: "塚原卜傳", title: "劍聖·鹿島新當流", hp: 208, atk: 36, def: 18, reward: 150, unlock: 78, weight: 2, sprite: "swordmaster", technique: "奧義·一之太刀", cost: 5, power: 2.22, skillChance: .56, guardChance: .38, legendary: true, sparring: true, intro: "老劍客只是踏前半步，你卻已感到眉間微寒。這是一場劍聖試煉。" }
+    ];
 
     const gamble = {
       betType: "丁",
@@ -1923,22 +1953,52 @@
       }, REDUCE_MOTION ? 70 : 110);
     }
 
+    function chooseEncounterEnemy() {
+      const progress = player.fame + player.merit / 8 + player.combatWins * 7;
+      const available = enemyRoster.filter(enemy => enemy.unlock <= progress);
+      const pool = available.length ? available : enemyRoster.slice(0, 2);
+      const totalWeight = pool.reduce((sum, enemy) => sum + enemy.weight, 0);
+      let roll = Math.random() * totalWeight;
+      for (const enemy of pool) {
+        roll -= enemy.weight;
+        if (roll <= 0) return enemy;
+      }
+      return pool[0];
+    }
+
     function startCombat(enemyName = null, hp = null, atk = null, def = null, reward = null) {
       if (gamble.rollTimer) { clearInterval(gamble.rollTimer); gamble.rollTimer = null; }
       gameState = "COMBAT";
-      combat.enemyName = enemyName || (Math.random() < .5 ? "流浪野武士" : "試刀浪人");
-      combat.enemyMaxHp = hp || 58 + Math.floor(Math.random() * 27);
+      const enemy = enemyName
+        ? { name: enemyName, title: "任務敵兵", hp: hp ?? 68, atk: atk ?? 15, def: def ?? 4, reward: reward ?? 18, sprite: "ronin", technique: "奮迅斬", cost: 3, power: 1.45, skillChance: .18, guardChance: .08, intro: `【${enemyName}】拔出兵刃，封住你的去路。` }
+        : chooseEncounterEnemy();
+      combat.enemyName = enemy.name;
+      combat.enemyTitle = enemy.title;
+      combat.enemyMaxHp = enemy.hp;
       combat.enemyHp = combat.enemyMaxHp;
-      combat.enemyAtk = atk || 12 + Math.floor(Math.random() * 6);
-      combat.enemyDef = def || 2 + Math.floor(Math.random() * 4);
-      combat.rewardGold = reward || 10 + Math.floor(Math.random() * 16);
+      combat.enemyAtk = enemy.atk;
+      combat.enemyDef = enemy.def;
+      combat.rewardGold = enemy.reward;
+      combat.enemyTechnique = enemy.technique;
+      combat.enemySkillCost = enemy.cost;
+      combat.enemySkillPower = enemy.power;
+      combat.enemySkillChance = enemy.skillChance;
+      combat.enemyGuardChance = enemy.guardChance;
+      combat.enemySprite = enemy.sprite;
+      combat.legendary = Boolean(enemy.legendary);
+      combat.sparring = Boolean(enemy.sparring);
+      combat.enemyKi = combat.legendary ? 3 : 1;
+      combat.enemyMaxKi = combat.legendary ? 8 : 6;
       combat.guarding = false;
+      combat.enemyGuarding = false;
       combat.resolved = false;
       combat.flash = 0;
       combat.slash = 0;
+      combat.enemySlash = 0;
+      combat.turn = 1;
       player.ki = Math.max(2, player.ki);
-      setMode("野外遭遇 · 個人戰");
-      setMessage(combat.enemyName, `「留下盤纏再走！」【${combat.enemyName}】橫刀攔路。戰鬥開始。`);
+      setMode(combat.legendary ? "劍豪試煉 · 個人戰" : "野外遭遇 · 個人戰");
+      setMessage(`${combat.enemyTitle}｜${combat.enemyName}`, `${enemy.intro} 對手體力 ${combat.enemyMaxHp}、攻 ${combat.enemyAtk}、防 ${combat.enemyDef}，秘技【${combat.enemyTechnique}】。`);
       sound.play("encounter");
       combatActions();
     }
@@ -1946,10 +2006,18 @@
     function combatActions() {
       setActions([
         { label: "普通斬擊", run: () => playerCombatTurn("attack") },
-        { label: "架刀防禦", run: () => playerCombatTurn("guard") },
+        { label: "架刀防禦 氣力+2", run: () => playerCombatTurn("guard") },
         { label: `燕返 氣力3`, run: () => playerCombatTurn("skill"), disabled: player.ki < 3 },
+        { label: "看破對手", run: inspectEnemy },
         { label: "嘗試逃跑", run: () => playerCombatTurn("flee") }
       ]);
+    }
+
+    function inspectEnemy() {
+      const ratio = combat.enemyHp / combat.enemyMaxHp;
+      const condition = ratio > .65 ? "氣息未亂" : ratio > .3 ? "呼吸漸重" : "已露破綻";
+      setMessage("戰況判讀", `【${combat.enemyTitle}｜${combat.enemyName}】${condition}。體力 ${combat.enemyHp}/${combat.enemyMaxHp}，氣力 ${combat.enemyKi}/${combat.enemyMaxKi}，防禦 ${combat.enemyDef}。秘技【${combat.enemyTechnique}】需 ${combat.enemySkillCost} 氣力；對手有 ${Math.round(combat.enemyGuardChance * 100)}% 的基本防守傾向。`);
+      combatActions();
     }
 
     function playerCombatTurn(action) {
@@ -1957,12 +2025,15 @@
       combat.guarding = false;
       let message = "";
       if (action === "attack") {
-        const damage = Math.max(3, totalAttack() - combat.enemyDef + Math.floor(Math.random() * 7));
+        let damage = Math.max(3, totalAttack() - combat.enemyDef + Math.floor(Math.random() * 7));
+        if (combat.enemyGuarding) damage = Math.max(1, Math.floor(damage / 3));
         combat.enemyHp = Math.max(0, combat.enemyHp - damage);
         combat.slash = 1;
+        combat.flash = 1;
         player.ki = Math.min(player.maxKi, player.ki + 1);
         sound.play("sword");
-        message = `你拔出【${player.weapon.name}】迅速斬進，造成 ${damage} 點傷害。`;
+        message = `你拔出【${player.weapon.name}】迅速斬進，造成 ${damage} 點傷害。${combat.enemyGuarding ? " 對手架刀卸開了大半力道。" : ""}`;
+        combat.enemyGuarding = false;
       } else if (action === "guard") {
         combat.guarding = true;
         player.ki = Math.min(player.maxKi, player.ki + 2);
@@ -1971,14 +2042,17 @@
       } else if (action === "skill") {
         if (player.ki < 3) { setMessage("秘技", "氣力不足，無法使出燕返。 "); return; }
         player.ki -= 3;
-        const damage = Math.max(18, Math.floor(totalAttack() * 1.72) - Math.floor(combat.enemyDef / 2));
+        let damage = Math.max(18, Math.floor(totalAttack() * 1.72) - Math.floor(combat.enemyDef / 2));
+        if (combat.enemyGuarding) damage = Math.max(8, Math.floor(damage * .62));
         combat.enemyHp = Math.max(0, combat.enemyHp - damage);
         combat.slash = 1.4;
+        combat.flash = 1;
         sound.play("sword");
         setTimeout(() => sound.play("hit"), 80);
         message = `秘技【燕返】！刀光折返，無視大半防禦，造成 ${damage} 點傷害。`;
+        combat.enemyGuarding = false;
       } else if (action === "flee") {
-        const chance = .48 + (player.hp / player.maxHp) * .18;
+        const chance = .48 + (player.hp / player.maxHp) * .18 - (combat.legendary ? .22 : 0);
         if (Math.random() < chance) {
           setMessage("脫身", `你揚起砂土、穿入林間，甩開了【${combat.enemyName}】。`);
           encounterSafeDistance = 500;
@@ -1993,12 +2067,38 @@
         return;
       }
 
-      const rawDamage = Math.max(2, combat.enemyAtk - totalDefense() + Math.floor(Math.random() * 5));
-      const enemyDamage = combat.guarding ? Math.max(1, Math.floor(rawDamage / 3)) : rawDamage;
-      player.hp = Math.max(0, player.hp - enemyDamage);
-      combat.enemyFlash = 1;
-      sound.play(combat.guarding ? "guard" : "hit");
-      message += ` 【${combat.enemyName}】反擊，對你造成 ${enemyDamage} 點傷害。`;
+      combat.enemyKi = Math.min(combat.enemyMaxKi, combat.enemyKi + 1);
+      const hpRatio = combat.enemyHp / combat.enemyMaxHp;
+      const wantsGuard = Math.random() < combat.enemyGuardChance * (hpRatio < .42 ? 1.8 : .45);
+      const usesSkill = !wantsGuard && combat.enemyKi >= combat.enemySkillCost && Math.random() < combat.enemySkillChance;
+      if (wantsGuard) {
+        combat.enemyGuarding = true;
+        combat.enemyKi = Math.min(combat.enemyMaxKi, combat.enemyKi + 2);
+        sound.play("guard");
+        message += ` 【${combat.enemyName}】收刀守中、靜待破綻，氣力回復 2。`;
+      } else {
+        let rawDamage;
+        if (usesSkill) {
+          combat.enemyKi -= combat.enemySkillCost;
+          rawDamage = Math.max(6, Math.floor(combat.enemyAtk * combat.enemySkillPower) - Math.floor(totalDefense() * .35));
+          if (combat.enemyTechnique.includes("十文字")) rawDamage += 4;
+          if (combat.enemyTechnique.includes("無刀取")) player.ki = Math.max(0, player.ki - 2);
+          combat.enemySlash = 1.35;
+          sound.play("sword");
+          setTimeout(() => sound.play("hit"), 90);
+        } else {
+          rawDamage = Math.max(2, combat.enemyAtk - Math.floor(totalDefense() * .72) + Math.floor(Math.random() * 6));
+          combat.enemySlash = .72;
+          sound.play(combat.guarding ? "guard" : "hit");
+        }
+        const enemyDamage = combat.guarding ? Math.max(1, Math.floor(rawDamage / (usesSkill ? 1.8 : 3))) : rawDamage;
+        player.hp = Math.max(0, player.hp - enemyDamage);
+        combat.enemyFlash = 1;
+        message += usesSkill
+          ? ` 【${combat.enemyName}】發動秘技【${combat.enemyTechnique}】，造成 ${enemyDamage} 點傷害${combat.enemyTechnique.includes("無刀取") ? "並削減你 2 點氣力" : ""}！`
+          : ` 【${combat.enemyName}】反擊，對你造成 ${enemyDamage} 點傷害。`;
+      }
+      combat.turn += 1;
 
       if (player.hp <= 0) {
         loseCombat(message);
@@ -2011,7 +2111,16 @@
     function winCombat(opening) {
       combat.resolved = true;
       player.gold += combat.rewardGold;
-      player.fame += 1;
+      player.combatWins += 1;
+      player.fame += combat.legendary ? 4 : 1;
+      let masteryText = "";
+      if (combat.legendary) {
+        const oldMaxKi = player.maxKi;
+        player.maxKi = Math.min(10, player.maxKi + 1);
+        masteryText = player.maxKi > oldMaxKi
+          ? ` 你從【${combat.enemyTechnique}】中捕捉到一線真意，最大氣力提升為 ${player.maxKi}。`
+          : " 你的劍豪名聲傳遍諸國。";
+      }
       let missionText = "";
       if (player.mission && player.mission.type === "pacify" && player.mission.progress < player.mission.target) {
         player.mission.progress += 1;
@@ -2022,7 +2131,7 @@
       let lootText = "";
       let revealedItem = null;
       let revealedKind = null;
-      if (Math.random() < .58) {
+      if (!combat.sparring && Math.random() < .58) {
         const isWeapon = Math.random() < .5;
         const table = isWeapon ? weaponLoot : armorLoot;
         const item = { ...table[Math.floor(Math.random() * table.length)] };
@@ -2040,7 +2149,10 @@
         }
       }
       sound.play("victory");
-      setMessage("勝利", `${opening} 對手棄刀倒地，你取得 ${combat.rewardGold} 貫。${lootText}${missionText}`);
+      const closing = combat.sparring
+        ? `${combat.enemyName}收勢還刀，承認你通過了這場試煉。你獲得謝禮 ${combat.rewardGold} 貫。`
+        : `對手棄刀倒地，你取得 ${combat.rewardGold} 貫。`;
+      setMessage(combat.legendary ? "劍豪試煉勝利" : "勝利", `${opening} ${closing}${masteryText}${lootText}${missionText}`);
       setActions([{ label: "收刀返回地圖", run: returnToMapFromCombat }]);
       if (revealedItem) showItemReveal(revealedKind, revealedItem);
       updateHUD(); saveGame();
@@ -2131,6 +2243,7 @@
       combat.flash = Math.max(0, combat.flash - dt * 3);
       combat.enemyFlash = Math.max(0, combat.enemyFlash - dt * 3);
       combat.slash = Math.max(0, combat.slash - dt * 2.7);
+      combat.enemySlash = Math.max(0, combat.enemySlash - dt * 2.7);
       if (gameState === "MAP" && started) updateMap(dt);
     }
 
@@ -2472,25 +2585,76 @@
     }
 
     function drawCombat() {
-      const grad = ctx.createLinearGradient(0, 0, 0, VIEW.h);
-      grad.addColorStop(0, "#5e5846"); grad.addColorStop(.6, "#343429"); grad.addColorStop(1, "#1b1814");
-      ctx.fillStyle = grad; ctx.fillRect(0, 0, VIEW.w, VIEW.h);
-      ctx.fillStyle = "rgba(223,211,174,.09)"; ctx.beginPath(); ctx.arc(750, 105, 82, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#28281f";
-      for (let i = 0; i < 14; i++) { const x = i * 80 - 20; ctx.beginPath(); ctx.moveTo(x, 395); ctx.lineTo(x + 36, 230 - (i % 3) * 24); ctx.lineTo(x + 78, 395); ctx.fill(); }
-      ctx.fillStyle = "#29231b"; ctx.fillRect(0, 392, VIEW.w, 148);
+      const fieldH = VIEW.h - 42;
+      if (battleBackground.complete && battleBackground.naturalWidth) {
+        const scale = Math.max(VIEW.w / battleBackground.naturalWidth, fieldH / battleBackground.naturalHeight);
+        const sw = VIEW.w / scale;
+        const sh = fieldH / scale;
+        const sx = Math.max(0, (battleBackground.naturalWidth - sw) / 2);
+        const sy = Math.max(0, (battleBackground.naturalHeight - sh) / 2);
+        ctx.drawImage(battleBackground, sx, sy, sw, sh, 0, 0, VIEW.w, fieldH);
+      } else {
+        const grad = ctx.createLinearGradient(0, 0, 0, fieldH);
+        grad.addColorStop(0, "#8f8766"); grad.addColorStop(.55, "#5a5a3b"); grad.addColorStop(1, "#2b251b");
+        ctx.fillStyle = grad; ctx.fillRect(0, 0, VIEW.w, fieldH);
+      }
+      const shade = ctx.createLinearGradient(0, 0, 0, fieldH);
+      shade.addColorStop(0, "rgba(13,18,17,.18)"); shade.addColorStop(.55, "rgba(16,14,10,.02)"); shade.addColorStop(1, "rgba(12,8,5,.58)");
+      ctx.fillStyle = shade; ctx.fillRect(0, 0, VIEW.w, fieldH);
 
-      drawFighter(260, 348, true, combat.enemyFlash, "#9f2f2d");
-      drawFighter(700, 348, false, combat.flash, "#344555");
+      drawBattleSprite(58, 126, "player", combat.enemyFlash);
+      drawBattleSprite(582, 126, combat.enemySprite || "ronin", combat.flash);
       if (combat.slash > 0) {
         ctx.save(); ctx.globalAlpha = Math.min(1, combat.slash);
-        ctx.strokeStyle = "#ffdf85"; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(480, 280, 190, -.45, .45); ctx.stroke();
-        ctx.strokeStyle = "rgba(255,255,255,.65)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(480, 280, 172, -.5, .5); ctx.stroke(); ctx.restore();
+        ctx.shadowBlur = 16; ctx.shadowColor = "#ffd37a"; ctx.strokeStyle = "#ffe4a0"; ctx.lineWidth = 8;
+        ctx.beginPath(); ctx.arc(470, 285, 205, -.54, .44); ctx.stroke();
+        ctx.shadowBlur = 0; ctx.strokeStyle = "rgba(255,255,255,.8)"; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(470, 285, 184, -.6, .5); ctx.stroke(); ctx.restore();
       }
-      drawBar(72, 64, 300, 15, player.hp / player.maxHp, "#4d9f65", "黑崎龍之介", `${Math.ceil(player.hp)} / ${player.maxHp}`);
-      drawBar(588, 64, 300, 15, combat.enemyHp / combat.enemyMaxHp, "#b5453d", combat.enemyName, `${combat.enemyHp} / ${combat.enemyMaxHp}`);
-      ctx.fillStyle = "#d8c194"; ctx.font = '13px "Microsoft JhengHei", sans-serif'; ctx.textAlign = "left"; ctx.fillText(`氣力 ${player.ki}/${player.maxKi}　武器 ${player.weapon.name}`, 72, 111);
-      ctx.textAlign = "right"; ctx.fillText(`攻 ${combat.enemyAtk}　防 ${combat.enemyDef}`, 888, 111);
+      if (combat.enemySlash > 0) {
+        ctx.save(); ctx.globalAlpha = Math.min(1, combat.enemySlash);
+        ctx.shadowBlur = 18; ctx.shadowColor = combat.legendary ? "#9f68ff" : "#d74736";
+        ctx.strokeStyle = combat.legendary ? "#d6b8ff" : "#ff8a69"; ctx.lineWidth = 9;
+        ctx.beginPath(); ctx.arc(493, 290, 198, Math.PI - .5, Math.PI + .45); ctx.stroke();
+        ctx.restore();
+      }
+
+      ctx.fillStyle = "rgba(18,16,13,.82)"; ctx.fillRect(36, 27, 364, 104); ctx.fillRect(560, 27, 364, 104);
+      ctx.strokeStyle = "rgba(234,209,146,.55)"; ctx.lineWidth = 2; ctx.strokeRect(36, 27, 364, 104); ctx.strokeRect(560, 27, 364, 104);
+      drawBar(58, 67, 320, 15, player.hp / player.maxHp, "#4d9f65", "黑崎龍之介", `${Math.ceil(player.hp)} / ${player.maxHp}`);
+      drawBar(582, 67, 320, 15, combat.enemyHp / combat.enemyMaxHp, combat.legendary ? "#7e4fb0" : "#b5453d", combat.enemyName, `${combat.enemyHp} / ${combat.enemyMaxHp}`);
+      ctx.fillStyle = "#e6d2a5"; ctx.font = '700 13px "Microsoft JhengHei", sans-serif'; ctx.textAlign = "left";
+      ctx.fillText(`浪人　氣力 ${player.ki}/${player.maxKi}`, 58, 50);
+      ctx.font = '12px "Microsoft JhengHei", sans-serif'; ctx.fillText(`攻 ${player.attack}　防 ${player.defense}　武器 ${player.weapon.name}`, 58, 111);
+      ctx.textAlign = "right"; ctx.font = '700 13px "Microsoft JhengHei", sans-serif';
+      ctx.fillText(combat.enemyTitle || "無名浪人", 902, 50);
+      ctx.font = '12px "Microsoft JhengHei", sans-serif'; ctx.fillText(`氣力 ${combat.enemyKi}/${combat.enemyMaxKi}　攻 ${combat.enemyAtk}　防 ${combat.enemyDef}`, 902, 111);
+
+      ctx.fillStyle = "rgba(14,12,10,.78)"; ctx.fillRect(310, 397, 340, 56);
+      ctx.strokeStyle = "rgba(231,205,143,.46)"; ctx.strokeRect(310, 397, 340, 56);
+      ctx.fillStyle = "#e8d4a2"; ctx.textAlign = "center"; ctx.font = '700 14px "Microsoft JhengHei", sans-serif';
+      ctx.fillText(`第 ${combat.turn || 1} 合　對手奧義：${combat.enemyTechnique || "逆袈裟"}`, VIEW.w / 2, 421);
+      ctx.fillStyle = combat.enemyGuarding ? "#8bd5d0" : "#b8aa89"; ctx.font = '12px "Microsoft JhengHei", sans-serif';
+      ctx.fillText(combat.enemyGuarding ? "對手正凝神架刀，防備反擊" : "觀察架勢，掌握出招時機", VIEW.w / 2, 442);
+    }
+
+    function drawBattleSprite(x, y, type, flash) {
+      if (!(battleFighterAtlas.complete && battleFighterAtlas.naturalWidth)) {
+        drawFighter(x + 155, y + 270, type === "player", flash, type === "player" ? "#344555" : "#9f2f2d");
+        return;
+      }
+      const cells = { player: [0, 0], ronin: [1, 0], swordmaster: [0, 1], monk: [1, 1] };
+      const cell = cells[type] || cells.ronin;
+      const sw = battleFighterAtlas.naturalWidth / 2;
+      const sh = battleFighterAtlas.naturalHeight / 2;
+      ctx.save();
+      if (flash > 0) ctx.translate(Math.sin(scenePulse * 55) * 8, 0);
+      ctx.shadowColor = "rgba(0,0,0,.62)"; ctx.shadowBlur = 18; ctx.shadowOffsetY = 9;
+      ctx.drawImage(battleFighterAtlas, cell[0] * sw, cell[1] * sh, sw, sh, x, y, 320, 320);
+      if (flash > 0) {
+        ctx.globalCompositeOperation = "source-atop"; ctx.fillStyle = "rgba(255,235,205,.4)"; ctx.fillRect(x, y, 320, 320);
+      }
+      ctx.restore();
     }
 
     function drawFighter(x, groundY, playerSide, flash, color) {
