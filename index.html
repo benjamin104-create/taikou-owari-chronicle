@@ -449,6 +449,253 @@
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
     }
+
+    /* 太閣立志傳一代風格：中央卷軸、直排選單、深藍情報頁 */
+    body {
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 4px),
+        #080909;
+      font-family: "DFKai-SB", "BiauKai", "Microsoft JhengHei", serif;
+    }
+
+    .app-shell { width: min(920px, calc(100% - 24px)); padding: 10px 0 24px; }
+    .topbar {
+      min-height: 45px;
+      margin: 0;
+      padding: 7px 14px;
+      border: 2px solid #545a55;
+      border-bottom: 0;
+      background: #111516;
+      box-shadow: inset 0 1px #8b948c;
+    }
+    .clan-mark { width: 31px; height: 31px; border-radius: 2px; box-shadow: none; }
+    .brand h1 { color: #f0eee2; font-size: 18px; letter-spacing: .16em; }
+    .brand small { color: #8f988f; font-family: ui-monospace, monospace; font-size: 9px; }
+    .icon-button, .ghost-button {
+      border-color: #697168;
+      border-radius: 1px;
+      background: #202726;
+      color: #eef0df;
+      box-shadow: inset 1px 1px rgba(255,255,255,.1), inset -1px -1px #060707;
+    }
+    .hud, .side-panel, .footer-note { display: none !important; }
+    .game-grid {
+      display: block;
+      border: 2px solid #545a55;
+      background: #070909;
+      box-shadow: 0 22px 70px #000;
+    }
+    .play-column { padding: clamp(12px, 3vw, 25px) clamp(18px, 5vw, 53px) 18px; background: #030505; }
+    .canvas-wrap {
+      overflow: visible;
+      aspect-ratio: 4 / 3;
+      border: 7px ridge #aaa476;
+      border-radius: 1px;
+      background: #828458;
+      box-shadow: inset 0 0 0 3px #4b5134, 0 0 0 2px #191b13, 0 10px 25px #000;
+      image-rendering: pixelated;
+    }
+    .canvas-wrap::before,
+    .canvas-wrap::after {
+      position: absolute;
+      z-index: 12;
+      top: -13px;
+      bottom: -13px;
+      width: 14px;
+      border: 2px solid #626240;
+      border-radius: 7px;
+      background: linear-gradient(90deg, #6b7045, #c5bf80 45%, #5f633d);
+      box-shadow: 0 0 0 2px #272a1c, 0 6px 10px rgba(0,0,0,.65);
+      content: "";
+      pointer-events: none;
+    }
+    .canvas-wrap::before { left: -17px; }
+    .canvas-wrap::after { right: -17px; }
+    canvas { background: #86905a; }
+
+    .mode-ribbon {
+      top: 8px;
+      left: 50%;
+      z-index: 5;
+      padding: 3px 13px;
+      translate: -50% 0;
+      border: 1px solid #494c32;
+      border-radius: 0;
+      background: #d8d2aa;
+      color: #1a211d;
+      font-size: 12px;
+      box-shadow: 2px 2px rgba(29,34,25,.5);
+      backdrop-filter: none;
+    }
+    .mode-ribbon::before { display: none; }
+
+    .rank-strip {
+      position: absolute;
+      z-index: 6;
+      top: 31px;
+      left: 50%;
+      display: flex;
+      gap: 5px;
+      translate: -50% 0;
+      pointer-events: none;
+    }
+    .rank-plaque {
+      width: 39px;
+      height: 90px;
+      display: grid;
+      place-items: center;
+      padding: 5px 7px;
+      border: 2px outset #b9b289;
+      background:
+        repeating-linear-gradient(90deg, rgba(70,65,44,.05) 0 1px, transparent 1px 5px),
+        #e3dec1;
+      color: #202622;
+      font-size: clamp(15px, 2.1vw, 23px);
+      line-height: 1.03;
+      text-align: center;
+      writing-mode: vertical-rl;
+      box-shadow: 2px 3px rgba(36,40,28,.46);
+    }
+    .rank-plaque.current { color: #b2292d; background: #f1e8c9; text-shadow: 1px 1px #fff; }
+    .rank-plaque.locked { color: #6d705e; filter: saturate(.55); }
+
+    .retro-tabs {
+      position: absolute;
+      z-index: 9;
+      top: 54px;
+      right: -2px;
+      display: grid;
+      gap: 2px;
+    }
+    .retro-tab {
+      width: 31px;
+      min-height: 48px;
+      padding: 4px;
+      border: 2px outset #b8b083;
+      border-radius: 0;
+      background: #d2cfad;
+      color: #303629;
+      font-size: 17px;
+      line-height: 1;
+      writing-mode: vertical-rl;
+      box-shadow: 2px 2px rgba(21,24,17,.48);
+    }
+    .retro-tab:hover, .retro-tab:focus-visible { background: #f1e6b8; color: #a42629; }
+
+    .retro-info-panel {
+      position: absolute;
+      z-index: 15;
+      top: 22%;
+      left: 50%;
+      width: min(430px, calc(100% - 92px));
+      translate: -50% 0;
+      border: 4px ridge #b9b58b;
+      background: #102931;
+      color: #eff0de;
+      box-shadow: 9px 10px rgba(20,25,19,.52);
+    }
+    .retro-info-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 11px;
+      border-bottom: 2px solid #6d846e;
+      background: #e3dfca;
+      color: #22271f;
+      font-size: 20px;
+    }
+    .retro-close { width: 28px; height: 26px; padding: 0; border: 2px outset #b0aa83; background: #d7d2b1; color: #222; }
+    .retro-info-body { padding: 14px; font-size: clamp(14px, 2.4vw, 22px); line-height: 1.45; text-shadow: 2px 2px #000; }
+    .retro-profile { display: grid; grid-template-columns: 92px 1fr; gap: 15px; align-items: center; }
+    .pixel-portrait {
+      position: relative;
+      width: 86px;
+      height: 106px;
+      overflow: hidden;
+      border: 4px ridge #b7b086;
+      background: linear-gradient(#4f8692 0 33%, #d5aa79 34% 58%, #2a3945 59%);
+      image-rendering: pixelated;
+    }
+    .pixel-portrait::before {
+      position: absolute;
+      top: 22px;
+      left: 21px;
+      width: 42px;
+      height: 46px;
+      border-radius: 44% 44% 38% 38%;
+      background: #c68758;
+      box-shadow: -14px -13px 0 -8px #211914, 14px -13px 0 -8px #211914, 0 -17px 0 -5px #3b241a;
+      content: "";
+    }
+    .pixel-portrait::after { position: absolute; top: 45px; left: 30px; width: 7px; height: 5px; background: #171515; box-shadow: 20px 0 #171515, 10px 15px 0 2px #39201a; content: ""; }
+    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 24px; }
+    .info-grid span { white-space: nowrap; }
+    .retro-info-note { margin-top: 12px; padding-top: 8px; border-top: 1px solid #6d846e; color: #d8d9bd; font-size: .75em; }
+
+    .interaction-tip {
+      bottom: 48px;
+      border-radius: 0;
+      border-color: #777955;
+      background: rgba(16, 41, 49, .94);
+      color: #f0f0d9;
+      backdrop-filter: none;
+    }
+    .dialog-panel {
+      min-height: 132px;
+      margin-top: 15px;
+      padding: 11px 14px;
+      border: 5px ridge #aaa476;
+      background:
+        repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 4px),
+        #102a32;
+      box-shadow: inset 0 0 0 2px #243f42;
+    }
+    .speaker { color: #f2e5a8; font-size: 17px; }
+    #message { min-height: 42px; color: #f0f1df; font-size: 15px; text-shadow: 1px 1px #000; }
+    .shortcut-note { color: #aab3a1; }
+    .action-button {
+      border: 2px outset #b6ae7e;
+      border-radius: 0;
+      background: #ded8b7;
+      color: #20251e;
+      font-weight: 700;
+      box-shadow: 2px 2px #060a09;
+    }
+    .action-button:hover { border-color: #eee0a7; background: #f3e8bd; color: #99272a; }
+    .action-button.danger { color: #a32629; border-color: #c7a08a; }
+
+    .start-overlay {
+      background:
+        radial-gradient(circle at 50% 40%, rgba(34,79,82,.78), rgba(7,15,16,.96)),
+        repeating-linear-gradient(0deg, transparent 0 3px, rgba(255,255,255,.02) 3px 4px);
+    }
+    .start-card { border: 6px ridge #aaa476; border-radius: 0; background: #102a32; box-shadow: 8px 9px #030505; }
+    .start-card h2 { color: #f3f0dd; }
+    .start-card p { color: #d8dbc4; }
+    .primary-button { border: 3px outset #c1b884; border-radius: 0; background: #e2d9ab; color: #822527; box-shadow: 3px 3px #050707; }
+
+    @media (max-width: 640px) {
+      .app-shell { width: 100%; padding: 0; }
+      .topbar { padding: 6px 9px; }
+      .play-column { padding: 12px 19px 10px; }
+      .canvas-wrap { aspect-ratio: 4 / 3; border-width: 5px; }
+      .rank-strip { top: 23px; gap: 2px; }
+      .rank-plaque { width: 27px; height: 66px; padding: 3px; font-size: 14px; border-width: 1px; }
+      .retro-tabs { top: 36px; }
+      .retro-tab { width: 24px; min-height: 34px; padding: 2px; font-size: 13px; border-width: 1px; }
+      .mode-ribbon { display: none; }
+      .touch-controls.map-visible { display: block; }
+      .dpad { scale: .78; transform-origin: left bottom; }
+      .touch-interact { width: 58px; height: 58px; bottom: 42px; right: 12px; }
+      .interaction-tip { bottom: 74px; font-size: 10px; }
+      .dialog-panel { min-height: 150px; margin-top: 10px; border-width: 4px; }
+      #message { font-size: 13px; }
+      .retro-info-panel { top: 19%; width: calc(100% - 54px); }
+      .retro-info-header { font-size: 16px; }
+      .retro-info-body { font-size: 14px; }
+      .retro-profile { grid-template-columns: 72px 1fr; gap: 10px; }
+      .pixel-portrait { width: 67px; height: 82px; transform-origin: top left; }
+    }
   </style>
 </head>
 <body>
@@ -482,8 +729,33 @@
     <section class="game-grid">
       <div class="play-column">
         <div class="canvas-wrap" id="canvasWrap">
-          <canvas id="gameCanvas" width="960" height="540" tabindex="0" aria-label="可捲動的尾張國大地圖遊戲畫面"></canvas>
+          <canvas id="gameCanvas" width="960" height="720" tabindex="0" aria-label="太閣立志傳一代風格的可捲動尾張國大地圖"></canvas>
           <div class="mode-ribbon" id="modeRibbon">大地圖移動</div>
+          <div class="rank-strip" id="rankStrip" aria-label="織田家官階">
+            <span class="rank-plaque" data-rank="足輕組頭">足輕頭</span>
+            <span class="rank-plaque" data-rank="足輕大將">物頭</span>
+            <span class="rank-plaque" data-rank="侍大將">目付</span>
+            <span class="rank-plaque" data-rank="部將">奉行</span>
+            <span class="rank-plaque" data-rank="家老">中老</span>
+            <span class="rank-plaque locked">家老</span>
+            <span class="rank-plaque locked">宿老</span>
+            <span class="rank-plaque locked">大名</span>
+          </div>
+          <nav class="retro-tabs" aria-label="卷軸功能選單">
+            <button class="retro-tab" type="button" data-retro-action="town" aria-label="町情報">町</button>
+            <button class="retro-tab" type="button" data-retro-action="castle" aria-label="城池情報">城</button>
+            <button class="retro-tab" type="button" data-retro-action="evaluation" aria-label="評定">評</button>
+            <button class="retro-tab" type="button" data-retro-action="person" aria-label="人物情報">見</button>
+            <button class="retro-tab" type="button" data-retro-action="battle" aria-label="切磋">戰</button>
+            <button class="retro-tab" type="button" data-retro-action="army" aria-label="軍團情報">軍</button>
+          </nav>
+          <section class="retro-info-panel" id="retroInfoPanel" aria-live="polite" hidden>
+            <header class="retro-info-header">
+              <strong id="retroInfoTitle">人物情報</strong>
+              <button class="retro-close" id="retroInfoClose" type="button" aria-label="關閉情報">×</button>
+            </header>
+            <div class="retro-info-body" id="retroInfoBody"></div>
+          </section>
           <div class="interaction-tip" id="interactionTip">按 Space 進入據點</div>
 
           <div class="touch-controls map-visible" id="touchControls" aria-label="觸控移動控制">
@@ -595,7 +867,11 @@
       touchControls: document.getElementById("touchControls"),
       soundToggle: document.getElementById("soundToggle"),
       volume: document.getElementById("volume"),
-      toast: document.getElementById("toast")
+      toast: document.getElementById("toast"),
+      rankStrip: document.getElementById("rankStrip"),
+      retroInfoPanel: document.getElementById("retroInfoPanel"),
+      retroInfoTitle: document.getElementById("retroInfoTitle"),
+      retroInfoBody: document.getElementById("retroInfoBody")
     };
 
     const VIEW = { w: canvas.width, h: canvas.height };
@@ -914,7 +1190,84 @@
       ]);
     }
 
+    function displayRank(rank = player.rank) {
+      const names = { "足輕組頭": "足輕頭", "足輕大將": "物頭", "侍大將": "目付", "部將": "奉行", "家老": "中老" };
+      return names[rank] || rank;
+    }
+
+    function refreshRankStrip() {
+      if (!ui.rankStrip) return;
+      ui.rankStrip.querySelectorAll("[data-rank]").forEach(plaque => {
+        plaque.classList.toggle("current", player.isRetainer && plaque.dataset.rank === player.rank);
+      });
+    }
+
+    function showRetroInfo(title, html) {
+      ui.retroInfoTitle.textContent = title;
+      ui.retroInfoBody.innerHTML = html;
+      ui.retroInfoPanel.hidden = false;
+      sound.play("ui");
+    }
+
+    function hideRetroInfo() {
+      ui.retroInfoPanel.hidden = true;
+      canvas.focus();
+    }
+
+    function showPersonCard() {
+      const trust = player.isRetainer ? Math.min(100, 35 + player.completedMissions * 12 + Math.floor(player.merit / 25)) : 8;
+      showRetroInfo("人物情報", `
+        <div class="retro-profile">
+          <div class="pixel-portrait" aria-label="黑崎龍之介像"></div>
+          <div><div>${displayRank()}</div><div>信賴　${trust}</div><div>黑崎龍之介</div></div>
+        </div>
+        <div class="retro-info-note">所屬 ${player.faction}　名聲 ${player.fame}　惡名 ${player.infamy}<br>武器 ${player.weapon.name}　鎧甲 ${player.armor.name}</div>`);
+    }
+
+    function showCastleCard() {
+      showRetroInfo("城池情報", `
+        <div>織田家支城　　清洲城</div>
+        <div>城主　織田信長</div>
+        <div class="info-grid">
+          <span>石高　22萬石</span><span>資金　9430貫</span>
+          <span>統率　100</span><span>兵糧　8380石</span>
+          <span>士氣　100</span><span>兵士　7700人</span>
+          <span>注目　★★★</span><span>鐵砲　1670挺</span>
+          <span>土地　★</span><span>防禦　60</span>
+        </div>
+        <div class="retro-info-note">今川軍西進，清洲城正急募兵糧、鐵砲與可用之士。</div>`);
+    }
+
+    function showTownCard() {
+      const loc = nearbyLocation || locations.find(item => item.id === "kiyosu-town");
+      showRetroInfo("町情報", `<div>${loc.name}</div><div class="info-grid"><span>規模　中</span><span>治安　72</span><span>米價　平</span><span>商業　68</span><span>鍛冶　有</span><span>博戲　有</span></div><div class="retro-info-note">${loc.desc}</div>`);
+    }
+
+    function showArmyCard() {
+      const mission = player.mission ? `${player.mission.title} ${missionProgressText(player.mission)}` : "尚未承辦評定";
+      showRetroInfo("軍團情報", `<div>織田軍團</div><div class="info-grid"><span>總大將　織田信長</span><span>士氣　100</span><span>身份　${displayRank()}</span><span>功勳　${player.merit}</span><span>軍資　${player.gold}貫</span><span>體力　${Math.ceil(player.hp)}</span></div><div class="retro-info-note">軍務：${mission}</div>`);
+    }
+
+    function handleRetroAction(action) {
+      if (!started) return;
+      if (action === "town") showTownCard();
+      if (action === "castle") showCastleCard();
+      if (action === "person") showPersonCard();
+      if (action === "army") showArmyCard();
+      if (action === "evaluation") {
+        hideRetroInfo();
+        if (gameState !== "MAP") return;
+        if (nearbyLocation && nearbyLocation.id === "kiyosu-castle") enterCastle();
+        else setMessage("評定傳令", "評定須親赴【清洲城】。請沿卷軸地圖前往城門，靠近後按 Space／Enter。 ");
+      }
+      if (action === "battle") {
+        hideRetroInfo();
+        if (gameState === "MAP") startCombat("路上修行武士", 64, 14, 3, 16);
+      }
+    }
+
     function updateHUD() {
+      refreshRankStrip();
       ui.time.textContent = `1560年 ${month}月 ${day}日`;
       ui.location.textContent = nearbyLocation ? nearbyLocation.area : "尾張國·街道野外";
       ui.hp.textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
@@ -1705,6 +2058,7 @@
     }
 
     function draw() {
+      ctx.imageSmoothingEnabled = false;
       ctx.clearRect(0, 0, VIEW.w, VIEW.h);
       if (gameState === "MAP") drawMap();
       else if (gameState === "FORGE") drawForge();
@@ -1717,7 +2071,7 @@
     function drawMap() {
       ctx.save();
       ctx.translate(-camera.x, -camera.y);
-      const skyTone = weatherCycle[weatherIndex] === "驟雨" ? "#58634a" : weatherCycle[weatherIndex] === "雨後霧" ? "#78806b" : "#7b8257";
+      const skyTone = weatherCycle[weatherIndex] === "驟雨" ? "#70794e" : weatherCycle[weatherIndex] === "雨後霧" ? "#8b9066" : "#97945b";
       ctx.fillStyle = skyTone;
       ctx.fillRect(camera.x, camera.y, VIEW.w, VIEW.h);
 
@@ -1729,6 +2083,7 @@
       }
       ctx.globalAlpha = 1;
 
+      drawCoast();
       drawMountains();
       drawRiver();
       drawRoads();
@@ -1737,7 +2092,6 @@
       drawPlayer();
       ctx.restore();
 
-      drawMiniMap();
       if (weatherCycle[weatherIndex] === "驟雨") drawRain();
       if (weatherCycle[weatherIndex] === "雨後霧") {
         const fog = ctx.createLinearGradient(0, 0, VIEW.w, 0);
@@ -1746,12 +2100,25 @@
       }
     }
 
+    function drawCoast() {
+      ctx.fillStyle = "#26839a";
+      ctx.beginPath();
+      ctx.moveTo(0, 0); ctx.lineTo(420, 0);
+      for (let y = 0; y <= WORLD.h; y += 90) ctx.lineTo(330 + Math.sin(y * .013) * 105, y);
+      ctx.lineTo(0, WORLD.h); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#d4c985"; ctx.lineWidth = 9; ctx.stroke();
+      ctx.strokeStyle = "rgba(194,232,219,.24)"; ctx.lineWidth = 2;
+      for (let y = 35; y < WORLD.h; y += 34) {
+        ctx.beginPath(); ctx.moveTo(18, y); ctx.lineTo(260 + Math.sin(y) * 30, y); ctx.stroke();
+      }
+    }
+
     function drawRoads() {
       roads.forEach(points => {
         ctx.lineCap = "round"; ctx.lineJoin = "round";
-        ctx.strokeStyle = "rgba(53, 41, 25, .18)"; ctx.lineWidth = 34;
+        ctx.strokeStyle = "rgba(67, 49, 25, .28)"; ctx.lineWidth = 32;
         pathThrough(points); ctx.stroke();
-        ctx.strokeStyle = "#b8a16f"; ctx.lineWidth = 25;
+        ctx.strokeStyle = "#b99c5e"; ctx.lineWidth = 23;
         pathThrough(points); ctx.stroke();
         ctx.strokeStyle = "rgba(240, 218, 160, .18)"; ctx.lineWidth = 3;
         pathThrough(points); ctx.stroke();
@@ -1783,9 +2150,9 @@
     function drawMountains() {
       mountains.forEach(m => {
         ctx.save(); ctx.translate(m.x, m.y); ctx.scale(m.scale, m.scale);
-        ctx.fillStyle = "rgba(39, 55, 39, .42)";
+        ctx.fillStyle = "#8ca733";
         ctx.beginPath(); ctx.moveTo(-58, 38); ctx.lineTo(0, -42); ctx.lineTo(64, 38); ctx.closePath(); ctx.fill();
-        ctx.fillStyle = "rgba(224, 210, 169, .20)";
+        ctx.fillStyle = "#c8cf58";
         ctx.beginPath(); ctx.moveTo(0, -42); ctx.lineTo(18, -18); ctx.lineTo(8, -22); ctx.lineTo(-2, -10); ctx.lineTo(-14, -25); ctx.closePath(); ctx.fill();
         ctx.restore();
       });
@@ -2026,6 +2393,25 @@
       vignette.addColorStop(0, "rgba(0,0,0,0)"); vignette.addColorStop(1, "rgba(8,5,3,.42)");
       ctx.fillStyle = vignette; ctx.fillRect(0, 0, VIEW.w, VIEW.h);
       ctx.strokeStyle = "rgba(226,194,123,.18)"; ctx.lineWidth = 8; ctx.strokeRect(4, 4, VIEW.w - 8, VIEW.h - 8);
+      drawRetroStatusBar();
+    }
+
+    function drawRetroStatusBar() {
+      const h = 42;
+      const y = VIEW.h - h;
+      ctx.fillStyle = "#e2dfc7"; ctx.fillRect(0, y, VIEW.w, h);
+      ctx.fillStyle = "#777b57"; ctx.fillRect(0, y, VIEW.w, 5);
+      ctx.strokeStyle = "#4f543b"; ctx.lineWidth = 2; ctx.strokeRect(2, y + 2, VIEW.w - 4, h - 4);
+      ctx.fillStyle = "#161d1b";
+      ctx.font = '700 25px "DFKai-SB", "BiauKai", serif';
+      ctx.textBaseline = "middle"; ctx.textAlign = "left";
+      ctx.fillText(`1560年${month}月${day}日`, 18, y + 24);
+      ctx.font = '700 20px "DFKai-SB", "BiauKai", serif';
+      ctx.fillText(weatherCycle[weatherIndex], 310, y + 24);
+      ctx.fillText(nearbyLocation ? nearbyLocation.name : "尾張", 438, y + 24);
+      ctx.textAlign = "right";
+      ctx.fillText(`體 ${Math.ceil(player.hp)}　金 ${player.gold}`, VIEW.w - 18, y + 24);
+      ctx.textBaseline = "alphabetic";
     }
 
     function gameLoop(now) {
@@ -2094,6 +2480,10 @@
     document.getElementById("resetButton").addEventListener("click", resetGame);
     document.getElementById("helpButton").addEventListener("click", () => {
       setMessage("操作說明", "大地圖：WASD／方向鍵移動，Space／Enter／E 進入據點。戰鬥、賭場與鍛冶屋可按畫面按鈕或數字鍵選擇；Esc 返回。手機可用畫面搖桿。 ");
+    });
+    document.getElementById("retroInfoClose").addEventListener("click", hideRetroInfo);
+    document.querySelectorAll("[data-retro-action]").forEach(button => {
+      button.addEventListener("click", () => handleRetroAction(button.dataset.retroAction));
     });
     bindTouchControls();
 
