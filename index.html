@@ -1,0 +1,2109 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#17120d">
+  <title>新·太閣立志傳：尾張風雲錄</title>
+  <style>
+    :root {
+      --ink: #17120d;
+      --ink-soft: #2d241b;
+      --paper: #d6c291;
+      --paper-pale: #efe2bd;
+      --paper-dark: #8e7448;
+      --red: #9f2f2d;
+      --red-bright: #d35646;
+      --gold: #d6ad56;
+      --moss: #334731;
+      --muted: #a99a7e;
+      --line: rgba(214, 173, 86, .34);
+      --shadow: rgba(0, 0, 0, .48);
+    }
+
+    * { box-sizing: border-box; }
+
+    [hidden] { display: none !important; }
+
+    html, body { min-height: 100%; }
+
+    body {
+      margin: 0;
+      color: var(--paper-pale);
+      background:
+        radial-gradient(circle at 15% 0%, rgba(128, 69, 38, .25), transparent 34rem),
+        radial-gradient(circle at 90% 90%, rgba(51, 71, 49, .22), transparent 38rem),
+        #0e0c09;
+      font-family: "Microsoft JhengHei", "PingFang TC", system-ui, sans-serif;
+      letter-spacing: .02em;
+    }
+
+    button, input { font: inherit; }
+
+    button {
+      color: inherit;
+      border: 0;
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    canvas:focus-visible {
+      outline: 3px solid rgba(214, 173, 86, .9);
+      outline-offset: 3px;
+    }
+
+    .app-shell {
+      width: min(1220px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 32px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 12px;
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+
+    .clan-mark {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border: 1px solid rgba(214, 173, 86, .62);
+      border-radius: 50%;
+      background: radial-gradient(circle, #f0dba7 0 13%, #a2322d 14% 38%, #21180f 39% 52%, #c9a75a 53% 58%, #18120d 59%);
+      box-shadow: 0 0 0 4px rgba(214, 173, 86, .08), inset 0 0 16px rgba(0,0,0,.45);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: "DFKai-SB", "BiauKai", "Yu Mincho", serif;
+      font-size: clamp(18px, 2.6vw, 27px);
+      font-weight: 700;
+      letter-spacing: .1em;
+      white-space: nowrap;
+    }
+
+    .brand small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; letter-spacing: .16em; }
+
+    .top-controls { display: flex; align-items: center; gap: 8px; }
+
+    .icon-button,
+    .ghost-button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: linear-gradient(#2c241b, #19140f);
+      color: #e4d5b2;
+      padding: 8px 12px;
+      box-shadow: inset 0 1px rgba(255,255,255,.04);
+    }
+
+    .icon-button:hover,
+    .ghost-button:hover { border-color: rgba(214, 173, 86, .68); background: #33271d; }
+
+    .volume-wrap {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    #volume { width: 78px; accent-color: var(--gold); }
+
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(8, minmax(0, 1fr));
+      border: 1px solid rgba(214, 173, 86, .45);
+      border-bottom: 0;
+      background: linear-gradient(90deg, #211710, #302115 45%, #201711);
+      box-shadow: 0 -8px 24px rgba(0,0,0,.18);
+    }
+
+    .hud-item {
+      min-width: 0;
+      padding: 8px 10px;
+      border-right: 1px solid rgba(214, 173, 86, .15);
+    }
+
+    .hud-item:last-child { border-right: 0; }
+    .hud-label { display: block; color: #98896c; font-size: 10px; letter-spacing: .13em; }
+    .hud-value { display: block; overflow: hidden; margin-top: 2px; color: #f0dfb5; font-size: 13px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+
+    .game-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 250px;
+      border: 1px solid rgba(214, 173, 86, .45);
+      background: var(--ink);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, .45);
+    }
+
+    .play-column { min-width: 0; }
+
+    .canvas-wrap {
+      position: relative;
+      overflow: hidden;
+      aspect-ratio: 16 / 9;
+      background: #1b2518;
+      border-bottom: 1px solid rgba(214, 173, 86, .28);
+      touch-action: none;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      background: #66714a;
+    }
+
+    .mode-ribbon {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 3px;
+      background: rgba(24, 18, 12, .82);
+      color: #e8d8b1;
+      font-family: "DFKai-SB", "BiauKai", serif;
+      font-size: 13px;
+      letter-spacing: .1em;
+      pointer-events: none;
+      backdrop-filter: blur(4px);
+    }
+
+    .mode-ribbon::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--red-bright);
+      box-shadow: 0 0 10px rgba(211, 86, 70, .75);
+      content: "";
+    }
+
+    .interaction-tip {
+      position: absolute;
+      left: 50%;
+      bottom: 15px;
+      translate: -50% 0;
+      max-width: calc(100% - 30px);
+      padding: 8px 14px;
+      border: 1px solid rgba(214, 173, 86, .56);
+      border-radius: 999px;
+      background: rgba(22, 16, 11, .88);
+      color: #f4e3b8;
+      font-size: 12px;
+      text-align: center;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .18s, transform .18s;
+      pointer-events: none;
+      backdrop-filter: blur(5px);
+    }
+
+    .interaction-tip.visible { opacity: 1; transform: translateY(0); }
+
+    .start-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at center, rgba(61, 44, 28, .76), rgba(12, 9, 6, .95)),
+        repeating-linear-gradient(90deg, transparent 0 22px, rgba(255,255,255,.015) 23px 24px);
+    }
+
+    .start-card {
+      width: min(530px, 100%);
+      padding: clamp(24px, 5vw, 42px);
+      border: 1px solid rgba(214, 173, 86, .6);
+      background: rgba(28, 20, 13, .9);
+      text-align: center;
+      box-shadow: 0 22px 50px rgba(0,0,0,.5), inset 0 0 40px rgba(214,173,86,.04);
+    }
+
+    .start-kicker { margin: 0 0 6px; color: var(--gold); font-size: 11px; letter-spacing: .3em; }
+    .start-card h2 { margin: 0; font-family: "DFKai-SB", "BiauKai", serif; font-size: clamp(27px, 6vw, 43px); letter-spacing: .12em; }
+    .start-card p { margin: 14px auto 22px; color: #c6b795; font-size: 13px; line-height: 1.8; }
+    .start-actions { display: flex; justify-content: center; gap: 9px; flex-wrap: wrap; }
+
+    .primary-button {
+      min-height: 42px;
+      padding: 10px 18px;
+      border: 1px solid #dc7665;
+      border-radius: 4px;
+      background: linear-gradient(#b64138, #7e2725);
+      color: #fff2d4;
+      font-weight: 800;
+      box-shadow: 0 5px 16px rgba(130, 40, 34, .28), inset 0 1px rgba(255,255,255,.18);
+    }
+
+    .primary-button:hover { filter: brightness(1.12); }
+
+    .dialog-panel {
+      min-height: 112px;
+      padding: 13px 16px 12px;
+      background:
+        linear-gradient(90deg, rgba(158, 117, 54, .05), transparent 14%, transparent 86%, rgba(158, 117, 54, .05)),
+        #18130f;
+    }
+
+    .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 7px; }
+    .speaker { color: var(--gold); font-family: "DFKai-SB", "BiauKai", serif; font-size: 14px; letter-spacing: .08em; }
+    .shortcut-note { color: #7e725e; font-size: 10px; }
+    #message { min-height: 39px; margin: 0; color: #dfd1ae; font-size: 13px; line-height: 1.65; }
+
+    .action-bar {
+      display: flex;
+      gap: 7px;
+      margin-top: 10px;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .action-button {
+      min-width: 106px;
+      min-height: 36px;
+      flex: 1 0 auto;
+      padding: 7px 10px;
+      border: 1px solid rgba(214, 173, 86, .27);
+      border-radius: 3px;
+      background: linear-gradient(#2c241b, #201912);
+      color: #d8c8a6;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .action-button:hover { border-color: rgba(214, 173, 86, .72); color: #fff0c6; background: #382a1e; }
+    .action-button.danger { border-color: rgba(190, 72, 57, .45); color: #e9ad9e; }
+    .action-button:disabled { cursor: not-allowed; opacity: .42; }
+
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid rgba(214, 173, 86, .25);
+      background:
+        linear-gradient(rgba(255,255,255,.015), transparent),
+        #14100c;
+    }
+
+    .side-section { padding: 15px 15px 14px; border-bottom: 1px solid rgba(214, 173, 86, .16); }
+    .side-section h3 { margin: 0 0 11px; color: #b7a37a; font-size: 11px; font-weight: 700; letter-spacing: .17em; }
+
+    .equipment-card {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      gap: 9px;
+      align-items: center;
+      padding: 9px;
+      border: 1px solid rgba(214, 173, 86, .16);
+      background: rgba(255,255,255,.018);
+    }
+
+    .equipment-card + .equipment-card { margin-top: 7px; }
+
+    .equip-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(214, 173, 86, .18);
+      border-radius: 3px;
+      background: #211912;
+      color: var(--gold);
+      font-size: 20px;
+    }
+
+    .equip-type { color: #746a58; font-size: 9px; letter-spacing: .12em; }
+    .equip-name { overflow: hidden; margin-top: 2px; color: #e4d5b2; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .equip-stat { margin-top: 2px; color: #b98d55; font-size: 10px; }
+
+    .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .stat-pill { padding: 7px 8px; border: 1px solid rgba(214, 173, 86, .14); background: #1b1611; }
+    .stat-pill span { display: block; color: #756a58; font-size: 9px; }
+    .stat-pill strong { display: block; margin-top: 2px; color: #ead9b5; font-size: 15px; }
+
+    .objective {
+      margin: 0;
+      color: #c6b795;
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .legend { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 8px; color: #887b66; font-size: 10px; }
+    .legend span { display: flex; align-items: center; gap: 6px; }
+    .legend i { width: 8px; height: 8px; display: inline-block; border-radius: 50%; }
+
+    .save-row { display: flex; gap: 6px; margin-top: auto; padding: 13px; }
+    .save-row button { flex: 1; padding: 8px 5px; font-size: 10px; }
+
+    .touch-controls { position: absolute; inset: 0; display: none; pointer-events: none; }
+
+    .dpad {
+      position: absolute;
+      left: 13px;
+      bottom: 12px;
+      width: 132px;
+      height: 132px;
+      pointer-events: auto;
+    }
+
+    .touch-key,
+    .touch-interact {
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(21, 16, 11, .65);
+      color: #f3dfb5;
+      box-shadow: inset 0 0 15px rgba(0,0,0,.28);
+      backdrop-filter: blur(3px);
+      touch-action: none;
+      user-select: none;
+    }
+
+    .touch-key { position: absolute; width: 43px; height: 43px; border-radius: 9px; font-size: 20px; }
+    .touch-key[data-dir="up"] { left: 44px; top: 0; }
+    .touch-key[data-dir="left"] { left: 0; top: 44px; }
+    .touch-key[data-dir="right"] { right: 0; top: 44px; }
+    .touch-key[data-dir="down"] { left: 44px; bottom: 0; }
+
+    .touch-interact {
+      position: absolute;
+      right: 18px;
+      bottom: 28px;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      pointer-events: auto;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .touch-key.active, .touch-interact:active { background: rgba(159, 47, 45, .82); }
+
+    .toast {
+      position: fixed;
+      z-index: 30;
+      top: 18px;
+      left: 50%;
+      translate: -50% -16px;
+      padding: 9px 15px;
+      border: 1px solid rgba(214, 173, 86, .5);
+      border-radius: 4px;
+      background: rgba(25, 18, 12, .94);
+      color: #f0deb4;
+      font-size: 12px;
+      opacity: 0;
+      transition: opacity .2s, translate .2s;
+      pointer-events: none;
+    }
+
+    .toast.visible { opacity: 1; translate: -50% 0; }
+
+    .footer-note { margin: 12px 2px 0; color: #665c4c; font-size: 10px; text-align: center; }
+
+    @media (max-width: 900px) {
+      .game-grid { grid-template-columns: 1fr; }
+      .side-panel { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid rgba(214, 173, 86, .25); border-left: 0; }
+      .side-section { border-right: 1px solid rgba(214, 173, 86, .12); }
+      .save-row { grid-column: 1 / -1; }
+      .hud { grid-template-columns: repeat(4, 1fr); }
+      .hud-item:nth-child(4) { border-right: 0; }
+      .hud-item:nth-child(-n+4) { border-bottom: 1px solid rgba(214, 173, 86, .14); }
+    }
+
+    @media (max-width: 640px) {
+      .app-shell { width: 100%; padding: 0; }
+      .topbar { padding: 9px 10px; margin: 0; background: #110d0a; }
+      .clan-mark { width: 34px; height: 34px; }
+      .brand small, .volume-wrap, #resetButton { display: none; }
+      .brand h1 { font-size: 16px; }
+      .hud { border-right: 0; border-left: 0; }
+      .hud-item { padding: 6px 8px; }
+      .hud-label { font-size: 8px; }
+      .hud-value { font-size: 11px; }
+      .game-grid { border-right: 0; border-left: 0; }
+      .canvas-wrap { aspect-ratio: 4 / 3; }
+      .side-panel { grid-template-columns: 1fr 1fr; }
+      .side-section:last-of-type { display: none; }
+      .dialog-panel { min-height: 140px; }
+      .shortcut-note { display: none; }
+      .touch-controls.map-visible { display: block; }
+      .interaction-tip { bottom: 94px; }
+      .action-button { min-width: 98px; }
+      .footer-note { padding: 0 10px 14px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="clan-mark" aria-hidden="true"></div>
+        <div>
+          <h1>新·太閣立志傳</h1>
+          <small>尾張風雲錄 · 經典卷軸大地圖</small>
+        </div>
+      </div>
+      <div class="top-controls">
+        <button class="icon-button" id="soundToggle" type="button" aria-pressed="false">♪ 音效：關</button>
+        <label class="volume-wrap" for="volume">音量 <input id="volume" type="range" min="0" max="1" value="0.55" step="0.05"></label>
+        <button class="ghost-button" id="resetButton" type="button">重新開局</button>
+      </div>
+    </header>
+
+    <section class="hud" aria-label="角色狀態">
+      <div class="hud-item"><span class="hud-label">時 間</span><strong class="hud-value" id="hudTime">1560年 5月 12日</strong></div>
+      <div class="hud-item"><span class="hud-label">所 在</span><strong class="hud-value" id="hudLocation">尾張國·清洲街道</strong></div>
+      <div class="hud-item"><span class="hud-label">體 力</span><strong class="hud-value" id="hudHp">100 / 100</strong></div>
+      <div class="hud-item"><span class="hud-label">氣 力</span><strong class="hud-value" id="hudKi">3 / 6</strong></div>
+      <div class="hud-item"><span class="hud-label">金 錢</span><strong class="hud-value" id="hudGold">50 貫</strong></div>
+      <div class="hud-item"><span class="hud-label">天 候</span><strong class="hud-value" id="hudWeather">初夏晴</strong></div>
+      <div class="hud-item"><span class="hud-label">身 分</span><strong class="hud-value" id="hudRank">浪人</strong></div>
+      <div class="hud-item"><span class="hud-label">功 勳</span><strong class="hud-value" id="hudMerit">0</strong></div>
+    </section>
+
+    <section class="game-grid">
+      <div class="play-column">
+        <div class="canvas-wrap" id="canvasWrap">
+          <canvas id="gameCanvas" width="960" height="540" tabindex="0" aria-label="可捲動的尾張國大地圖遊戲畫面"></canvas>
+          <div class="mode-ribbon" id="modeRibbon">大地圖移動</div>
+          <div class="interaction-tip" id="interactionTip">按 Space 進入據點</div>
+
+          <div class="touch-controls map-visible" id="touchControls" aria-label="觸控移動控制">
+            <div class="dpad">
+              <button class="touch-key" data-dir="up" type="button" aria-label="向上移動">▲</button>
+              <button class="touch-key" data-dir="left" type="button" aria-label="向左移動">◀</button>
+              <button class="touch-key" data-dir="right" type="button" aria-label="向右移動">▶</button>
+              <button class="touch-key" data-dir="down" type="button" aria-label="向下移動">▼</button>
+            </div>
+            <button class="touch-interact" id="touchInteract" type="button">調查</button>
+          </div>
+
+          <div class="start-overlay" id="startOverlay">
+            <div class="start-card">
+              <p class="start-kicker">一五六〇 · 桶狹間前夜</p>
+              <h2>尾張風雲錄</h2>
+              <p>以方向鍵或 WASD 在卷軸大地圖行走。沿路探索清洲城、町場、博戲場與木曾川，也可能遭遇攔路浪人。</p>
+              <div class="start-actions">
+                <button class="primary-button" id="startSound" type="button">啟用音效並開始</button>
+                <button class="ghost-button" id="startSilent" type="button">靜音開始</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dialog-panel" aria-live="polite">
+          <div class="dialog-heading">
+            <span class="speaker" id="speaker">旅途札記</span>
+            <span class="shortcut-note">數字鍵選擇 · Space / Enter 互動 · Esc 返回</span>
+          </div>
+          <p id="message">初夏的風掠過尾張平野。遠處戰鼓隱約，清洲城正為今川大軍西進而騷動。</p>
+          <div class="action-bar" id="actionBar"></div>
+        </div>
+      </div>
+
+      <aside class="side-panel" aria-label="角色與裝備資訊">
+        <section class="side-section">
+          <h3>旅 人 裝 束</h3>
+          <div class="equipment-card">
+            <div class="equip-icon" aria-hidden="true">刀</div>
+            <div><div class="equip-type">武 器</div><div class="equip-name" id="weaponName">無名打刀</div><div class="equip-stat" id="weaponStat">攻擊 +0</div></div>
+          </div>
+          <div class="equipment-card">
+            <div class="equip-icon" aria-hidden="true">鎧</div>
+            <div><div class="equip-type">防 具</div><div class="equip-name" id="armorName">粗布衣</div><div class="equip-stat" id="armorStat">防禦 +0</div></div>
+          </div>
+        </section>
+
+        <section class="side-section">
+          <h3>能 力</h3>
+          <div class="stat-grid">
+            <div class="stat-pill"><span>總攻擊</span><strong id="totalAttack">18</strong></div>
+            <div class="stat-pill"><span>總防禦</span><strong id="totalDefense">4</strong></div>
+            <div class="stat-pill"><span>智謀</span><strong>85</strong></div>
+            <div class="stat-pill"><span>千術</span><strong>LV 1</strong></div>
+          </div>
+        </section>
+
+        <section class="side-section">
+          <h3>當 前 目 標</h3>
+          <p class="objective" id="objective">遊歷尾張、備妥裝備，並在桶狹間之戰爆發前尋找立足之地。</p>
+          <h3 style="margin-top:16px">地 圖 凡 例</h3>
+          <div class="legend">
+            <span><i style="background:#d8ccb0"></i>城砦</span>
+            <span><i style="background:#c8763f"></i>町場</span>
+            <span><i style="background:#75467e"></i>博戲</span>
+            <span><i style="background:#4e83a4"></i>渡口</span>
+          </div>
+        </section>
+
+        <div class="save-row">
+          <button class="ghost-button" id="saveButton" type="button">保存進度</button>
+          <button class="ghost-button" id="helpButton" type="button">操作說明</button>
+        </div>
+      </aside>
+    </section>
+
+    <p class="footer-note">單檔離線版 · 音效由瀏覽器即時合成，不需外部素材。遊戲會自動保存於此瀏覽器。</p>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <script>
+    "use strict";
+
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const ui = {
+      time: document.getElementById("hudTime"),
+      location: document.getElementById("hudLocation"),
+      hp: document.getElementById("hudHp"),
+      ki: document.getElementById("hudKi"),
+      gold: document.getElementById("hudGold"),
+      weather: document.getElementById("hudWeather"),
+      rank: document.getElementById("hudRank"),
+      merit: document.getElementById("hudMerit"),
+      weaponName: document.getElementById("weaponName"),
+      weaponStat: document.getElementById("weaponStat"),
+      armorName: document.getElementById("armorName"),
+      armorStat: document.getElementById("armorStat"),
+      totalAttack: document.getElementById("totalAttack"),
+      totalDefense: document.getElementById("totalDefense"),
+      objective: document.getElementById("objective"),
+      speaker: document.getElementById("speaker"),
+      message: document.getElementById("message"),
+      actionBar: document.getElementById("actionBar"),
+      modeRibbon: document.getElementById("modeRibbon"),
+      interactionTip: document.getElementById("interactionTip"),
+      touchControls: document.getElementById("touchControls"),
+      soundToggle: document.getElementById("soundToggle"),
+      volume: document.getElementById("volume"),
+      toast: document.getElementById("toast")
+    };
+
+    const VIEW = { w: canvas.width, h: canvas.height };
+    const WORLD = { w: 2700, h: 1680 };
+    const SAVE_KEY = "taikou-classic-scroll-v1";
+    const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const weaponLoot = [
+      { name: "打刀", atk: 5 },
+      { name: "和泉守兼定", atk: 10 },
+      { name: "備前長船", atk: 16 },
+      { name: "菊一文字", atk: 25 },
+      { name: "童子切安綱", atk: 35 }
+    ];
+
+    const armorLoot = [
+      { name: "皮小札", def: 3 },
+      { name: "漆塗黑胴", def: 7 },
+      { name: "南蠻胴具足", def: 12 },
+      { name: "黑漆塗大鎧", def: 18 }
+    ];
+
+    const locations = [
+      { id: "kiyosu-castle", name: "清洲城", area: "尾張國·清洲城", x: 610, y: 390, radius: 92, type: "castle", desc: "織田家居城，兵馬與傳令使往來不絕。" },
+      { id: "kiyosu-town", name: "清洲町", area: "尾張國·清洲町", x: 790, y: 610, radius: 82, type: "town", desc: "城下町商聲鼎沸，爐火與酒香自巷內飄出。" },
+      { id: "gambling", name: "黑市博戲場", area: "清洲町·博戲場", x: 1015, y: 715, radius: 70, type: "gambling", desc: "竹盅落桌聲隔著布簾傳來。" },
+      { id: "kiso-port", name: "木曾川渡口", area: "尾張國·木曾川渡口", x: 2080, y: 430, radius: 96, type: "river", desc: "川並衆的舟船泊在蘆葦間，陌生人都會被盤問。" },
+      { id: "tsushima", name: "津島町", area: "尾張國·津島町", x: 1510, y: 1110, radius: 86, type: "market", desc: "水陸商貨匯集，米、布與鹽包堆滿碼頭。" },
+      { id: "atsuta", name: "熱田神宮", area: "尾張國·熱田神宮", x: 560, y: 1320, radius: 82, type: "shrine", desc: "古木掩映參道，鈴音使旅人心神沉靜。" },
+      { id: "narumi", name: "鳴海砦", area: "尾張國·鳴海砦外", x: 2250, y: 1290, radius: 82, type: "fort", desc: "今川方軍旗立於土壘上，戒備森嚴。" }
+    ];
+
+    const roads = [
+      [[180, 870], [480, 780], [790, 610], [1015, 715], [1320, 870], [1510, 1110], [1880, 1190], [2250, 1290], [2550, 1440]],
+      [[610, 390], [720, 500], [790, 610], [920, 810], [820, 1070], [560, 1320]],
+      [[1015, 715], [1320, 610], [1660, 520], [2080, 430]],
+      [[1510, 1110], [1570, 870], [1660, 520]]
+    ];
+
+    const riverPath = [[1900, -80], [1870, 210], [1980, 410], [1910, 650], [2020, 850], [1970, 1080], [2110, 1320], [2040, 1760]];
+
+    const player = {
+      x: 420,
+      y: 830,
+      radius: 12,
+      speed: 190,
+      hp: 100,
+      maxHp: 100,
+      ki: 3,
+      maxKi: 6,
+      baseAtk: 18,
+      baseDef: 4,
+      gold: 50,
+      intellect: 85,
+      cheatSkill: 1,
+      fame: 5,
+      infamy: 0,
+      isRetainer: false,
+      faction: "無",
+      rank: "浪人",
+      merit: 0,
+      completedMissions: 0,
+      mission: null,
+      inventory: { rice: 0, firearms: 0 },
+      weapon: { name: "無名打刀", atk: 0 },
+      armor: { name: "粗布衣", def: 0 },
+      facing: "right",
+      walkPhase: 0,
+      distance: 0
+    };
+
+    const camera = { x: 0, y: 0 };
+    const keys = Object.create(null);
+    let gameState = "MAP";
+    let nearbyLocation = null;
+    let actionHandlers = [];
+    let started = false;
+    let lastFrame = performance.now();
+    let encounterDistance = 0;
+    let encounterSafeDistance = 350;
+    let travelDayDistance = 0;
+    let day = 12;
+    let month = 5;
+    let weatherIndex = 0;
+    let weatherTimer = 0;
+    let footstepTimer = 0;
+    let autosaveTimer = 0;
+    let scenePulse = 0;
+    let toastTimer = 0;
+
+    const weatherCycle = ["初夏晴", "薄曇", "驟雨", "雨後霧", "南風"];
+    const rankTable = [
+      { name: "足輕組頭", merit: 0 },
+      { name: "足輕大將", merit: 50 },
+      { name: "侍大將", merit: 140 },
+      { name: "部將", merit: 300 },
+      { name: "家老", merit: 550 }
+    ];
+
+    const missionTemplates = [
+      { type: "rice", title: "軍糧採購", baseTarget: 3, reward: 28, merit: 35, advance: 20, brief: "前往津島町採購軍糧，備戰期間不得延誤。" },
+      { type: "pacify", title: "街道治安討伐", baseTarget: 2, reward: 36, merit: 42, advance: 0, brief: "掃蕩尾張街道上的攔路浪人，確保兵糧車通行。" },
+      { type: "firearms", title: "鐵砲軍備採購", baseTarget: 2, reward: 48, merit: 52, advance: 30, brief: "至清洲町鍛冶屋採購火繩槍，補充織田家的鐵砲隊。" },
+      { type: "recon", title: "鳴海砦敵情偵查", baseTarget: 1, reward: 55, merit: 60, advance: 0, brief: "前往鳴海砦暗中查明今川方守軍與糧秣。" }
+    ];
+    const combat = {
+      enemyName: "流浪野武士",
+      enemyHp: 60,
+      enemyMaxHp: 60,
+      enemyAtk: 13,
+      enemyDef: 2,
+      rewardGold: 14,
+      guarding: false,
+      resolved: false,
+      flash: 0,
+      slash: 0,
+      enemyFlash: 0
+    };
+
+    const gamble = {
+      betType: "丁",
+      betAmount: 5,
+      dice1: 1,
+      dice2: 1,
+      rolling: false,
+      reveal: false,
+      hint: "",
+      forcedHint: null,
+      rollTimer: null
+    };
+
+    const forge = { glow: 0 };
+
+    function mulberry32(seed) {
+      return function() {
+        seed |= 0;
+        seed = seed + 0x6D2B79F5 | 0;
+        let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    const mapRandom = mulberry32(156005);
+    const terrainDots = Array.from({ length: 520 }, () => ({
+      x: mapRandom() * WORLD.w,
+      y: mapRandom() * WORLD.h,
+      r: 1 + mapRandom() * 3,
+      a: .025 + mapRandom() * .06
+    }));
+    const forests = Array.from({ length: 94 }, () => ({
+      x: 120 + mapRandom() * (WORLD.w - 240),
+      y: 100 + mapRandom() * (WORLD.h - 200),
+      scale: .7 + mapRandom() * .8
+    })).filter(tree => locations.every(loc => Math.hypot(tree.x - loc.x, tree.y - loc.y) > loc.radius + 85));
+    const mountains = Array.from({ length: 26 }, (_, i) => ({
+      x: 150 + (i % 9) * 290 + mapRandom() * 90,
+      y: i < 9 ? 120 + mapRandom() * 90 : 1460 + mapRandom() * 120,
+      scale: .7 + mapRandom() * .7
+    }));
+
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.master = null;
+        this.enabled = false;
+        this.ambientStarted = false;
+        this.volume = Number(ui.volume.value);
+      }
+
+      async enable() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return false;
+          this.ctx = new AudioContext();
+          this.master = this.ctx.createGain();
+          this.master.gain.value = this.volume;
+          this.master.connect(this.ctx.destination);
+        }
+        if (this.ctx.state === "suspended") await this.ctx.resume();
+        this.enabled = true;
+        this.master.gain.setTargetAtTime(this.volume, this.ctx.currentTime, .03);
+        if (!this.ambientStarted) this.startAmbient();
+        this.play("chime");
+        return true;
+      }
+
+      disable() {
+        this.enabled = false;
+        if (this.master && this.ctx) this.master.gain.setTargetAtTime(0, this.ctx.currentTime, .04);
+      }
+
+      setVolume(value) {
+        this.volume = Number(value);
+        if (this.master && this.ctx && this.enabled) this.master.gain.setTargetAtTime(this.volume, this.ctx.currentTime, .03);
+      }
+
+      startAmbient() {
+        if (!this.ctx || !this.master || this.ambientStarted) return;
+        this.ambientStarted = true;
+        const length = this.ctx.sampleRate * 2;
+        const buffer = this.ctx.createBuffer(1, length, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        let last = 0;
+        for (let i = 0; i < length; i++) {
+          const white = Math.random() * 2 - 1;
+          last = last * .985 + white * .015;
+          data[i] = last * .34;
+        }
+        const noise = this.ctx.createBufferSource();
+        const filter = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+        noise.buffer = buffer;
+        noise.loop = true;
+        filter.type = "lowpass";
+        filter.frequency.value = 900;
+        gain.gain.value = .24;
+        noise.connect(filter).connect(gain).connect(this.master);
+        noise.start();
+
+        const drone = this.ctx.createOscillator();
+        const droneGain = this.ctx.createGain();
+        drone.type = "sine";
+        drone.frequency.value = 73.4;
+        droneGain.gain.value = .018;
+        drone.connect(droneGain).connect(this.master);
+        drone.start();
+      }
+
+      tone(freq, duration, type = "sine", gainValue = .12, delay = 0, endFreq = null) {
+        if (!this.enabled || !this.ctx || !this.master) return;
+        const now = this.ctx.currentTime + delay;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+        gain.gain.setValueAtTime(.0001, now);
+        gain.gain.exponentialRampToValueAtTime(gainValue, now + .012);
+        gain.gain.exponentialRampToValueAtTime(.0001, now + duration);
+        osc.connect(gain).connect(this.master);
+        osc.start(now);
+        osc.stop(now + duration + .02);
+      }
+
+      noise(duration = .15, gainValue = .1, highpass = 300) {
+        if (!this.enabled || !this.ctx || !this.master) return;
+        const size = Math.ceil(this.ctx.sampleRate * duration);
+        const buffer = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < size; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / size);
+        const src = this.ctx.createBufferSource();
+        const filter = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+        filter.type = "highpass";
+        filter.frequency.value = highpass;
+        gain.gain.value = gainValue;
+        src.buffer = buffer;
+        src.connect(filter).connect(gain).connect(this.master);
+        src.start();
+      }
+
+      play(name) {
+        if (!this.enabled) return;
+        switch (name) {
+          case "step": this.noise(.045, .026, 120); this.tone(95, .045, "sine", .025); break;
+          case "ui": this.tone(520, .055, "triangle", .045, 0, 620); break;
+          case "chime": [523, 659, 784].forEach((f, i) => this.tone(f, .45, "sine", .05, i * .08)); break;
+          case "encounter": this.tone(95, .25, "square", .13); this.tone(72, .32, "square", .13, .16); break;
+          case "sword": this.noise(.12, .17, 1100); this.tone(320, .11, "sawtooth", .07, 0, 95); break;
+          case "hit": this.tone(82, .13, "square", .15, 0, 48); this.noise(.07, .1, 220); break;
+          case "guard": this.tone(1420, .14, "square", .07); this.tone(920, .19, "triangle", .05, .02); break;
+          case "victory": [392, 523, 659, 784].forEach((f, i) => this.tone(f, .35, "triangle", .07, i * .1)); break;
+          case "dice": this.noise(.18, .1, 650); this.tone(180, .05, "square", .035); break;
+          case "coin": this.tone(1180, .16, "sine", .07); this.tone(1640, .18, "sine", .05, .07); break;
+          case "forge": this.tone(155, .1, "square", .12); this.tone(980, .22, "triangle", .07, .025); break;
+          case "shrine": [440, 660, 880].forEach((f, i) => this.tone(f, .9, "sine", .055, i * .11)); break;
+        }
+      }
+    }
+
+    const sound = new SoundEngine();
+
+    function totalAttack() { return player.baseAtk + player.weapon.atk; }
+    function totalDefense() { return player.baseDef + player.armor.def; }
+    function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+
+    function setMessage(speaker, message) {
+      ui.speaker.textContent = speaker;
+      ui.message.innerHTML = message;
+    }
+
+    function setActions(actions) {
+      actionHandlers = actions;
+      ui.actionBar.innerHTML = "";
+      actions.forEach((action, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `action-button${action.danger ? " danger" : ""}`;
+        button.textContent = `${index + 1}. ${action.label}`;
+        button.disabled = Boolean(action.disabled);
+        button.addEventListener("click", () => {
+          sound.play("ui");
+          action.run();
+          canvas.focus();
+        });
+        ui.actionBar.appendChild(button);
+      });
+    }
+
+    function mapActions() {
+      setActions([
+        { label: "調查附近", run: interact },
+        { label: "查看旅途情報", run: showTravelInfo },
+        { label: "原地休息", run: restOnRoad }
+      ]);
+    }
+
+    function updateHUD() {
+      ui.time.textContent = `1560年 ${month}月 ${day}日`;
+      ui.location.textContent = nearbyLocation ? nearbyLocation.area : "尾張國·街道野外";
+      ui.hp.textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
+      ui.ki.textContent = `${player.ki} / ${player.maxKi}`;
+      ui.gold.textContent = `${player.gold} 貫`;
+      ui.weather.textContent = weatherCycle[weatherIndex];
+      ui.rank.textContent = player.isRetainer ? player.rank : "浪人";
+      ui.merit.textContent = player.isRetainer ? `${player.merit}` : "—";
+      ui.weaponName.textContent = player.weapon.name;
+      ui.weaponStat.textContent = `攻擊 +${player.weapon.atk}`;
+      ui.armorName.textContent = player.armor.name;
+      ui.armorStat.textContent = `防禦 +${player.armor.def}`;
+      ui.totalAttack.textContent = totalAttack();
+      ui.totalDefense.textContent = totalDefense();
+      updateObjective();
+    }
+
+    function updateObjective() {
+      if (!player.isRetainer) {
+        ui.objective.textContent = "前往清洲城求見織田家臣，累積名聲並尋求仕官機會。";
+        return;
+      }
+      if (!player.mission) {
+        ui.objective.textContent = `織田家·${player.rank}｜功勳 ${player.merit}。返回清洲城參加評定，領取下一項任務。`;
+        return;
+      }
+      const progress = missionProgressText(player.mission);
+      ui.objective.textContent = `評定任務【${player.mission.title}】${progress}。${player.mission.brief}`;
+    }
+
+    function missionProgressText(mission) {
+      if (!mission) return "";
+      const labels = { rice: "俵軍糧", firearms: "挺鐵砲", pacify: "名浪人", recon: "處砦情" };
+      return ` ${mission.progress}/${mission.target} ${labels[mission.type] || ""}`;
+    }
+
+    function missionReady() {
+      return Boolean(player.mission && player.mission.progress >= player.mission.target);
+    }
+
+    function setMode(label) {
+      ui.modeRibbon.textContent = label;
+      ui.touchControls.classList.toggle("map-visible", gameState === "MAP");
+    }
+
+    function showToast(text) {
+      clearTimeout(toastTimer);
+      ui.toast.textContent = text;
+      ui.toast.classList.add("visible");
+      toastTimer = setTimeout(() => ui.toast.classList.remove("visible"), 1800);
+    }
+
+    function saveGame(showNotice = false) {
+      const snapshot = {
+        version: 1,
+        player: {
+          x: player.x, y: player.y, hp: player.hp, ki: player.ki, gold: player.gold,
+          fame: player.fame, infamy: player.infamy, weapon: player.weapon, armor: player.armor,
+          distance: player.distance, isRetainer: player.isRetainer, faction: player.faction,
+          rank: player.rank, merit: player.merit, completedMissions: player.completedMissions,
+          mission: player.mission, inventory: player.inventory
+        },
+        calendar: { day, month, weatherIndex }
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot));
+      if (showNotice) showToast("進度已保存");
+    }
+
+    function loadGame() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
+        if (!saved || saved.version !== 1) return;
+        Object.assign(player, saved.player || {});
+        player.inventory = { rice: 0, firearms: 0, ...(player.inventory || {}) };
+        if (!player.isRetainer) {
+          player.faction = "無";
+          player.rank = "浪人";
+          player.merit = 0;
+          player.mission = null;
+        }
+        if (saved.calendar) {
+          day = saved.calendar.day || day;
+          month = saved.calendar.month || month;
+          weatherIndex = saved.calendar.weatherIndex || 0;
+        }
+        setMessage("旅途札記", "已接續上次旅程。尾張的風向仍在變化，路上務必留神。 ");
+      } catch (error) {
+        console.warn("存檔讀取失敗", error);
+      }
+    }
+
+    function resetGame() {
+      if (!confirm("要刪除此瀏覽器中的進度並重新開局嗎？")) return;
+      localStorage.removeItem(SAVE_KEY);
+      location.reload();
+    }
+
+    function showTravelInfo() {
+      setMessage("行商人的地圖", "清洲城在東北，清洲町與博戲場沿街道相連；向東可至木曾川，南行則通往津島與熱田。小地圖上的金點就是據點。 ");
+    }
+
+    function restOnRoad() {
+      if (player.hp >= player.maxHp) {
+        setMessage("路旁松蔭", "你在樹下擦拭刀鞘、整頓行囊。精神略微安定，氣力恢復了。 ");
+        player.ki = Math.min(player.maxKi, player.ki + 2);
+      } else {
+        player.hp = Math.min(player.maxHp, player.hp + 12);
+        player.ki = Math.min(player.maxKi, player.ki + 2);
+        advanceDay();
+        setMessage("路旁松蔭", "你用乾糧裹腹，在松蔭下小憩半日。體力恢復 12 點，但旅途也向前推進了一日。 ");
+      }
+      updateHUD();
+      saveGame();
+    }
+
+    function advanceDay() {
+      day++;
+      if (day > 30) { day = 1; month++; }
+      if (month > 12) month = 1;
+    }
+
+    function findNearbyLocation() {
+      let closest = null;
+      let best = Infinity;
+      for (const loc of locations) {
+        const distance = Math.hypot(player.x - loc.x, player.y - loc.y);
+        if (distance < loc.radius && distance < best) { closest = loc; best = distance; }
+      }
+      return closest;
+    }
+
+    function interact() {
+      if (gameState !== "MAP") return;
+      if (!nearbyLocation) {
+        setMessage("旅途札記", "四周只有風吹草聲。沿土路前行，等據點名稱浮現後再調查。 ");
+        return;
+      }
+      switch (nearbyLocation.type) {
+        case "town": enterForge(); break;
+        case "gambling": enterGamble(); break;
+        case "castle": enterCastle(); break;
+        case "river": enterRiver(); break;
+        case "market": enterMarket(); break;
+        case "shrine": enterShrine(); break;
+        case "fort": enterFort(); break;
+      }
+    }
+
+    function enterScene(label, speaker, message, actions) {
+      gameState = "SCENE";
+      setMode(label);
+      setMessage(speaker, message);
+      setActions([...actions, { label: "返回大地圖", run: leaveScene }]);
+    }
+
+    function leaveScene() {
+      if (gamble.rollTimer) { clearInterval(gamble.rollTimer); gamble.rollTimer = null; gamble.rolling = false; }
+      gameState = "MAP";
+      setMode("大地圖移動");
+      setMessage("旅途札記", `離開${nearbyLocation ? nearbyLocation.name : "據點"}，重新踏上尾張的街道。`);
+      mapActions();
+      updateHUD();
+      saveGame();
+    }
+
+    function enterCastle() {
+      gameState = "SCENE";
+      setMode("清洲城 · 評定所");
+      castleMainMenu();
+    }
+
+    function castleMainMenu() {
+      if (!player.isRetainer) {
+        setMessage("清洲城門番", "「今川軍已越過三河。浪人若有真本事，可入城求見家臣；若只想看熱鬧，莫擋軍使的路。」");
+        setActions([
+          { label: "與家臣交談", run: retainerDialogueMenu },
+          { label: "申請仕官織田家", run: applyToOda },
+          { label: "請求臨時差事", run: castleErrand },
+          { label: "返回大地圖", run: leaveScene }
+        ]);
+        return;
+      }
+
+      const missionLine = player.mission
+        ? `你目前承辦【${player.mission.title}】${missionProgressText(player.mission)}。`
+        : "今日評定席尚有軍務待人承辦。";
+      setMessage("清洲城評定所", `【織田家·${player.rank}】功勳 ${player.merit}。${missionLine}`);
+      setActions([
+        { label: "與家臣交談", run: retainerDialogueMenu },
+        { label: player.mission ? "已有評定任務" : "領取評定任務", run: receiveEvaluationMission, disabled: Boolean(player.mission) },
+        { label: missionReady() ? "交付評定任務" : "任務尚未完成", run: deliverEvaluationMission, disabled: !missionReady() },
+        { label: "查看官途與功勳", run: showCareerStatus },
+        { label: "返回大地圖", run: leaveScene }
+      ]);
+    }
+
+    function retainerDialogueMenu() {
+      setMessage("家臣詰所", "柴田勝家正在檢視槍隊名冊；一旁受邀入城的明智光秀則對著近畿地圖沉思。你想與誰交談？");
+      setActions([
+        { label: "柴田勝家", run: talkToKatsuie },
+        { label: "明智光秀", run: talkToMitsuhide },
+        { label: "返回評定所", run: castleMainMenu }
+      ]);
+    }
+
+    function talkToKatsuie() {
+      const advice = !player.isRetainer
+        ? "「想在織田家吃俸祿，先證明你能服從軍令。戰場上，漂亮話擋不住長槍。」"
+        : player.mission
+          ? `「【${player.mission.title}】重在確實。別只顧邀功，先把差事辦完。」`
+          : "「有功便賞，有過便罰。去評定席領一項軍務，比在詰所閒談有用。」";
+      setMessage("柴田勝家", advice);
+    }
+
+    function talkToMitsuhide() {
+      const advice = player.isRetainer
+        ? "「信長公用人不拘門第，但功勳也不是只有斬首。兵糧、情報與鐵砲，常比一人的武勇更能改變戰局。」"
+        : "「尾張看似弱小，清洲城裡卻有一股不肯守舊的氣勢。若要仕官，讓信長公看見你能完成別人不願接的差事。」";
+      setMessage("明智光秀", advice);
+    }
+
+    function applyToOda() {
+      if (player.isRetainer) { castleMainMenu(); return; }
+      if (player.fame < 5) {
+        setMessage("柴田勝家", "「來歷不明又毫無名聲，如何把軍務交給你？先在尾張做出一件像樣的事。」");
+        return;
+      }
+      player.isRetainer = true;
+      player.faction = "織田家";
+      player.rank = "足輕組頭";
+      player.merit = 10;
+      player.gold += 25;
+      sound.play("victory");
+      setMessage("織田信長", "「出身不重要。能做事的人，朕便用。」你獲准仕官織田家，受封【足輕組頭】，領取初度支度金 25 貫與功勳 10。 ");
+      updateHUD();
+      saveGame();
+      setActions([
+        { label: "參加首次評定", run: receiveEvaluationMission },
+        { label: "返回評定所", run: castleMainMenu }
+      ]);
+    }
+
+    function castleErrand() {
+      const gain = 8 + Math.floor(Math.random() * 8);
+      player.gold += gain;
+      player.fame += 1;
+      advanceDay();
+      sound.play("coin");
+      setMessage("兵糧奉行", `你替城中搬運箭束與乾糧，領得 ${gain} 貫工錢。雖只是雜役，織田家的足輕已記住你的臉。`);
+      updateHUD();
+      saveGame();
+    }
+
+    function receiveEvaluationMission() {
+      if (!player.isRetainer) { applyToOda(); return; }
+      if (player.mission) { castleMainMenu(); return; }
+      const template = missionTemplates[player.completedMissions % missionTemplates.length];
+      const tier = Math.max(0, rankTable.findIndex(entry => entry.name === player.rank));
+      const target = template.baseTarget + (template.type === "recon" ? 0 : Math.floor(tier / 2));
+      player.mission = { ...template, target, progress: 0, issuedMonth: month, issuedDay: day };
+      if (template.advance) {
+        player.gold += template.advance;
+        sound.play("coin");
+      }
+      setMessage("織田信長", `「${template.brief}」你領取評定任務【${template.title}】，目標 ${target}。${template.advance ? `另發前金 ${template.advance} 貫。` : ""}`);
+      updateHUD();
+      saveGame();
+      setActions([
+        { label: "查看任務路線", run: showMissionRoute },
+        { label: "返回評定所", run: castleMainMenu },
+        { label: "立即出城", run: leaveScene }
+      ]);
+    }
+
+    function showMissionRoute() {
+      if (!player.mission) { castleMainMenu(); return; }
+      const routes = {
+        rice: "沿南方街道前往【津島町】，向米商購買評定軍糧，再回清洲城交付。",
+        firearms: "進入【清洲町·鍛冶屋】，選擇採購評定鐵砲，再回清洲城交付。",
+        pacify: "離開據點，在尾張野外行走並擊敗攔路浪人；勝利會自動記入討伐數。",
+        recon: "前往東南方的【鳴海砦】，選擇暗中偵查；成功後返回清洲城。"
+      };
+      setMessage("評定任務指引", routes[player.mission.type]);
+    }
+
+    function deliverEvaluationMission() {
+      if (!missionReady()) { setMessage("評定奉行", "「任務尚未達成，不能以空口交差。」"); return; }
+      const mission = player.mission;
+      if (mission.type === "rice") player.inventory.rice = Math.max(0, player.inventory.rice - mission.target);
+      if (mission.type === "firearms") player.inventory.firearms = Math.max(0, player.inventory.firearms - mission.target);
+      player.gold += mission.reward;
+      player.merit += mission.merit;
+      player.fame += Math.ceil(mission.merit / 12);
+      player.completedMissions += 1;
+      player.mission = null;
+      const promotion = checkPromotion();
+      sound.play("victory");
+      setMessage("織田信長", `【${mission.title}】評定完成。獲得 ${mission.reward} 貫、功勳 ${mission.merit}。${promotion}`);
+      updateHUD();
+      saveGame();
+      setActions([
+        { label: "返回評定所", run: castleMainMenu },
+        { label: "與家臣交談", run: retainerDialogueMenu },
+        { label: "出城", run: leaveScene }
+      ]);
+    }
+
+    function checkPromotion() {
+      let nextRank = rankTable[0].name;
+      for (const entry of rankTable) if (player.merit >= entry.merit) nextRank = entry.name;
+      if (nextRank === player.rank) return `目前累積功勳 ${player.merit}。`;
+      const oldRank = player.rank;
+      player.rank = nextRank;
+      player.gold += 20;
+      return `信長公准予晉升：由【${oldRank}】升為【${nextRank}】，另賜 20 貫。`;
+    }
+
+    function showCareerStatus() {
+      const currentIndex = Math.max(0, rankTable.findIndex(entry => entry.name === player.rank));
+      const next = rankTable[currentIndex + 1];
+      const nextLine = next ? `距離【${next.name}】尚需 ${Math.max(0, next.merit - player.merit)} 功勳。` : "你已位列家老，進入織田家最高決策層。";
+      setMessage("織田家奉行帳", `所屬：織田家｜身份：${player.rank}｜功勳：${player.merit}｜完成評定：${player.completedMissions} 件。${nextLine}`);
+    }
+
+    function enterRiver() {
+      enterScene("木曾川渡口", "川並衆舟子", "蘆葦後停著數艘小早船。粗獷舟子打量你的刀，問你是過路人，還是來找蜂須賀小六。", [
+        { label: "請舟子喝酒", run: riverDrink },
+        { label: "打聽蜂須賀小六", run: () => setMessage("川並衆舟子", "「親分不吃空話。會賭、會打、懂得分帳的人，才有資格上他的船。」") }
+      ]);
+    }
+
+    function riverDrink() {
+      if (player.gold < 3) { setMessage("川並衆舟子", "「沒酒錢還想套話？回去吧。」"); return; }
+      player.gold -= 3;
+      player.fame += 1;
+      sound.play("coin");
+      setMessage("川並衆舟子", "三碗濁酒下肚，舟子透露小六近日常在清洲黑市博戲場看人搖骰。你獲得了【川並衆的口風】。 ");
+      updateHUD();
+      saveGame();
+    }
+
+    function enterMarket() {
+      const actions = [
+        { label: "出售沿路雜物", run: () => {
+          const gain = 5 + Math.floor(Math.random() * 5);
+          player.gold += gain;
+          sound.play("coin");
+          setMessage("米商", `你把沿路蒐集的獸皮與舊鐵賣得 ${gain} 貫。商人提醒：戰亂時兵糧價格會先漲。`);
+          updateHUD();
+        }},
+        { label: "打聽南蠻貨", run: () => setMessage("堺來商人", "火繩槍與南蠻胴得往界町尋。若熬過尾張這場大戰，西行自有一番天地。") }
+      ];
+      if (player.mission && player.mission.type === "rice" && !missionReady()) {
+        actions.unshift({ label: "採購評定軍糧 6貫", run: buyEvaluationRice });
+      }
+      enterScene("津島町", "米商", "碼頭上鹽包、木棉與米俵堆成小山。戰事將近，商人都在觀望價格。", actions);
+    }
+
+    function buyEvaluationRice() {
+      if (!player.mission || player.mission.type !== "rice") { setMessage("米商", "「若無織田家的評定文書，這批軍糧不能按公價出貨。」"); return; }
+      if (missionReady()) { setMessage("米商", "「評定所要的數量已備齊，別讓糧車在路上耽擱。」"); return; }
+      if (player.gold < 6) { setMessage("米商", "「一俵六貫，少一文也不能裝車。」"); return; }
+      player.gold -= 6;
+      player.inventory.rice += 1;
+      player.mission.progress = player.inventory.rice;
+      sound.play("coin");
+      setMessage("津島米商", `購得評定軍糧一俵。目前 ${player.mission.progress}/${player.mission.target}；備齊後送回清洲城評定所。`);
+      updateHUD();
+      saveGame();
+      const actions = [];
+      if (!missionReady()) actions.push({ label: "再買一俵 6貫", run: buyEvaluationRice });
+      actions.push({ label: "返回大地圖", run: leaveScene });
+      setActions(actions);
+    }
+
+    function enterShrine() {
+      enterScene("熱田神宮", "神宮巫女", "古杉間的風忽然安靜。你在拜殿前放下刀，聽見清澈鈴音。", [
+        { label: "奉納二貫祈福", run: shrineHeal },
+        { label: "求取桶狹間籤", run: () => {
+          sound.play("shrine");
+          setMessage("神籤", "【中吉】驟雨遮天，狹路藏機。弱者若先看見風向，也能擊倒強敵。 ");
+        }}
+      ]);
+    }
+
+    function shrineHeal() {
+      if (player.gold < 2) { setMessage("神宮巫女", "巫女仍替你搖鈴祈福，但你的行囊裡已沒有可奉納的錢。 "); return; }
+      player.gold -= 2;
+      player.hp = player.maxHp;
+      player.ki = player.maxKi;
+      sound.play("shrine");
+      setMessage("神宮巫女", "祝詞與鈴聲洗去旅途疲憊。體力與氣力完全恢復。 ");
+      updateHUD();
+      saveGame();
+    }
+
+    function enterFort() {
+      enterScene("鳴海砦外", "今川斥候", "土壘上飄著今川家赤鳥紋旗。兩名斥候已注意到你的行蹤，繼續靠近十分危險。", [
+        { label: "暗中偵查", run: scoutFort, danger: true },
+        { label: "拔刀挑戰斥候", run: () => startCombat("今川斥候", 78, 16, 4, 24), danger: true }
+      ]);
+    }
+
+    function scoutFort() {
+      const success = Math.random() * 100 < player.intellect * .72;
+      if (success) {
+        player.fame += 3;
+        if (player.mission && player.mission.type === "recon") player.mission.progress = player.mission.target;
+        setMessage("偵查成功", player.mission && player.mission.type === "recon"
+          ? "你借樹林掩護查清砦內兵力、糧車與巡邏換班。評定任務已完成，可回清洲城交付。"
+          : "你借樹林掩護查清砦內兵力與糧車數量。若將情報帶回清洲，或許能換得正式仕官的機會。 ");
+        updateHUD();
+        saveGame();
+      } else {
+        startCombat("今川巡邏足輕", 66, 14, 3, 18);
+      }
+    }
+
+    function enterForge() {
+      gameState = "FORGE";
+      setMode("清洲町 · 鍛冶屋");
+      setMessage("鍛冶屋主人", "「爐火正旺。要磨利現有兵刃，還是看看鎮店的名刀與大鎧？」");
+      forgeActions();
+    }
+
+    function weaponUpgradeCost() { return Math.max(15, (player.weapon.atk + 3) * 4); }
+    function armorUpgradeCost() { return Math.max(15, (player.armor.def + 3) * 5); }
+
+    function forgeActions() {
+      const actions = [
+        { label: `強化武器 ${weaponUpgradeCost()}貫`, run: upgradeWeapon },
+        { label: `強化鎧甲 ${armorUpgradeCost()}貫`, run: upgradeArmor },
+        { label: "買妖刀村正 180貫", run: buyMuramasa },
+        { label: "買八幡大鎧 160貫", run: buyArmor }
+      ];
+      if (player.mission && player.mission.type === "firearms" && !missionReady()) {
+        actions.push({ label: "採購評定鐵砲 15貫", run: buyEvaluationFirearm });
+      }
+      actions.push({ label: "返回大地圖", run: leaveScene });
+      setActions(actions);
+    }
+
+    function buyEvaluationFirearm() {
+      if (!player.mission || player.mission.type !== "firearms") { setMessage("鍛冶屋主人", "「要按軍用價格拿貨，先帶評定所文書來。」"); return; }
+      if (missionReady()) { setMessage("鍛冶屋主人", "「評定數量已經打包，快送進城裡。」"); return; }
+      if (player.gold < 15) { setMessage("鍛冶屋主人", "「一挺火繩槍十五貫，爐料與匠錢都不能少。」"); return; }
+      player.gold -= 15;
+      player.inventory.firearms += 1;
+      player.mission.progress = player.inventory.firearms;
+      sound.play("forge");
+      setMessage("鍛冶屋主人", `織田家評定鐵砲已封箱。目前 ${player.mission.progress}/${player.mission.target}；備齊後送回清洲城。`);
+      updateHUD();
+      forgeActions();
+      saveGame();
+    }
+
+    function upgradeWeapon() {
+      const cost = weaponUpgradeCost();
+      if (player.gold < cost) { setMessage("鍛冶屋主人", `「錢不夠。這次淬火要 ${cost} 貫。」`); return; }
+      player.gold -= cost;
+      player.weapon = { ...player.weapon, name: player.weapon.name.includes("·鍛") ? player.weapon.name : `${player.weapon.name}·鍛`, atk: player.weapon.atk + 3 };
+      forge.glow = 1;
+      sound.play("forge");
+      setMessage("鍛冶屋主人", `火星四濺！【${player.weapon.name}】攻擊提升 3 點。`);
+      updateHUD(); forgeActions(); saveGame();
+    }
+
+    function upgradeArmor() {
+      const cost = armorUpgradeCost();
+      if (player.gold < cost) { setMessage("鍛冶屋主人", `「鐵料不賒帳。加固要 ${cost} 貫。」`); return; }
+      player.gold -= cost;
+      player.armor = { ...player.armor, name: player.armor.name.includes("·鍛") ? player.armor.name : `${player.armor.name}·鍛`, def: player.armor.def + 2 };
+      forge.glow = 1;
+      sound.play("forge");
+      setMessage("鍛冶屋主人", `鉚釘咬合，【${player.armor.name}】防禦提升 2 點。`);
+      updateHUD(); forgeActions(); saveGame();
+    }
+
+    function buyMuramasa() {
+      if (player.gold < 180) { setMessage("鍛冶屋主人", "「村正不是尋常貨色。少一文都不賣。」"); return; }
+      if (player.weapon.atk >= 28 && !player.weapon.name.includes("村正")) { setMessage("鍛冶屋主人", "「你手裡的刀不比村正差。真要買，先想清楚。」"); return; }
+      player.gold -= 180;
+      player.weapon = { name: "妖刀村正", atk: 28 };
+      forge.glow = 1; sound.play("forge");
+      setMessage("鍛冶屋主人", "刀身離鞘時像有低鳴。你取得【妖刀村正】，但店主警告不要讓殺意反噬心神。 ");
+      updateHUD(); saveGame();
+    }
+
+    function buyArmor() {
+      if (player.gold < 160) { setMessage("鍛冶屋主人", "「八幡大鎧需一百六十貫，帶足錢再來。」"); return; }
+      player.gold -= 160;
+      player.armor = { name: "八幡大鎧", def: 22 };
+      forge.glow = 1; sound.play("forge");
+      setMessage("鍛冶屋主人", "你穿上厚重的【八幡大鎧】，甲片隨呼吸沉穩起伏。 ");
+      updateHUD(); saveGame();
+    }
+
+    function enterGamble() {
+      gameState = "GAMBLE";
+      setMode("黑市博戲場 · 丁半");
+      gamble.hint = "";
+      gamble.reveal = false;
+      setMessage("壺振荷官", "「下定離手。押丁，還是押半？」竹盅扣在榻榻米中央。 ");
+      gambleActions();
+    }
+
+    function gambleActions() {
+      setActions([
+        { label: `押丁${gamble.betType === "丁" ? " ✓" : ""}`, run: () => chooseBet("丁") },
+        { label: `押半${gamble.betType === "半" ? " ✓" : ""}`, run: () => chooseBet("半") },
+        { label: `注碼 ${gamble.betAmount}貫`, run: cycleBet },
+        { label: "心眼聽骰", run: listenDice },
+        { label: "開盅", run: rollDice },
+        { label: "返回大地圖", run: leaveScene }
+      ]);
+    }
+
+    function chooseBet(type) {
+      gamble.betType = type;
+      setMessage("壺振荷官", `你將木札推向【${type}】。荷官的手仍壓著竹盅。`);
+      gambleActions();
+    }
+
+    function cycleBet() {
+      const amounts = [1, 5, 10, 20, 50];
+      gamble.betAmount = amounts[(amounts.indexOf(gamble.betAmount) + 1) % amounts.length];
+      setMessage("壺振荷官", `本局注碼改為 ${gamble.betAmount} 貫。`);
+      gambleActions();
+    }
+
+    function listenDice() {
+      if (gamble.rolling) return;
+      const success = Math.random() * 100 < player.intellect * .76 + player.cheatSkill * 8;
+      gamble.forcedHint = Math.random() < .5 ? "丁" : "半";
+      gamble.hint = success ? `耳中雜音漸退，你判斷下一盅偏向【${gamble.forcedHint}】。` : "酒客拍桌聲太重，你未能聽清骰音。";
+      setMessage(success ? "千術 · 心眼聽骰" : "聽骰失敗", gamble.hint);
+      sound.play("dice");
+    }
+
+    function rollDice() {
+      if (gamble.rolling) return;
+      if (player.gold < gamble.betAmount) { setMessage("壺振荷官", "「客官，囊中無錢就莫佔著賭席。」"); return; }
+      gamble.rolling = true;
+      gamble.reveal = false;
+      let ticks = 0;
+      setMessage("壺振荷官", "「下定離手——！」竹盅在蓆上急轉，骰子連聲撞擊。 ");
+      actionHandlers = [];
+      ui.actionBar.querySelectorAll("button").forEach(button => button.disabled = true);
+      gamble.rollTimer = setInterval(() => {
+        gamble.dice1 = 1 + Math.floor(Math.random() * 6);
+        gamble.dice2 = 1 + Math.floor(Math.random() * 6);
+        sound.play("dice");
+        ticks++;
+        if (ticks >= 8) {
+          clearInterval(gamble.rollTimer);
+          gamble.rollTimer = null;
+          if (gamble.forcedHint && Math.random() < .62) {
+            const desiredEven = gamble.forcedHint === "丁";
+            if (((gamble.dice1 + gamble.dice2) % 2 === 0) !== desiredEven) gamble.dice2 = gamble.dice2 === 6 ? 5 : gamble.dice2 + 1;
+          }
+          gamble.rolling = false;
+          gamble.reveal = true;
+          const sum = gamble.dice1 + gamble.dice2;
+          const result = sum % 2 === 0 ? "丁" : "半";
+          let multiplier = 1;
+          if (result === "丁" && gamble.dice1 === gamble.dice2 && (gamble.dice1 === 1 || gamble.dice1 === 6)) multiplier = 3;
+          if (result === "半" && ((gamble.dice1 === 1 && gamble.dice2 === 2) || (gamble.dice1 === 2 && gamble.dice2 === 1) || (gamble.dice1 === 5 && gamble.dice2 === 6) || (gamble.dice1 === 6 && gamble.dice2 === 5))) multiplier = 2;
+          if (result === gamble.betType) {
+            const win = gamble.betAmount * multiplier;
+            player.gold += win;
+            sound.play("coin");
+            setMessage("開盅", `【${gamble.dice1}、${gamble.dice2}】合計 ${sum}，是【${result}】！${multiplier > 1 ? `特殊目，${multiplier} 倍賠付。` : ""}你贏得 ${win} 貫。`);
+          } else {
+            player.gold -= gamble.betAmount;
+            setMessage("開盅", `【${gamble.dice1}、${gamble.dice2}】合計 ${sum}，是【${result}】。你輸掉 ${gamble.betAmount} 貫。`);
+          }
+          gamble.hint = "";
+          gamble.forcedHint = null;
+          updateHUD(); gambleActions(); saveGame();
+        }
+      }, REDUCE_MOTION ? 70 : 110);
+    }
+
+    function startCombat(enemyName = null, hp = null, atk = null, def = null, reward = null) {
+      if (gamble.rollTimer) { clearInterval(gamble.rollTimer); gamble.rollTimer = null; }
+      gameState = "COMBAT";
+      combat.enemyName = enemyName || (Math.random() < .5 ? "流浪野武士" : "試刀浪人");
+      combat.enemyMaxHp = hp || 58 + Math.floor(Math.random() * 27);
+      combat.enemyHp = combat.enemyMaxHp;
+      combat.enemyAtk = atk || 12 + Math.floor(Math.random() * 6);
+      combat.enemyDef = def || 2 + Math.floor(Math.random() * 4);
+      combat.rewardGold = reward || 10 + Math.floor(Math.random() * 16);
+      combat.guarding = false;
+      combat.resolved = false;
+      combat.flash = 0;
+      combat.slash = 0;
+      player.ki = Math.max(2, player.ki);
+      setMode("野外遭遇 · 個人戰");
+      setMessage(combat.enemyName, `「留下盤纏再走！」【${combat.enemyName}】橫刀攔路。戰鬥開始。`);
+      sound.play("encounter");
+      combatActions();
+    }
+
+    function combatActions() {
+      setActions([
+        { label: "普通斬擊", run: () => playerCombatTurn("attack") },
+        { label: "架刀防禦", run: () => playerCombatTurn("guard") },
+        { label: `燕返 氣力3`, run: () => playerCombatTurn("skill"), disabled: player.ki < 3 },
+        { label: "嘗試逃跑", run: () => playerCombatTurn("flee") }
+      ]);
+    }
+
+    function playerCombatTurn(action) {
+      if (combat.resolved || combat.enemyHp <= 0 || player.hp <= 0) return;
+      combat.guarding = false;
+      let message = "";
+      if (action === "attack") {
+        const damage = Math.max(3, totalAttack() - combat.enemyDef + Math.floor(Math.random() * 7));
+        combat.enemyHp = Math.max(0, combat.enemyHp - damage);
+        combat.slash = 1;
+        player.ki = Math.min(player.maxKi, player.ki + 1);
+        sound.play("sword");
+        message = `你拔出【${player.weapon.name}】迅速斬進，造成 ${damage} 點傷害。`;
+      } else if (action === "guard") {
+        combat.guarding = true;
+        player.ki = Math.min(player.maxKi, player.ki + 2);
+        sound.play("guard");
+        message = "你沉腰架刀，準備卸開對手攻勢。氣力回復 2 點。";
+      } else if (action === "skill") {
+        if (player.ki < 3) { setMessage("秘技", "氣力不足，無法使出燕返。 "); return; }
+        player.ki -= 3;
+        const damage = Math.max(18, Math.floor(totalAttack() * 1.72) - Math.floor(combat.enemyDef / 2));
+        combat.enemyHp = Math.max(0, combat.enemyHp - damage);
+        combat.slash = 1.4;
+        sound.play("sword");
+        setTimeout(() => sound.play("hit"), 80);
+        message = `秘技【燕返】！刀光折返，無視大半防禦，造成 ${damage} 點傷害。`;
+      } else if (action === "flee") {
+        const chance = .48 + (player.hp / player.maxHp) * .18;
+        if (Math.random() < chance) {
+          setMessage("脫身", `你揚起砂土、穿入林間，甩開了【${combat.enemyName}】。`);
+          encounterSafeDistance = 500;
+          setTimeout(returnToMapFromCombat, 450);
+          return;
+        }
+        message = "你試圖抽身，卻被對手搶先封住退路。";
+      }
+
+      if (combat.enemyHp <= 0) {
+        winCombat(message);
+        return;
+      }
+
+      const rawDamage = Math.max(2, combat.enemyAtk - totalDefense() + Math.floor(Math.random() * 5));
+      const enemyDamage = combat.guarding ? Math.max(1, Math.floor(rawDamage / 3)) : rawDamage;
+      player.hp = Math.max(0, player.hp - enemyDamage);
+      combat.enemyFlash = 1;
+      sound.play(combat.guarding ? "guard" : "hit");
+      message += ` 【${combat.enemyName}】反擊，對你造成 ${enemyDamage} 點傷害。`;
+
+      if (player.hp <= 0) {
+        loseCombat(message);
+        return;
+      }
+      setMessage("刀劍交鋒", message);
+      updateHUD(); combatActions();
+    }
+
+    function winCombat(opening) {
+      combat.resolved = true;
+      player.gold += combat.rewardGold;
+      player.fame += 1;
+      let missionText = "";
+      if (player.mission && player.mission.type === "pacify" && player.mission.progress < player.mission.target) {
+        player.mission.progress += 1;
+        missionText = missionReady()
+          ? " 評定討伐數已達成，可回清洲城交付。"
+          : ` 評定討伐進度 ${player.mission.progress}/${player.mission.target}。`;
+      }
+      let lootText = "";
+      if (Math.random() < .58) {
+        const isWeapon = Math.random() < .5;
+        const table = isWeapon ? weaponLoot : armorLoot;
+        const item = { ...table[Math.floor(Math.random() * table.length)] };
+        if (isWeapon && item.atk > player.weapon.atk) {
+          player.weapon = item;
+          lootText = ` 戰利品【${item.name}】攻擊 +${item.atk}，已換上。`;
+        } else if (!isWeapon && item.def > player.armor.def) {
+          player.armor = item;
+          lootText = ` 戰利品【${item.name}】防禦 +${item.def}，已換上。`;
+        } else {
+          player.gold += 6;
+          lootText = ` 撿到的舊裝備不如現有裝束，折售 6 貫。`;
+        }
+      }
+      sound.play("victory");
+      setMessage("勝利", `${opening} 對手棄刀倒地，你取得 ${combat.rewardGold} 貫。${lootText}${missionText}`);
+      setActions([{ label: "收刀返回地圖", run: returnToMapFromCombat }]);
+      updateHUD(); saveGame();
+    }
+
+    function loseCombat(opening) {
+      combat.resolved = true;
+      const loss = Math.min(20, player.gold);
+      player.gold -= loss;
+      player.hp = 45;
+      player.ki = 2;
+      setMessage("敗北", `${opening} 你失去意識後被樵夫救醒，損失 ${loss} 貫，體力恢復至 45。`);
+      setActions([{ label: "養傷後返回", run: returnToMapFromCombat }]);
+      updateHUD(); saveGame();
+    }
+
+    function returnToMapFromCombat() {
+      gameState = "MAP";
+      encounterDistance = 0;
+      encounterSafeDistance = 430;
+      setMode("大地圖移動");
+      mapActions();
+      updateHUD();
+    }
+
+    function updateMap(dt) {
+      let dx = 0, dy = 0;
+      if (keys.ArrowUp || keys.w || keys.W || keys.touchUp) dy -= 1;
+      if (keys.ArrowDown || keys.s || keys.S || keys.touchDown) dy += 1;
+      if (keys.ArrowLeft || keys.a || keys.A || keys.touchLeft) dx -= 1;
+      if (keys.ArrowRight || keys.d || keys.D || keys.touchRight) dx += 1;
+
+      if (dx || dy) {
+        const length = Math.hypot(dx, dy) || 1;
+        dx /= length; dy /= length;
+        const move = player.speed * dt;
+        const oldX = player.x, oldY = player.y;
+        player.x = clamp(player.x + dx * move, 36, WORLD.w - 36);
+        player.y = clamp(player.y + dy * move, 36, WORLD.h - 36);
+        const travelled = Math.hypot(player.x - oldX, player.y - oldY);
+        player.distance += travelled;
+        encounterDistance += travelled;
+        travelDayDistance += travelled;
+        encounterSafeDistance -= travelled;
+        player.walkPhase += dt * 11;
+        player.facing = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
+        footstepTimer -= dt;
+        if (footstepTimer <= 0) { sound.play("step"); footstepTimer = .28; }
+
+        if (travelDayDistance > 1450) {
+          travelDayDistance = 0;
+          advanceDay();
+          weatherIndex = (weatherIndex + (Math.random() < .7 ? 1 : 2)) % weatherCycle.length;
+        }
+
+        const inWild = !findNearbyLocation();
+        if (inWild && encounterSafeDistance <= 0 && encounterDistance > 300) {
+          encounterDistance = 0;
+          if (Math.random() < .38) { startCombat(); return; }
+        }
+      }
+
+      const targetX = clamp(player.x - VIEW.w / 2, 0, WORLD.w - VIEW.w);
+      const targetY = clamp(player.y - VIEW.h / 2, 0, WORLD.h - VIEW.h);
+      const ease = 1 - Math.pow(.0005, dt);
+      camera.x += (targetX - camera.x) * ease;
+      camera.y += (targetY - camera.y) * ease;
+
+      const previous = nearbyLocation;
+      nearbyLocation = findNearbyLocation();
+      if (previous !== nearbyLocation) {
+        updateHUD();
+        if (nearbyLocation) {
+          ui.interactionTip.textContent = `Space / Enter：進入 ${nearbyLocation.name}`;
+          setMessage(nearbyLocation.name, nearbyLocation.desc);
+        }
+      }
+      ui.interactionTip.classList.toggle("visible", Boolean(nearbyLocation));
+
+      autosaveTimer += dt;
+      if (autosaveTimer > 20) { autosaveTimer = 0; saveGame(); }
+    }
+
+    function update(dt) {
+      scenePulse += dt;
+      weatherTimer += dt;
+      forge.glow = Math.max(0, forge.glow - dt * 1.8);
+      combat.flash = Math.max(0, combat.flash - dt * 3);
+      combat.enemyFlash = Math.max(0, combat.enemyFlash - dt * 3);
+      combat.slash = Math.max(0, combat.slash - dt * 2.7);
+      if (gameState === "MAP" && started) updateMap(dt);
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, VIEW.w, VIEW.h);
+      if (gameState === "MAP") drawMap();
+      else if (gameState === "FORGE") drawForge();
+      else if (gameState === "GAMBLE") drawGamble();
+      else if (gameState === "COMBAT") drawCombat();
+      else drawLocationScene();
+      drawVignette();
+    }
+
+    function drawMap() {
+      ctx.save();
+      ctx.translate(-camera.x, -camera.y);
+      const skyTone = weatherCycle[weatherIndex] === "驟雨" ? "#58634a" : weatherCycle[weatherIndex] === "雨後霧" ? "#78806b" : "#7b8257";
+      ctx.fillStyle = skyTone;
+      ctx.fillRect(camera.x, camera.y, VIEW.w, VIEW.h);
+
+      ctx.fillStyle = "rgba(229, 208, 157, .10)";
+      for (const dot of terrainDots) {
+        if (dot.x < camera.x - 5 || dot.x > camera.x + VIEW.w + 5 || dot.y < camera.y - 5 || dot.y > camera.y + VIEW.h + 5) continue;
+        ctx.globalAlpha = dot.a;
+        ctx.beginPath(); ctx.arc(dot.x, dot.y, dot.r, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+
+      drawMountains();
+      drawRiver();
+      drawRoads();
+      drawForests();
+      locations.forEach(drawLocation);
+      drawPlayer();
+      ctx.restore();
+
+      drawMiniMap();
+      if (weatherCycle[weatherIndex] === "驟雨") drawRain();
+      if (weatherCycle[weatherIndex] === "雨後霧") {
+        const fog = ctx.createLinearGradient(0, 0, VIEW.w, 0);
+        fog.addColorStop(0, "rgba(228,226,205,.16)"); fog.addColorStop(.5, "rgba(228,226,205,.04)"); fog.addColorStop(1, "rgba(228,226,205,.18)");
+        ctx.fillStyle = fog; ctx.fillRect(0, 0, VIEW.w, VIEW.h);
+      }
+    }
+
+    function drawRoads() {
+      roads.forEach(points => {
+        ctx.lineCap = "round"; ctx.lineJoin = "round";
+        ctx.strokeStyle = "rgba(53, 41, 25, .18)"; ctx.lineWidth = 34;
+        pathThrough(points); ctx.stroke();
+        ctx.strokeStyle = "#b8a16f"; ctx.lineWidth = 25;
+        pathThrough(points); ctx.stroke();
+        ctx.strokeStyle = "rgba(240, 218, 160, .18)"; ctx.lineWidth = 3;
+        pathThrough(points); ctx.stroke();
+      });
+    }
+
+    function pathThrough(points) {
+      ctx.beginPath();
+      points.forEach((point, index) => index ? ctx.lineTo(point[0], point[1]) : ctx.moveTo(point[0], point[1]));
+    }
+
+    function drawRiver() {
+      ctx.lineCap = "round"; ctx.lineJoin = "round";
+      ctx.strokeStyle = "rgba(37, 48, 48, .35)"; ctx.lineWidth = 122;
+      pathThrough(riverPath); ctx.stroke();
+      ctx.strokeStyle = "#577f8c"; ctx.lineWidth = 110;
+      pathThrough(riverPath); ctx.stroke();
+      ctx.strokeStyle = "rgba(210, 225, 212, .23)"; ctx.lineWidth = 3;
+      pathThrough(riverPath); ctx.stroke();
+      for (let i = 0; i < 18; i++) {
+        const y = i * 105 + 30;
+        const x = 1930 + Math.sin(i * 1.7) * 50;
+        ctx.strokeStyle = "rgba(229, 237, 218, .15)";
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x - 25, y); ctx.quadraticCurveTo(x, y - 7, x + 25, y); ctx.stroke();
+      }
+    }
+
+    function drawMountains() {
+      mountains.forEach(m => {
+        ctx.save(); ctx.translate(m.x, m.y); ctx.scale(m.scale, m.scale);
+        ctx.fillStyle = "rgba(39, 55, 39, .42)";
+        ctx.beginPath(); ctx.moveTo(-58, 38); ctx.lineTo(0, -42); ctx.lineTo(64, 38); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "rgba(224, 210, 169, .20)";
+        ctx.beginPath(); ctx.moveTo(0, -42); ctx.lineTo(18, -18); ctx.lineTo(8, -22); ctx.lineTo(-2, -10); ctx.lineTo(-14, -25); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      });
+    }
+
+    function drawForests() {
+      forests.forEach(tree => {
+        if (tree.x < camera.x - 30 || tree.x > camera.x + VIEW.w + 30 || tree.y < camera.y - 40 || tree.y > camera.y + VIEW.h + 40) return;
+        ctx.save(); ctx.translate(tree.x, tree.y); ctx.scale(tree.scale, tree.scale);
+        ctx.fillStyle = "rgba(30, 42, 28, .2)"; ctx.beginPath(); ctx.ellipse(3, 14, 17, 7, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#334c34";
+        ctx.beginPath(); ctx.moveTo(0, -25); ctx.lineTo(-15, 5); ctx.lineTo(15, 5); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#405b3c";
+        ctx.beginPath(); ctx.moveTo(0, -13); ctx.lineTo(-18, 16); ctx.lineTo(18, 16); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = "#60442c"; ctx.fillRect(-2, 14, 4, 9);
+        ctx.restore();
+      });
+    }
+
+    function drawLocation(loc) {
+      const active = nearbyLocation && nearbyLocation.id === loc.id;
+      ctx.save(); ctx.translate(loc.x, loc.y);
+      if (active) {
+        ctx.strokeStyle = `rgba(237, 193, 93, ${.4 + Math.sin(scenePulse * 4) * .2})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(0, 0, loc.radius * .72, 0, Math.PI * 2); ctx.stroke();
+      }
+      if (loc.type === "castle" || loc.type === "fort") drawCastleIcon(loc.type === "fort");
+      else if (loc.type === "town" || loc.type === "market") drawTownIcon(loc.type === "market");
+      else if (loc.type === "gambling") drawGambleIcon();
+      else if (loc.type === "river") drawPortIcon();
+      else if (loc.type === "shrine") drawShrineIcon();
+
+      ctx.font = '700 15px "Microsoft JhengHei", sans-serif';
+      const width = ctx.measureText(loc.name).width;
+      ctx.fillStyle = active ? "rgba(45, 25, 15, .94)" : "rgba(31, 27, 20, .78)";
+      ctx.fillRect(-width / 2 - 8, 37, width + 16, 25);
+      ctx.strokeStyle = active ? "rgba(224, 178, 77, .75)" : "rgba(238, 223, 178, .24)";
+      ctx.strokeRect(-width / 2 - 8, 37, width + 16, 25);
+      ctx.fillStyle = active ? "#ffe5a6" : "#eee0b8";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(loc.name, 0, 50);
+      ctx.restore();
+    }
+
+    function drawCastleIcon(fort = false) {
+      ctx.fillStyle = "rgba(31,24,17,.25)"; ctx.beginPath(); ctx.ellipse(0, 24, 50, 13, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = fort ? "#706455" : "#d9d3c4";
+      ctx.fillRect(-34, -5, 68, 32); ctx.fillRect(-25, -25, 50, 22); ctx.fillRect(-15, -42, 30, 19);
+      ctx.fillStyle = "#3a2b22";
+      ctx.beginPath(); ctx.moveTo(-43, -5); ctx.lineTo(43, -5); ctx.lineTo(30, -17); ctx.lineTo(-30, -17); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-33, -25); ctx.lineTo(33, -25); ctx.lineTo(21, -35); ctx.lineTo(-21, -35); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-22, -42); ctx.lineTo(22, -42); ctx.lineTo(11, -51); ctx.lineTo(-11, -51); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#17120d"; [-23, 0, 23].forEach(x => ctx.fillRect(x - 3, 8, 6, 9));
+      ctx.fillStyle = fort ? "#b64036" : "#bda04f"; ctx.fillRect(26, -51, 2, 31); ctx.fillRect(28, -49, 18, 9);
+    }
+
+    function drawTownIcon(market = false) {
+      ctx.fillStyle = "rgba(31,24,17,.24)"; ctx.beginPath(); ctx.ellipse(0, 19, 48, 12, 0, 0, Math.PI * 2); ctx.fill();
+      [-27, 0, 27].forEach((x, i) => {
+        ctx.fillStyle = i === 1 ? "#d6c49a" : "#bca77e"; ctx.fillRect(x - 15, -10 + (i % 2) * 5, 30, 28);
+        ctx.fillStyle = i === 1 && market ? "#8e2e2e" : "#4c3427";
+        ctx.beginPath(); ctx.moveTo(x - 20, -10 + (i % 2) * 5); ctx.lineTo(x + 20, -10 + (i % 2) * 5); ctx.lineTo(x + 12, -20 + (i % 2) * 5); ctx.lineTo(x - 12, -20 + (i % 2) * 5); ctx.closePath(); ctx.fill();
+      });
+    }
+
+    function drawGambleIcon() {
+      ctx.fillStyle = "rgba(31,24,17,.25)"; ctx.beginPath(); ctx.ellipse(0, 20, 43, 12, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#372535"; ctx.fillRect(-31, -16, 62, 38);
+      ctx.fillStyle = "#75467e"; ctx.beginPath(); ctx.moveTo(-39, -16); ctx.lineTo(39, -16); ctx.lineTo(27, -30); ctx.lineTo(-27, -30); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#e8d6ac"; ctx.fillRect(-13, -7, 26, 24);
+      ctx.fillStyle = "#8f302e"; ctx.beginPath(); ctx.arc(0, 5, 7, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function drawPortIcon() {
+      ctx.strokeStyle = "#d0bc8d"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(-38, 22); ctx.lineTo(37, 22); ctx.stroke();
+      ctx.fillStyle = "#5f3925"; ctx.beginPath(); ctx.moveTo(-31, 8); ctx.lineTo(35, 8); ctx.lineTo(23, 25); ctx.lineTo(-20, 25); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#3a2a1c"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, 8); ctx.lineTo(0, -40); ctx.stroke();
+      ctx.fillStyle = "#d8c89b"; ctx.beginPath(); ctx.moveTo(2, -36); ctx.lineTo(26, -5); ctx.lineTo(2, 0); ctx.closePath(); ctx.fill();
+    }
+
+    function drawShrineIcon() {
+      ctx.strokeStyle = "#983834"; ctx.lineWidth = 8; ctx.beginPath(); ctx.moveTo(-26, 24); ctx.lineTo(-26, -22); ctx.moveTo(26, 24); ctx.lineTo(26, -22); ctx.stroke();
+      ctx.strokeStyle = "#a9433c"; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(-42, -27); ctx.lineTo(42, -27); ctx.moveTo(-31, -14); ctx.lineTo(31, -14); ctx.stroke();
+      ctx.strokeStyle = "#201a13"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-46, -31); ctx.lineTo(46, -31); ctx.stroke();
+    }
+
+    function drawPlayer() {
+      const bob = REDUCE_MOTION ? 0 : Math.sin(player.walkPhase) * 2;
+      ctx.save(); ctx.translate(player.x, player.y + bob);
+      ctx.fillStyle = "rgba(25,20,15,.32)"; ctx.beginPath(); ctx.ellipse(0, 14, 15, 6, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#9f2f2d";
+      ctx.beginPath(); ctx.moveTo(-10, -6); ctx.lineTo(10, -6); ctx.lineTo(13, 14); ctx.lineTo(-13, 14); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#d0a66f"; ctx.beginPath(); ctx.arc(0, -13, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#24201c"; ctx.beginPath(); ctx.moveTo(-10, -16); ctx.lineTo(10, -16); ctx.lineTo(0, -25); ctx.closePath(); ctx.fill();
+      const flip = player.facing === "left" ? -1 : 1;
+      ctx.strokeStyle = "#e5dfd2"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(7 * flip, -1); ctx.lineTo(23 * flip, -17); ctx.stroke();
+      ctx.fillStyle = "#e9c36d"; ctx.beginPath(); ctx.arc(0, -34, 3 + Math.sin(scenePulse * 5) * .4, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+    function drawMiniMap() {
+      const x = VIEW.w - 190, y = 18, w = 170, h = 104;
+      ctx.save();
+      ctx.fillStyle = "rgba(25,19,13,.82)"; ctx.fillRect(x, y, w, h);
+      ctx.strokeStyle = "rgba(225,198,130,.55)"; ctx.strokeRect(x, y, w, h);
+      ctx.fillStyle = "#6a7351"; ctx.fillRect(x + 5, y + 5, w - 10, h - 10);
+      ctx.strokeStyle = "rgba(80,117,136,.75)"; ctx.lineWidth = 5;
+      ctx.beginPath(); riverPath.forEach((p, i) => { const px = x + 5 + p[0] / WORLD.w * (w - 10); const py = y + 5 + p[1] / WORLD.h * (h - 10); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }); ctx.stroke();
+      locations.forEach(loc => {
+        ctx.fillStyle = "#e5bf64"; ctx.beginPath(); ctx.arc(x + 5 + loc.x / WORLD.w * (w - 10), y + 5 + loc.y / WORLD.h * (h - 10), 2.6, 0, Math.PI * 2); ctx.fill();
+      });
+      ctx.fillStyle = "#d64b43"; ctx.beginPath(); ctx.arc(x + 5 + player.x / WORLD.w * (w - 10), y + 5 + player.y / WORLD.h * (h - 10), 3.4, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,.28)"; ctx.lineWidth = 1;
+      ctx.strokeRect(x + 5 + camera.x / WORLD.w * (w - 10), y + 5 + camera.y / WORLD.h * (h - 10), VIEW.w / WORLD.w * (w - 10), VIEW.h / WORLD.h * (h - 10));
+      ctx.restore();
+    }
+
+    function drawRain() {
+      ctx.save(); ctx.strokeStyle = "rgba(215,225,221,.25)"; ctx.lineWidth = 1;
+      const offset = (performance.now() * .25) % 32;
+      for (let x = -30; x < VIEW.w + 30; x += 27) {
+        for (let y = -30; y < VIEW.h + 30; y += 46) {
+          ctx.beginPath(); ctx.moveTo(x + (y % 19), y + offset); ctx.lineTo(x - 7 + (y % 19), y + 16 + offset); ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawLocationScene() {
+      const loc = nearbyLocation || locations[0];
+      const grad = ctx.createLinearGradient(0, 0, 0, VIEW.h);
+      grad.addColorStop(0, loc.type === "river" ? "#587584" : "#756b4c");
+      grad.addColorStop(1, "#292018");
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, VIEW.w, VIEW.h);
+      ctx.fillStyle = "rgba(224,202,151,.13)"; ctx.beginPath(); ctx.arc(760, 110, 82, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "rgba(20,16,12,.48)";
+      for (let i = 0; i < 12; i++) { const x = i * 95 - 40; const height = 90 + (i % 4) * 23; ctx.fillRect(x, VIEW.h - height - 80, 80, height); }
+      ctx.fillStyle = "rgba(14,11,8,.75)"; ctx.fillRect(0, VIEW.h - 82, VIEW.w, 82);
+      ctx.fillStyle = "#e7d6ad"; ctx.font = '700 44px "DFKai-SB", serif'; ctx.textAlign = "center"; ctx.fillText(loc.name, VIEW.w / 2, 210);
+      ctx.fillStyle = "#bba77e"; ctx.font = '16px "Microsoft JhengHei", sans-serif'; ctx.fillText(loc.desc, VIEW.w / 2, 248);
+      ctx.fillStyle = "rgba(224,178,77,.45)"; ctx.fillRect(VIEW.w / 2 - 80, 265, 160, 2);
+    }
+
+    function drawForge() {
+      const glow = .75 + Math.sin(scenePulse * 6) * .12 + forge.glow * .2;
+      const grad = ctx.createRadialGradient(470, 220, 10, 470, 220, 440);
+      grad.addColorStop(0, `rgba(241,128,39,${glow})`); grad.addColorStop(.28, "#5f2d1b"); grad.addColorStop(1, "#17100c");
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, VIEW.w, VIEW.h);
+      ctx.fillStyle = "#241a14"; ctx.fillRect(0, 370, VIEW.w, 170);
+      ctx.fillStyle = "#33251d"; ctx.fillRect(358, 105, 225, 160);
+      ctx.fillStyle = "#f08b35"; ctx.beginPath(); ctx.ellipse(470, 222, 78, 43, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#ffd05d"; ctx.beginPath(); ctx.ellipse(470, 227, 44, 23, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#4d4c4a"; ctx.fillRect(403, 317, 150, 31); ctx.fillRect(438, 348, 80, 46);
+      ctx.fillStyle = "#181311"; ctx.fillRect(170, 250, 54, 137); ctx.fillStyle = "#a87950"; ctx.beginPath(); ctx.arc(197, 226, 23, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = "#b5aaa0"; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(222, 298); ctx.lineTo(345, 335); ctx.stroke();
+      ctx.fillStyle = "#f0dcb0"; ctx.font = '700 27px "DFKai-SB", serif'; ctx.textAlign = "left"; ctx.fillText("清洲町 · 名匠鍛冶", 36, 54);
+      ctx.fillStyle = "#c7a667"; ctx.font = '14px "Microsoft JhengHei", sans-serif'; ctx.fillText(`現有兵刃：${player.weapon.name}　總攻 ${totalAttack()}`, 38, 83);
+      ctx.fillText(`現有鎧甲：${player.armor.name}　總防 ${totalDefense()}`, 38, 108);
+    }
+
+    function drawGamble() {
+      ctx.fillStyle = "#182219"; ctx.fillRect(0, 0, VIEW.w, VIEW.h);
+      for (let x = 0; x < VIEW.w; x += 120) { ctx.strokeStyle = "rgba(195,185,137,.09)"; ctx.strokeRect(x, 0, 120, VIEW.h); }
+      ctx.fillStyle = "#711f20"; ctx.fillRect(190, 62, 580, 355);
+      ctx.strokeStyle = "#c9a455"; ctx.lineWidth = 5; ctx.strokeRect(190, 62, 580, 355);
+      ctx.fillStyle = "rgba(31,16,14,.38)"; ctx.beginPath(); ctx.ellipse(480, 270, 245, 100, 0, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = "#39241a"; ctx.beginPath(); ctx.ellipse(480, 198, 75, 44, 0, Math.PI, true); ctx.fill(); ctx.fillRect(405, 198, 150, 30);
+      if (gamble.reveal) {
+        drawDie(415, 246, gamble.dice1, 48); drawDie(497, 246, gamble.dice2, 48);
+      } else {
+        ctx.fillStyle = "#dacbaa"; ctx.font = '14px "Microsoft JhengHei", sans-serif'; ctx.textAlign = "center"; ctx.fillText(gamble.rolling ? "骰聲疾轉" : "竹盅未開", 480, 284);
+      }
+      ctx.fillStyle = gamble.betType === "丁" ? "#f0cf78" : "rgba(240,207,120,.32)"; ctx.font = '700 56px "DFKai-SB", serif'; ctx.fillText("丁", 303, 223);
+      ctx.fillStyle = gamble.betType === "半" ? "#f0cf78" : "rgba(240,207,120,.32)"; ctx.fillText("半", 657, 223);
+      ctx.fillStyle = "#f0dcb0"; ctx.font = '700 25px "DFKai-SB", serif'; ctx.fillText("清洲黑市 · 丁半博戲", 480, 39);
+      ctx.font = '14px "Microsoft JhengHei", sans-serif'; ctx.fillStyle = "#d8c7a4"; ctx.fillText(`押注：${gamble.betType}　　注碼：${gamble.betAmount} 貫`, 480, 385);
+      if (gamble.hint) { ctx.fillStyle = "#e9bd5e"; ctx.font = '13px "Microsoft JhengHei", sans-serif'; ctx.fillText(gamble.hint, 480, 444); }
+    }
+
+    function drawDie(x, y, value, size = 48) {
+      ctx.fillStyle = "#f6f0df"; ctx.fillRect(x, y, size, size);
+      ctx.strokeStyle = "#281d15"; ctx.lineWidth = 2; ctx.strokeRect(x, y, size, size);
+      const dots = {
+        1: [[.5,.5]], 2: [[.28,.28],[.72,.72]], 3: [[.25,.25],[.5,.5],[.75,.75]],
+        4: [[.28,.28],[.72,.28],[.28,.72],[.72,.72]], 5: [[.25,.25],[.75,.25],[.5,.5],[.25,.75],[.75,.75]],
+        6: [[.28,.22],[.72,.22],[.28,.5],[.72,.5],[.28,.78],[.72,.78]]
+      };
+      ctx.fillStyle = value === 1 ? "#b32f2d" : "#1d1814";
+      dots[value].forEach(dot => { ctx.beginPath(); ctx.arc(x + dot[0] * size, y + dot[1] * size, value === 1 ? size * .095 : size * .065, 0, Math.PI * 2); ctx.fill(); });
+    }
+
+    function drawCombat() {
+      const grad = ctx.createLinearGradient(0, 0, 0, VIEW.h);
+      grad.addColorStop(0, "#5e5846"); grad.addColorStop(.6, "#343429"); grad.addColorStop(1, "#1b1814");
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, VIEW.w, VIEW.h);
+      ctx.fillStyle = "rgba(223,211,174,.09)"; ctx.beginPath(); ctx.arc(750, 105, 82, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#28281f";
+      for (let i = 0; i < 14; i++) { const x = i * 80 - 20; ctx.beginPath(); ctx.moveTo(x, 395); ctx.lineTo(x + 36, 230 - (i % 3) * 24); ctx.lineTo(x + 78, 395); ctx.fill(); }
+      ctx.fillStyle = "#29231b"; ctx.fillRect(0, 392, VIEW.w, 148);
+
+      drawFighter(260, 348, true, combat.enemyFlash, "#9f2f2d");
+      drawFighter(700, 348, false, combat.flash, "#344555");
+      if (combat.slash > 0) {
+        ctx.save(); ctx.globalAlpha = Math.min(1, combat.slash);
+        ctx.strokeStyle = "#ffdf85"; ctx.lineWidth = 7; ctx.beginPath(); ctx.arc(480, 280, 190, -.45, .45); ctx.stroke();
+        ctx.strokeStyle = "rgba(255,255,255,.65)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(480, 280, 172, -.5, .5); ctx.stroke(); ctx.restore();
+      }
+      drawBar(72, 64, 300, 15, player.hp / player.maxHp, "#4d9f65", "黑崎龍之介", `${Math.ceil(player.hp)} / ${player.maxHp}`);
+      drawBar(588, 64, 300, 15, combat.enemyHp / combat.enemyMaxHp, "#b5453d", combat.enemyName, `${combat.enemyHp} / ${combat.enemyMaxHp}`);
+      ctx.fillStyle = "#d8c194"; ctx.font = '13px "Microsoft JhengHei", sans-serif'; ctx.textAlign = "left"; ctx.fillText(`氣力 ${player.ki}/${player.maxKi}　武器 ${player.weapon.name}`, 72, 111);
+      ctx.textAlign = "right"; ctx.fillText(`攻 ${combat.enemyAtk}　防 ${combat.enemyDef}`, 888, 111);
+    }
+
+    function drawFighter(x, groundY, playerSide, flash, color) {
+      ctx.save(); ctx.translate(x, groundY); if (flash > 0) ctx.translate(Math.sin(scenePulse * 50) * 7, 0);
+      const facing = playerSide ? 1 : -1;
+      ctx.fillStyle = "rgba(0,0,0,.28)"; ctx.beginPath(); ctx.ellipse(0, 20, 50, 13, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = flash > 0 ? "#f1e6c9" : color; ctx.beginPath(); ctx.moveTo(-28, -90); ctx.lineTo(25, -90); ctx.lineTo(44, 15); ctx.lineTo(-43, 15); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = "#c99c6d"; ctx.beginPath(); ctx.arc(0, -118, 23, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = playerSide ? "#29211b" : "#6f402a"; ctx.beginPath(); ctx.moveTo(-29, -125); ctx.lineTo(29, -125); ctx.lineTo(0, -151); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = "#e2ddd0"; ctx.lineWidth = 7; ctx.beginPath(); ctx.moveTo(19 * facing, -70); ctx.lineTo(102 * facing, -122); ctx.stroke();
+      ctx.strokeStyle = "#493526"; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(16 * facing, -70); ctx.lineTo(34 * facing, -58); ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawBar(x, y, w, h, ratio, color, name, value) {
+      ctx.textAlign = "left"; ctx.fillStyle = "#f0dfb8"; ctx.font = '700 15px "Microsoft JhengHei", sans-serif'; ctx.fillText(name, x, y - 10);
+      ctx.textAlign = "right"; ctx.font = '12px "Microsoft JhengHei", sans-serif'; ctx.fillText(value, x + w, y - 10);
+      ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.fillRect(x, y, w, h);
+      ctx.fillStyle = color; ctx.fillRect(x + 2, y + 2, Math.max(0, (w - 4) * ratio), h - 4);
+      ctx.strokeStyle = "rgba(238,222,182,.32)"; ctx.strokeRect(x, y, w, h);
+    }
+
+    function drawVignette() {
+      const vignette = ctx.createRadialGradient(VIEW.w / 2, VIEW.h / 2, VIEW.h * .25, VIEW.w / 2, VIEW.h / 2, VIEW.w * .72);
+      vignette.addColorStop(0, "rgba(0,0,0,0)"); vignette.addColorStop(1, "rgba(8,5,3,.42)");
+      ctx.fillStyle = vignette; ctx.fillRect(0, 0, VIEW.w, VIEW.h);
+      ctx.strokeStyle = "rgba(226,194,123,.18)"; ctx.lineWidth = 8; ctx.strokeRect(4, 4, VIEW.w - 8, VIEW.h - 8);
+    }
+
+    function gameLoop(now) {
+      const dt = Math.min(.04, (now - lastFrame) / 1000 || 0);
+      lastFrame = now;
+      update(dt);
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function handleKeyDown(event) {
+      if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(event.key)) event.preventDefault();
+      keys[event.key] = true;
+      if (!started) return;
+      if (gameState === "MAP" && [" ", "Enter", "e", "E"].includes(event.key)) interact();
+      if (event.key === "Escape" && ["SCENE", "FORGE", "GAMBLE"].includes(gameState) && !gamble.rolling) leaveScene();
+      const digit = Number(event.key);
+      if (digit >= 1 && digit <= actionHandlers.length && actionHandlers[digit - 1] && !actionHandlers[digit - 1].disabled) {
+        sound.play("ui");
+        actionHandlers[digit - 1].run();
+      }
+    }
+
+    function handleKeyUp(event) { keys[event.key] = false; }
+
+    function bindTouchControls() {
+      const mapping = { up: "touchUp", down: "touchDown", left: "touchLeft", right: "touchRight" };
+      document.querySelectorAll(".touch-key").forEach(button => {
+        const key = mapping[button.dataset.dir];
+        const press = event => { event.preventDefault(); keys[key] = true; button.classList.add("active"); canvas.focus(); };
+        const release = event => { event.preventDefault(); keys[key] = false; button.classList.remove("active"); };
+        button.addEventListener("pointerdown", press);
+        button.addEventListener("pointerup", release);
+        button.addEventListener("pointercancel", release);
+        button.addEventListener("pointerleave", release);
+      });
+      document.getElementById("touchInteract").addEventListener("pointerdown", event => { event.preventDefault(); interact(); canvas.focus(); });
+    }
+
+    async function beginGame(withSound) {
+      started = true;
+      document.getElementById("startOverlay").hidden = true;
+      if (withSound) await sound.enable();
+      refreshSoundButton();
+      canvas.focus();
+      setMessage("旅途札記", "你踏上尾張的土路。畫面會隨角色移動捲動；靠近據點後按 Space 或 Enter 進入。 ");
+      mapActions();
+    }
+
+    function refreshSoundButton() {
+      ui.soundToggle.textContent = sound.enabled ? "♪ 音效：開" : "♪ 音效：關";
+      ui.soundToggle.setAttribute("aria-pressed", String(sound.enabled));
+    }
+
+    document.addEventListener("keydown", handleKeyDown, { passive: false });
+    document.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", () => Object.keys(keys).forEach(key => keys[key] = false));
+    document.getElementById("startSound").addEventListener("click", () => beginGame(true));
+    document.getElementById("startSilent").addEventListener("click", () => beginGame(false));
+    ui.soundToggle.addEventListener("click", async () => {
+      if (sound.enabled) sound.disable(); else await sound.enable();
+      refreshSoundButton();
+    });
+    ui.volume.addEventListener("input", event => sound.setVolume(event.target.value));
+    document.getElementById("saveButton").addEventListener("click", () => saveGame(true));
+    document.getElementById("resetButton").addEventListener("click", resetGame);
+    document.getElementById("helpButton").addEventListener("click", () => {
+      setMessage("操作說明", "大地圖：WASD／方向鍵移動，Space／Enter／E 進入據點。戰鬥、賭場與鍛冶屋可按畫面按鈕或數字鍵選擇；Esc 返回。手機可用畫面搖桿。 ");
+    });
+    bindTouchControls();
+
+    loadGame();
+    nearbyLocation = findNearbyLocation();
+    camera.x = clamp(player.x - VIEW.w / 2, 0, WORLD.w - VIEW.w);
+    camera.y = clamp(player.y - VIEW.h / 2, 0, WORLD.h - VIEW.h);
+    updateHUD();
+    mapActions();
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
