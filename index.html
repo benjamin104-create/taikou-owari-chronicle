@@ -1090,13 +1090,20 @@
       completedMissions: 0,
       combatWins: 0,
       groupWins: 0,
+      level: 1,
+      experience: 0,
+      statPoints: 0,
+      martial: 60,
       leadership: 18,
+      politics: 45,
+      negotiation: 55,
       samuraiSkill: 1,
       ninjaSkill: 0,
       companions: [],
       companionHealth: {},
       visited: [],
       npcRelations: {},
+      officerRelations: {},
       recruitedRoadNpcs: [],
       battlePreference: "party",
       relicFlags: {},
@@ -1107,7 +1114,8 @@
       militarySkill: 1,
       domain: { agriculture: 44, commerce: 38, army: 320, morale: 68, firearms: 18, ships: 2, gunTech: 1, navalTech: 0, templeRelation: 0 },
       mission: null,
-      inventory: { rice: 0, firearms: 0, medicine: 1, dokudami: 2, yomogi: 1 },
+      sideQuest: null,
+      inventory: { rice: 0, firearms: 0, medicine: 1, dokudami: 2, yomogi: 1, specialties: {} },
       weapon: { id: "uchigatana", name: "無名打刀", atk: 0, type: "katana", speed: 0, stance: "中段" },
       armor: { name: "粗布衣", def: 0 },
       facing: "down",
@@ -1203,6 +1211,49 @@
       { id: "npc-genshiro", companionId: "genshiro", name: "松永源四郎", job: "美濃浪人", faction: "無所属", origin: "美濃國稻葉山城下出身，主家內訌後離散，在諸國尋找值得侍奉之人。", x: 4040, y: 1775, route: [[3970,1740],[4160,1660],[4350,1870],[4540,1970]], routeIndex: 1, routeDir: 1, speed: 52, facing: "right", spriteRow: 0, level: 4, hp: 96, atk: 22, def: 8, affinity: 0, recruitable: true, defeated: false },
       { id: "npc-yahichi", companionId: "yahichi", name: "林彌七", job: "織田家足輕頭", faction: "織田家", origin: "清洲奉行所配下的足輕頭，負責巡視津島與熱田之間的兵糧道。", x: 4140, y: 1970, route: [[3970,2020],[4250,2210],[4660,2160],[4350,1870]], routeIndex: 0, routeDir: 1, speed: 45, facing: "down", spriteRow: 1, level: 5, hp: 112, atk: 21, def: 12, affinity: 1, recruitable: true, defeated: false },
       { id: "npc-munetaka", companionId: "munetaka", name: "朝比奈宗孝", job: "今川家使番", faction: "今川家", origin: "駿河朝比奈氏旁支武士，奉命往返鳴海砦與三河，身上可能帶有軍情。", x: 4800, y: 2075, route: [[4660,2160],[5050,1770],[5480,2110]], routeIndex: 0, routeDir: 1, speed: 58, facing: "right", spriteRow: 2, level: 7, hp: 126, atk: 25, def: 12, affinity: -1, recruitable: true, defeated: false }
+    ];
+
+    const castleOfficers = [
+      { id:"oda-nobunaga", name:"織田信長", castleId:"kiyosu-castle", faction:"織田家", role:"大名", from:1555, to:1575, martial:88, leadership:96, politics:94, negotiation:91, interest:"南蠻物", advice:"戰場不是只靠勇力。先看道路、兵糧與敵將心氣，再決定從哪裡切開。" },
+      { id:"shibata-katsuie", name:"柴田勝家", castleId:"kiyosu-castle", faction:"織田家", role:"猛將", from:1555, to:1575, martial:93, leadership:90, politics:64, negotiation:54, interest:"美酒", advice:"刀要快，隊伍更要穩。能讓同伴不亂，才算真正的武者。" },
+      { id:"niwa-nagahide", name:"丹羽長秀", castleId:"kiyosu-castle", faction:"織田家", role:"奉行", from:1556, to:1575, martial:75, leadership:84, politics:91, negotiation:82, interest:"名物", advice:"築城、兵糧與道路都不起眼，卻最能決定一場戰爭能走多遠。" },
+      { id:"sakuma-nobumori", name:"佐久間信盛", castleId:"kiyosu-castle", faction:"織田家", role:"宿老", from:1555, to:1575, martial:70, leadership:78, politics:68, negotiation:72, interest:"茶器", advice:"活著守住陣地，也是一種戰功。別為了小名聲丟掉全局。" },
+      { id:"maeda-toshiie", name:"前田利家", castleId:"kiyosu-castle", faction:"織田家", role:"槍之又左", from:1558, to:1575, martial:91, leadership:84, politics:76, negotiation:78, interest:"美酒", advice:"槍尖不能只看眼前一人，還要看他身後的退路。" },
+      { id:"ikeda-tsuneoki", name:"池田恆興", castleId:"kiyosu-castle", faction:"織田家", role:"近習", from:1556, to:1575, martial:82, leadership:83, politics:74, negotiation:77, interest:"名物", advice:"主君身邊的消息傳得最快，也最容易混入假話。" },
+      { id:"mori-yoshinari", name:"森可成", castleId:"kiyosu-castle", faction:"織田家", role:"武將", from:1555, to:1570, martial:89, leadership:86, politics:58, negotiation:61, interest:"兵法", advice:"遇強敵先守住氣勢；一旦退縮，整隊都會跟著散。" },
+      { id:"takigawa-kazumasu", name:"瀧川一益", castleId:"kiyosu-castle", faction:"織田家", role:"鐵砲奉行", from:1558, to:1575, martial:84, leadership:88, politics:76, negotiation:73, interest:"南蠻物", advice:"鐵砲可怕的不只威力，而是讓敵人不敢照原先的路前進。" },
+      { id:"kinoshita-hideyoshi", name:"木下藤吉郎", castleId:"kiyosu-castle", faction:"織田家", role:"足輕組頭", from:1558, to:1575, martial:68, leadership:93, politics:96, negotiation:98, interest:"名物", advice:"先讓對方覺得你有用，再讓他發現少不了你。這就是出世的路。" },
+      { id:"akechi-mitsuhide", name:"明智光秀", castleId:"kiyosu-castle", faction:"織田家", role:"奉行", from:1568, to:1575, martial:80, leadership:90, politics:93, negotiation:92, interest:"茶器", advice:"禮法與鐵砲並不衝突。能理解兩者，才不會被時代拋下。" },
+      { id:"takenaka-hanbei", name:"竹中半兵衛", castleId:"kiyosu-castle", faction:"織田家", role:"軍師", from:1567, to:1575, martial:61, leadership:91, politics:90, negotiation:86, interest:"兵法", advice:"最好的計略不是多巧妙，而是讓敵人以為那是自己的選擇。" },
+      { id:"oda-nobunaga-azuchi", name:"織田信長", castleId:"azuchi", faction:"織田家", role:"天下人", from:1576, to:1582, martial:88, leadership:98, politics:96, negotiation:93, interest:"南蠻物", advice:"安土要看的不是一座城，而是通向天下的道路與商流。" },
+      { id:"akechi-mitsuhide-azuchi", name:"明智光秀", castleId:"azuchi", faction:"織田家", role:"近畿管領", from:1576, to:1582, martial:82, leadership:93, politics:95, negotiation:94, interest:"茶器", advice:"天下愈接近一統，禮法與怨恨就愈不能忽視。" },
+      { id:"hashiba-hideyoshi-azuchi", name:"羽柴秀吉", castleId:"azuchi", faction:"織田家", role:"中國軍團長", from:1576, to:1582, martial:70, leadership:96, politics:98, negotiation:99, interest:"名物", advice:"城攻不下，就先攻人心；人心攻不下，再談別的。" },
+      { id:"mori-motonari", name:"毛利元就", castleId:"hiroshima", faction:"毛利家", role:"大名", from:1555, to:1571, martial:74, leadership:97, politics:96, negotiation:94, interest:"兵法", advice:"一支箭易折，三支箭難斷；但三人若不同心，箭再多也無用。" },
+      { id:"mori-takamoto", name:"毛利隆元", castleId:"hiroshima", faction:"毛利家", role:"家督", from:1555, to:1563, martial:66, leadership:84, politics:91, negotiation:86, interest:"名物", advice:"軍勢能出征，是因為領內有人把帳目與糧道守住。" },
+      { id:"mori-terumoto", name:"毛利輝元", castleId:"hiroshima", faction:"毛利家", role:"家督", from:1563, to:1600, martial:62, leadership:82, politics:78, negotiation:83, interest:"茶器", advice:"西國諸將各有心思，統率他們比攻下一城更難。" },
+      { id:"kikkawa-motoharu", name:"吉川元春", castleId:"hiroshima", faction:"毛利家", role:"猛將", from:1555, to:1586, martial:94, leadership:94, politics:70, negotiation:68, interest:"兵法", advice:"山地合戰先搶高處，水戰則先讀潮。地形不會說謊。" },
+      { id:"kobayakawa-takakage", name:"小早川隆景", castleId:"hiroshima", faction:"毛利家", role:"智將", from:1555, to:1597, martial:73, leadership:93, politics:96, negotiation:95, interest:"茶器", advice:"水軍、商路與外交是一件事的三面，不能分開看。" },
+      { id:"kodera-masamoto", name:"小寺政職", castleId:"himeji", faction:"小寺家", role:"城主", from:1555, to:1578, martial:59, leadership:73, politics:77, negotiation:81, interest:"名物", advice:"播磨夾在強鄰之間，小城主得比大名更會看風向。" },
+      { id:"kuroda-mototaka", name:"黑田職隆", castleId:"himeji", faction:"小寺家", role:"家老", from:1555, to:1585, martial:78, leadership:86, politics:88, negotiation:87, interest:"兵法", advice:"家名靠的不是一時豪勇，而是數十年不斷的判斷。" },
+      { id:"kuroda-kanbei", name:"黑田官兵衛", castleId:"himeji", faction:"小寺家", role:"軍師", from:1567, to:1600, martial:69, leadership:94, politics:97, negotiation:96, interest:"兵法", advice:"兵法先算人，再算城。人心已有裂縫，石垣再厚也守不久。" },
+      { id:"takeda-shingen", name:"武田信玄", castleId:"kofu", faction:"武田家", role:"大名", from:1555, to:1573, martial:88, leadership:99, politics:94, negotiation:91, interest:"兵法", advice:"疾如風，徐如林，侵掠如火，不動如山；重點是知道何時該是哪一個。" },
+      { id:"takeda-nobushige", name:"武田信繁", castleId:"kofu", faction:"武田家", role:"副將", from:1555, to:1561, martial:91, leadership:92, politics:82, negotiation:80, interest:"兵法", advice:"副將的責任是讓全軍在主將看不見之處仍不崩散。" },
+      { id:"baba-nobuharu", name:"馬場信春", castleId:"kofu", faction:"武田家", role:"四名臣", from:1555, to:1575, martial:94, leadership:95, politics:72, negotiation:68, interest:"美酒", advice:"不敗不是從不冒險，而是不在毫無收益的地方賭命。" },
+      { id:"yamagata-masakage", name:"山縣昌景", castleId:"kofu", faction:"武田家", role:"赤備大將", from:1555, to:1575, martial:95, leadership:94, politics:65, negotiation:63, interest:"兵法", advice:"赤備的威勢來自隊形與紀律，不只是紅色甲冑。" },
+      { id:"kosaka-masanobu", name:"高?昌信", castleId:"kofu", faction:"武田家", role:"四名臣", from:1555, to:1578, martial:84, leadership:93, politics:88, negotiation:85, interest:"茶器", advice:"退卻也要像進軍一樣有秩序，這才是真正的軍學。" },
+      { id:"hojo-ujiyasu", name:"北條氏康", castleId:"odawara", faction:"北條家", role:"大名", from:1555, to:1571, martial:87, leadership:97, politics:96, negotiation:90, interest:"兵法", advice:"守城不是縮在城裡，而是讓整片領國都成為城郭。" },
+      { id:"hojo-ujimasa", name:"北條氏政", castleId:"odawara", faction:"北條家", role:"家督", from:1559, to:1590, martial:72, leadership:88, politics:89, negotiation:86, interest:"茶器", advice:"關東諸城彼此呼應，單看一城便看不懂北條的守法。" },
+      { id:"hojo-tsunashige", name:"北條綱成", castleId:"odawara", faction:"北條家", role:"地黃八幡", from:1555, to:1587, martial:96, leadership:94, politics:66, negotiation:62, interest:"美酒", advice:"援軍最重要的是準時；晚到的勇猛，只是替敗軍收屍。" },
+      { id:"fuma-kotaro", name:"風魔小太郎", castleId:"odawara", faction:"風魔眾", role:"忍頭", from:1555, to:1590, martial:88, leadership:82, politics:55, negotiation:69, interest:"南蠻物", advice:"夜裡最響的腳步，往往是故意讓你聽見的。" },
+      { id:"sanada-yukitaka", name:"真田幸隆", castleId:"matsumoto", faction:"武田家", role:"攻城名人", from:1555, to:1574, martial:73, leadership:91, politics:89, negotiation:91, interest:"兵法", advice:"城可從牆上攻，也可從城主的疑心裡攻。" },
+      { id:"amari-nobutada", name:"甘利信忠", castleId:"matsumoto", faction:"武田家", role:"侍大將", from:1555, to:1564, martial:85, leadership:83, politics:67, negotiation:63, interest:"美酒", advice:"山國行軍，帶多一袋糧常比多一把刀更有用。" },
+      { id:"ota-yasusuke", name:"太田康資", castleId:"edo", faction:"北條家", role:"江戶城代", from:1555, to:1564, martial:83, leadership:85, politics:74, negotiation:77, interest:"兵法", advice:"江戶水路交錯，守城先要守船與渡口。" },
+      { id:"hojo-ujiteru", name:"北條氏照", castleId:"edo", faction:"北條家", role:"一門眾", from:1564, to:1590, martial:84, leadership:90, politics:84, negotiation:80, interest:"名物", advice:"關東道路愈遠，支城間的聯絡就愈重要。" },
+      { id:"ashina-moriuji", name:"蘆名盛氏", castleId:"aizu", faction:"蘆名家", role:"大名", from:1555, to:1580, martial:80, leadership:91, politics:90, negotiation:86, interest:"茶器", advice:"奧州冬雪會替你守城，也會截斷自己的糧道。" },
+      { id:"sawanobu", name:"佐瀨種常", castleId:"aizu", faction:"蘆名家", role:"家老", from:1555, to:1590, martial:79, leadership:84, politics:83, negotiation:79, interest:"名物", advice:"主家之外，國人與寺社的態度也能決定一場戰。" },
+      { id:"date-harumune", name:"伊達晴宗", castleId:"yonezawa", faction:"伊達家", role:"大名", from:1555, to:1577, martial:76, leadership:89, politics:91, negotiation:88, interest:"茶器", advice:"一門眾親近，爭起來也最難收拾；約法要寫在前面。" },
+      { id:"date-terumune", name:"伊達輝宗", castleId:"yonezawa", faction:"伊達家", role:"家督", from:1564, to:1585, martial:82, leadership:90, politics:87, negotiation:86, interest:"南蠻物", advice:"奧州要變強，不能只守祖傳土地，還要學會看更遠的天下。" },
+      { id:"oniniwa-yoshinao", name:"鬼庭良直", castleId:"yonezawa", faction:"伊達家", role:"宿老", from:1555, to:1585, martial:92, leadership:88, politics:65, negotiation:62, interest:"美酒", advice:"老將的命若能換全軍一條退路，就不算白費。" }
     ];
 
     const historicalEvents = [
@@ -1443,7 +1494,7 @@
 
     const sound = new SoundEngine();
 
-    function totalAttack() { return player.baseAtk + player.weapon.atk; }
+    function totalAttack() { return player.baseAtk + player.weapon.atk + Math.max(0, Math.floor((player.martial - 50) / 5)); }
     function totalDefense() { return player.baseDef + player.armor.def; }
     function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
 
@@ -1483,11 +1534,63 @@
 
     function mapActions() {
       setActions([
+        { label: `角色成長 LV${player.level}${player.statPoints ? `（可配 ${player.statPoints} 點）` : ""}`, run: showGrowthMenu },
         { label: "調查附近", run: interact },
         { label: "前往已訪據點", run: showVisitedTravelMenu },
         { label: `戰鬥方針：${player.companions.length && player.battlePreference === "party" ? "群鬥" : "單挑"}`, run: toggleBattlePreference },
         { label: "原地休息", run: restOnRoad }
       ]);
+    }
+
+    function xpToNext(level = player.level) { return 45 + level * 35; }
+
+    function gainExperience(amount) {
+      player.experience += Math.max(0, Math.round(amount));
+      let levels = 0;
+      while (player.experience >= xpToNext(player.level)) {
+        player.experience -= xpToNext(player.level);
+        player.level += 1;
+        player.statPoints += 3;
+        player.hp = player.maxHp;
+        levels += 1;
+      }
+      if (levels) {
+        sound.play("victory");
+        showToast(`升至 LV${player.level}，獲得 ${levels * 3} 點能力點`);
+      }
+      return ` 經驗 +${amount}${levels ? `，升至 LV${player.level}（能力點 +${levels * 3}）` : `（${player.experience}/${xpToNext(player.level)}）`}。`;
+    }
+
+    function showGrowthMenu() {
+      gameState = "SCENE";
+      setMode("人物成長");
+      setMessage("黑崎龍之介", `LV${player.level}　經驗 ${player.experience}/${xpToNext()}　可分配 ${player.statPoints} 點。能力點由你決定用途，不再只靠反覆戰鬥被動變強。`);
+      setActions([
+        { label: `武力 ${player.martial} → ${Math.min(100, player.martial + 3)}（攻擊）`, run: () => allocateStat("martial"), disabled: !player.statPoints || player.martial >= 100 },
+        { label: `統率 ${player.leadership} → ${Math.min(100, player.leadership + 3)}（群鬥／帶兵）`, run: () => allocateStat("leadership"), disabled: !player.statPoints || player.leadership >= 100 },
+        { label: `生命 ${player.maxHp} → ${Math.min(200, player.maxHp + 8)}`, run: () => allocateStat("hp"), disabled: !player.statPoints || player.maxHp >= 200 },
+        { label: `政治 ${player.politics} → ${Math.min(100, player.politics + 3)}（內政）`, run: () => allocateStat("politics"), disabled: !player.statPoints || player.politics >= 100 },
+        { label: `交涉 ${player.negotiation} → ${Math.min(100, player.negotiation + 3)}（價格／人脈）`, run: () => allocateStat("negotiation"), disabled: !player.statPoints || player.negotiation >= 100 },
+        { label: "返回大地圖", run: leaveScene }
+      ]);
+    }
+
+    function allocateStat(type) {
+      if (player.statPoints <= 0) { showGrowthMenu(); return; }
+      const limits = { martial: 100, leadership: 100, hp: 200, politics: 100, negotiation: 100 };
+      const current = type === "hp" ? player.maxHp : player[type];
+      if (current >= limits[type]) { showGrowthMenu(); return; }
+      player.statPoints -= 1;
+      if (type === "hp") {
+        player.maxHp = Math.min(200, player.maxHp + 8);
+        player.hp = Math.min(player.maxHp, player.hp + 8);
+      } else {
+        player[type] = Math.min(100, player[type] + 3);
+      }
+      sound.play("chime");
+      updateHUD();
+      saveGame();
+      showGrowthMenu();
     }
 
     function toggleBattlePreference() {
@@ -1705,20 +1808,21 @@
 
     function saveGame(showNotice = false) {
       const snapshot = {
-        version: 4,
+        version: 5,
         player: {
           x: player.x, y: player.y, hp: player.hp, ki: player.ki, gold: player.gold,
           fame: player.fame, infamy: player.infamy, weapon: player.weapon, armor: player.armor,
           distance: player.distance, isRetainer: player.isRetainer, faction: player.faction,
           rank: player.rank, merit: player.merit, completedMissions: player.completedMissions,
-          combatWins: player.combatWins, groupWins: player.groupWins, leadership: player.leadership,
+          level: player.level, experience: player.experience, statPoints: player.statPoints,
+          combatWins: player.combatWins, groupWins: player.groupWins, martial: player.martial, leadership: player.leadership, politics: player.politics, negotiation: player.negotiation,
           samuraiSkill: player.samuraiSkill, ninjaSkill: player.ninjaSkill,
           companions: player.companions, companionHealth: player.companionHealth,
-          visited: player.visited, npcRelations: player.npcRelations, recruitedRoadNpcs: player.recruitedRoadNpcs,
+          visited: player.visited, npcRelations: player.npcRelations, officerRelations: player.officerRelations, recruitedRoadNpcs: player.recruitedRoadNpcs,
           battlePreference: player.battlePreference,
           relicFlags: player.relicFlags, historicalFlags: player.historicalFlags, historicalChoices: player.historicalChoices,
           firearmsSkill: player.firearmsSkill, navalSkill: player.navalSkill, militarySkill: player.militarySkill,
-          domain: player.domain, mission: player.mission, inventory: player.inventory
+          domain: player.domain, mission: player.mission, sideQuest: player.sideQuest, inventory: player.inventory
         },
         calendar: { year, day, month, weatherIndex },
         roadNpcs: roadNpcs.map(npc => ({ id: npc.id, x: npc.x, y: npc.y, routeIndex: npc.routeIndex, routeDir: npc.routeDir, facing: npc.facing, defeated: npc.defeated }))
@@ -1730,9 +1834,23 @@
     function loadGame() {
       try {
         const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
-        if (!saved || ![1, 2, 3, 4].includes(saved.version)) return;
+        if (!saved || ![1, 2, 3, 4, 5].includes(saved.version)) return;
         Object.assign(player, saved.player || {});
         player.inventory = { rice: 0, firearms: 0, medicine: 1, dokudami: 2, yomogi: 1, ...(player.inventory || {}) };
+        player.inventory.specialties = player.inventory.specialties || {};
+        player.officerRelations = player.officerRelations || {};
+        player.sideQuest = player.sideQuest || null;
+        if (saved.version < 5) {
+          player.level = 1 + Math.floor((player.combatWins || 0) / 4);
+          player.experience = 0;
+          player.statPoints = Math.max(0, (player.level - 1) * 2);
+          player.martial = 60 + Math.min(24, (player.combatWins || 0) * 2);
+          player.politics = 45;
+          player.negotiation = 55;
+        }
+        player.level = Math.max(1, Number(player.level) || 1);
+        player.experience = Math.max(0, Number(player.experience) || 0);
+        player.statPoints = Math.max(0, Number(player.statPoints) || 0);
         player.weapon = { id: "uchigatana", type: "katana", speed: 0, stance: "中段", ...(player.weapon || {}) };
         player.companions = Array.isArray(player.companions) ? player.companions : [];
         player.companionHealth = player.companionHealth || {};
@@ -1982,7 +2100,7 @@
         return;
       }
       if (!player.visited.includes(nearbyLocation.id)) player.visited.push(nearbyLocation.id);
-      if (nearbyLocation.id === "kiyosu-town") enterForge();
+      if (nearbyLocation.id === "kiyosu-town") enterTownHub();
       else if (nearbyLocation.id === "gambling") enterGamble();
       else if (nearbyLocation.id === "kiyosu-castle") enterCastle();
       else if (nearbyLocation.id === "kiso-port") enterRiver();
@@ -1994,6 +2112,13 @@
     }
 
     function enterGenericLocation(loc) {
+      if (loc.type === "castle") {
+        enterScene(loc.name, "城門番", `${loc.desc} 城中武將會隨年代與勢力變化，可先拜訪、交談或請求切磋。`, [
+          { label: `拜訪城內武將（${officersAtCastle(loc.id).length} 人）`, run: () => visitCastleOfficers(loc) },
+          { label: "在城下宿場歇息 2貫", run: () => townInn(2, () => enterGenericLocation(loc)) }
+        ]);
+        return;
+      }
       enterScene(loc.name, "旅人手帳", `${loc.desc}【${loc.name}】已登錄為到訪據點，今後可從列表自動導航回到此地。`, [
         { label: "打聽當地局勢", run: () => setMessage("當地古老", `${loc.area}近日人馬往來增加。商旅談論著各家軍勢，也提醒你莫在陌生領地隨意拔刀。`) },
         { label: "在宿場休息 2貫", run: () => { if (player.gold < 2) { setMessage("宿場主人", "「沒有宿錢，只能借你屋簷避雨。」"); return; } player.gold -= 2; player.hp = Math.min(player.maxHp, player.hp + 28); advanceDay(); updateHUD(); saveGame(); setMessage("宿場主人", "熱粥與乾淨草席讓你恢復 28 體力，時間推進一日。 "); } },
@@ -2182,7 +2307,84 @@
       showRetroInfo("戰國歷史年表", `${rows}<div class="retro-info-note">史實事件不只是動畫：鐵砲、水軍、兵力、商業、忍術、寺社關係與玩家選擇，都會改變判定與後續國力。</div>`);
     }
 
+    function officersAtCastle(castleId) {
+      return castleOfficers.filter(officer => officer.castleId === castleId && year >= officer.from && year <= officer.to);
+    }
+
+    function officerRelation(officer) { return player.officerRelations[officer.id] || 0; }
+
+    function visitCastleOfficers(loc) {
+      const officers = officersAtCastle(loc.id);
+      gameState = "SCENE";
+      setMode(`${loc.name}?武將拜訪`);
+      setMessage("城內案內役", `${year} 年目前可拜訪 ${officers.length} 位武將。人物會依年代移動或退場；交談、贈送名物與切磋都會留下關係紀錄。`);
+      const actions = officers.map(officer => ({
+        label: `${officer.name}｜${officer.role}｜親密 ${officerRelation(officer)}`,
+        run: () => visitOfficer(officer, loc)
+      }));
+      if (loc.id === "kiyosu-castle" && player.sideQuest) actions.unshift({ label: `交付支線：${player.sideQuest.title}`, run: deliverSideQuest });
+      actions.push({ label: loc.id === "kiyosu-castle" ? "返回清洲城" : `返回${loc.name}`, run: loc.id === "kiyosu-castle" ? castleMainMenu : () => enterGenericLocation(loc) });
+      setActions(actions);
+    }
+
+    function visitOfficer(officer, loc) {
+      setMode(`${officer.name}?會面`);
+      setMessage(`${officer.role}?${officer.name}`, `所屬 ${officer.faction}｜武力 ${officer.martial}｜統率 ${officer.leadership}｜政治 ${officer.politics}｜交涉 ${officer.negotiation}｜親密 ${officerRelation(officer)}。`);
+      setActions([
+        { label: "交談與請教", run: () => talkOfficer(officer) },
+        { label: "贈送名物", run: () => officerGiftMenu(officer, loc) },
+        { label: "請求切磋", run: () => sparOfficer(officer) },
+        { label: `返回${loc.name}武將名單`, run: () => visitCastleOfficers(loc) }
+      ]);
+    }
+
+    function talkOfficer(officer) {
+      const gain = 1 + (player.negotiation >= officer.negotiation ? 2 : player.negotiation + 15 >= officer.negotiation ? 1 : 0);
+      player.officerRelations[officer.id] = officerRelation(officer) + gain;
+      setMessage(officer.name, `「${officer.advice}」親密 +${gain}，目前 ${officerRelation(officer)}。`);
+      sound.play("ui"); saveGame();
+    }
+
+    function officerGiftMenu(officer, loc) {
+      const owned = specialtyCatalog.filter(item => (player.inventory.specialties[item.id] || 0) > 0);
+      if (!owned.length) {
+        setMessage(officer.name, "你目前沒有可贈送的名物。可先到清洲町名物店購買地方特產。" );
+        return;
+      }
+      setMessage("贈禮", `${officer.name}偏好：${officer.interest}。選擇一件名物。`);
+      setActions([
+        ...owned.map(item => ({ label: `${item.name} ×${player.inventory.specialties[item.id]}`, run: () => giveOfficerGift(officer, item, loc) })),
+        { label: "取消", run: () => visitOfficer(officer, loc) }
+      ]);
+    }
+
+    function giveOfficerGift(officer, item, loc) {
+      player.inventory.specialties[item.id] -= 1;
+      const preferred = (officer.interest === "美酒" && item.id === "kiyosu-sake") ||
+        (officer.interest === "茶器" && item.id === "seto-bowl") ||
+        (officer.interest === "南蠻物" && item.id === "namban-glass") ||
+        (officer.interest === "兵法" && item.id === "mino-paper") || officer.interest === "名物";
+      const gain = 3 + Math.floor(player.negotiation / 35) + (preferred ? 3 : 0);
+      player.officerRelations[officer.id] = officerRelation(officer) + gain;
+      sound.play("chime");
+      setMessage(officer.name, preferred ? `「這正合我的心意。」親密 +${gain}。` : `「有心了。」親密 +${gain}。`);
+      updateHUD(); saveGame();
+      setActions([{ label: "繼續會面", run: () => visitOfficer(officer, loc) }]);
+    }
+
+    function sparOfficer(officer) {
+      const hp = 64 + Math.floor(officer.martial * .42);
+      const atk = 10 + Math.floor(officer.martial * .13);
+      const def = 3 + Math.floor(officer.leadership / 18);
+      startCombat(officer.name, hp, atk, def, 8 + Math.floor(officer.martial / 10), "duel", {
+        officerId: officer.id, title: `${officer.faction}?${officer.role}`, sprite: officer.martial >= 90 ? "samurai" : "ronin", sparring: true,
+        technique: officer.martial >= 92 ? "戰國無雙" : "武家太刀", cost: officer.martial >= 92 ? 5 : 4, power: 1.55 + officer.martial / 250,
+        intro: `${officer.name}繫緊袖口，持木刀擺出架勢。這是有實力差距的正式切磋，不是普通路人戰。`
+      });
+    }
+
     function retainerDialogueMenu() {
+      return visitCastleOfficers(nearbyLocation || locations.find(loc => loc.id === "kiyosu-castle"));
       setMessage("家臣詰所", "柴田勝家正在檢視槍隊名冊；一旁受邀入城的明智光秀則對著近畿地圖沉思。你想與誰交談？");
       setActions([
         { label: "柴田勝家", run: talkToKatsuie },
@@ -2280,6 +2482,7 @@
       player.merit += mission.merit;
       player.fame += Math.ceil(mission.merit / 12);
       player.completedMissions += 1;
+      gainExperience(25 + Math.floor(mission.merit / 2));
       player.mission = null;
       const promotion = checkPromotion();
       sound.play("victory");
@@ -2450,6 +2653,124 @@
       }
     }
 
+    const specialtyCatalog = [
+      { id: "kiyosu-sake", name: "清洲銘酒", price: 8, desc: "適合送給豪爽武將，也能在酒場換取話題。" },
+      { id: "seto-bowl", name: "瀨戶燒茶碗", price: 18, desc: "尾張名物，茶人與文治派武將喜愛。" },
+      { id: "mino-paper", name: "美濃紙", price: 11, desc: "細韌潔白，奉行與軍師常用。" },
+      { id: "namban-glass", name: "南蠻玻璃珠", price: 28, desc: "罕見異國舶來品，對好奇的武將特別有效。" },
+      { id: "dried-katsuo", name: "土佐鰹節", price: 14, desc: "耐久旅糧，也是實用贈禮。" }
+    ];
+
+    function enterTownHub() {
+      gameState = "SCENE";
+      setMode("清洲城下町");
+      setMessage("清洲町町眾", "武具店的爐火、名物店的招牌與酒館的笑聲沿街相連。這裡不只是買刀，也能蒐集情報、結識同行者與接支線委託。");
+      setActions([
+        { label: "武具店／鍛冶屋", run: enterForge },
+        { label: "名物店（贈禮與地方特產）", run: enterSpecialtyShop },
+        { label: "酒館（情報、夥伴、支線）", run: enterTavern },
+        { label: "藥種屋（傷藥與史實草藥）", run: enterMedicineShop },
+        { label: "博戲場（丁半）", run: enterGamble },
+        { label: "旅籠歇息 5貫", run: () => townInn(5, enterTownHub) },
+        { label: "返回大地圖", run: leaveScene }
+      ]);
+    }
+
+    function specialtyPrice(item) {
+      return Math.max(1, item.price - Math.max(0, Math.floor((player.negotiation - 50) / 10)));
+    }
+
+    function enterSpecialtyShop() {
+      setMode("清洲名物店");
+      setMessage("名物商", `「送對名物，比空口說上十句更有用。」你的交涉 ${player.negotiation}，會影響成交價。`);
+      setActions([
+        ...specialtyCatalog.map(item => ({ label: `${item.name} ${specialtyPrice(item)}貫（持有 ${player.inventory.specialties[item.id] || 0}）`, run: () => buySpecialty(item) })),
+        { label: "返回清洲町", run: enterTownHub }
+      ]);
+    }
+
+    function buySpecialty(item) {
+      const price = specialtyPrice(item);
+      if (player.gold < price) { setMessage("名物商", `「【${item.name}】要 ${price} 貫，盤纏還不夠。」`); return; }
+      player.gold -= price;
+      player.inventory.specialties[item.id] = (player.inventory.specialties[item.id] || 0) + 1;
+      sound.play("coin");
+      setMessage("名物商", `購得【${item.name}】。${item.desc}`);
+      updateHUD(); saveGame(); enterSpecialtyShop();
+    }
+
+    function enterTavern() {
+      setMode("清洲酒館");
+      setMessage("酒館女將", "行商、浪人與傳令使挨桌而坐。花幾貫能聽見天下動向，也可能知道正在尋找主家的同行者。" );
+      setActions([
+        { label: "買一輪酒菜 3貫（回復體力）", run: tavernMeal },
+        { label: "向酒客買情報 3貫", run: buyTavernRumor },
+        { label: "打聽可同行者", run: tavernCompanionLead },
+        { label: player.sideQuest ? `支線：${player.sideQuest.title}` : "承接酒館支線委託", run: acceptTavernQuest, disabled: Boolean(player.sideQuest) },
+        { label: "返回清洲町", run: enterTownHub }
+      ]);
+    }
+
+    function tavernMeal() {
+      if (player.gold < 3) { setMessage("酒館女將", "「先留點盤纏吧，這桌不能賒。」"); return; }
+      player.gold -= 3; player.hp = Math.min(player.maxHp, player.hp + 26); player.ki = player.maxKi;
+      sound.play("coin"); setMessage("酒館女將", "熱湯與燒魚下肚，體力回復 26，氣力也已補滿。"); updateHUD(); saveGame();
+    }
+
+    function buyTavernRumor() {
+      if (player.gold < 3) { setMessage("情報販子", "「三貫才開口。」"); return; }
+      player.gold -= 3;
+      const officers = castleOfficers.filter(officer => year >= officer.from && year <= officer.to);
+      const officer = officers[Math.floor(Math.random() * officers.length)];
+      setMessage("情報販子", `「${officer.name}目前常在${locations.find(loc => loc.id === officer.castleId)?.name || "某座城"}出入。此人武勇 ${officer.martial}、統率 ${officer.leadership}，談話可先從${officer.interest}切入。」`);
+      sound.play("ui"); updateHUD(); saveGame();
+    }
+
+    function tavernCompanionLead() {
+      const npc = roadNpcs.find(item => !item.recruited && !item.defeated && item.recruitable);
+      if (!npc) { setMessage("酒館女將", "「眼下沒有合適的人，不妨過幾日再問。」"); return; }
+      player.npcRelations[npc.id] = npcRelation(npc) + 1;
+      setMessage("酒館女將", `「${npc.job}【${npc.name}】最近在${npc.origin}一帶活動。先交談查明來歷，再決定邀請或動武。」（親密 +1）`);
+      saveGame();
+    }
+
+    function acceptTavernQuest() {
+      if (player.sideQuest) { enterTavern(); return; }
+      player.sideQuest = { id: "lost-ledger", title: "酒館掌櫃的失落密帳", deadlineOrdinal: calendarOrdinal() + 10, reward: 24, experience: 42 };
+      setMessage("酒館掌櫃", "「把這本牽涉軍糧商人的密帳送到清洲城，十日內交給城中奉行。報酬二十四貫。」進清洲城後，從武將拜訪選單交付。" );
+      showToast("已承接支線：酒館掌櫃的失落密帳"); updateHUD(); saveGame();
+    }
+
+    function deliverSideQuest() {
+      if (!player.sideQuest) return;
+      const quest = player.sideQuest;
+      const late = calendarOrdinal() > quest.deadlineOrdinal;
+      const reward = late ? Math.floor(quest.reward / 2) : quest.reward;
+      player.gold += reward; player.fame += late ? 0 : 2; player.sideQuest = null;
+      const xpText = gainExperience(quest.experience);
+      sound.play("victory"); setMessage("清洲奉行", `密帳已收下。${late ? "雖然逾期，仍支付一半報酬" : "趕在期限內，城中商路得以及時整頓"}：${reward} 貫。${xpText}`);
+      updateHUD(); saveGame();
+      setActions([{ label: "返回城內", run: castleMainMenu }, { label: "拜訪武將", run: () => visitCastleOfficers(locations.find(loc => loc.id === "kiyosu-castle")) }]);
+    }
+
+    function enterMedicineShop() {
+      setMode("清洲藥種屋");
+      setMessage("藥種商", "傷藥適合戰時急救；十藥（魚腥草）與艾草則是當時常見的民間草藥。" );
+      setActions([
+        { label: `傷藥 12貫（持有 ${player.inventory.medicine || 0}）`, run: () => buyMedicine("medicine", 12, "傷藥") },
+        { label: `十藥／魚腥草 6貫（持有 ${player.inventory.dokudami || 0}）`, run: () => buyMedicine("dokudami", 6, "十藥") },
+        { label: `艾草 5貫（持有 ${player.inventory.yomogi || 0}）`, run: () => buyMedicine("yomogi", 5, "艾草") },
+        { label: "返回清洲町", run: enterTownHub }
+      ]);
+    }
+
+    function townInn(cost = 5, back = enterTownHub) {
+      if (player.gold < cost) { setMessage("旅籠主人", `「住宿要 ${cost} 貫。」`); return; }
+      player.gold -= cost; player.hp = player.maxHp; player.ki = player.maxKi; advanceDay();
+      sound.play("chime"); setMessage("旅籠主人", "安睡一夜，體力與氣力完全回復。" ); updateHUD(); saveGame();
+      setActions([{ label: "繼續", run: back }]);
+    }
+
     function enterForge() {
       gameState = "FORGE";
       setMode("清洲町 · 鍛冶屋");
@@ -2474,6 +2795,7 @@
         actions.push({ label: "採購評定鐵砲 15貫", run: buyEvaluationFirearm });
       }
       actions.push({ label: "返回大地圖", run: leaveScene });
+      actions[actions.length - 1] = { label: "\u8fd4\u56de\u6e05\u6d32\u753a", run: enterTownHub };
       setActions(actions);
     }
 
@@ -2676,6 +2998,7 @@
       combat.mode = mode;
       combat.pendingEnemy = enemy;
       combat.roadNpcId = enemy.roadNpcId || null;
+      combat.officerId = enemy.officerId || null;
       combat.enemyName = enemy.name;
       combat.enemyTitle = enemy.title;
       combat.rewardGold = enemy.reward;
@@ -2898,11 +3221,16 @@
         player.leadership = Math.min(100, player.leadership + 2 + Math.floor(enemyCount / 2));
       }
       player.fame += combat.legendary ? 4 : 1;
+      const experienceText = gainExperience(Math.max(16, 18 + enemyCount * 7 + Math.floor((combat.pendingEnemy.unlock || 0) / 2) + (combat.legendary ? 40 : 0)));
       if (combat.roadNpcId) {
         const roadNpc = roadNpcs.find(npc => npc.id === combat.roadNpcId);
         if (roadNpc) { roadNpc.defeated = true; player.npcRelations[roadNpc.id] = Math.min(-2, npcRelation(roadNpc) - 2); }
       }
       let masteryText = "";
+      if (combat.officerId) {
+        player.officerRelations[combat.officerId] = (player.officerRelations[combat.officerId] || 0) + 2;
+        masteryText = " 切磋獲勝，對方親密 +2。";
+      }
       if (combat.legendary) {
         const oldMaxKi = player.maxKi;
         player.maxKi = Math.min(10, player.maxKi + 1);
@@ -2943,6 +3271,7 @@
           lootText = ` 撿到的舊裝備不如現有裝束，折售 6 貫。`;
         }
       }
+      lootText += experienceText;
       sound.play("victory");
       const closing = combat.sparring
         ? `${combat.enemyName}收勢還刀，承認你通過了這場試煉。你獲得謝禮 ${battleReward} 貫。`
@@ -3047,7 +3376,7 @@
         const inWild = !findNearbyLocation();
         if (inWild && encounterSafeDistance <= 0 && encounterDistance > 300) {
           encounterDistance = 0;
-          if (Math.random() < .38) { startCombat(); return; }
+          if (Math.random() < .19) { startCombat(); return; }
         }
       }
 
@@ -3615,9 +3944,15 @@
       ctx.globalAlpha = unit.hp > 0 ? 1 : .32;
       if (unit.flash > 0) ctx.translate(Math.sin(scenePulse * 58) * 7, 0);
       ctx.shadowColor = "rgba(0,0,0,.62)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 8;
-      ctx.drawImage(partyFighterAtlas, cell[0] * sw, cell[1] * sh, sw, sh, x, y, size, size);
+      if (unit.side === "party") {
+        ctx.translate(x + size, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(partyFighterAtlas, cell[0] * sw, cell[1] * sh, sw, sh, 0, y, size, size);
+      } else {
+        ctx.drawImage(partyFighterAtlas, cell[0] * sw, cell[1] * sh, sw, sh, x, y, size, size);
+      }
       if (unit.flash > 0) {
-        ctx.globalCompositeOperation = "source-atop"; ctx.fillStyle = "rgba(255,235,205,.42)"; ctx.fillRect(x, y, size, size);
+        ctx.globalCompositeOperation = "source-atop"; ctx.fillStyle = "rgba(255,235,205,.42)"; ctx.fillRect(unit.side === "party" ? 0 : x, y, size, size);
       }
       ctx.restore();
     }
