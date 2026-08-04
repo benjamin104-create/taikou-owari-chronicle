@@ -930,6 +930,12 @@
     equipmentItemAtlas.src = "equipment-items-v1.png";
     const heroWeaponAtlas = new Image();
     heroWeaponAtlas.src = "hero-weapons-v1.png";
+    const hieizanEventCard = new Image();
+    hieizanEventCard.src = "event-hieizan-1571-v1.png";
+    const teppoEventCard = new Image();
+    teppoEventCard.src = "event-teppo-1543-v1.png";
+    const kizugawaEventCard = new Image();
+    kizugawaEventCard.src = "event-kizugawa-1578-v1.png";
 
     const weaponLoot = [
       { id: "uchigatana", name: "量產打刀", atk: 5, type: "katana", speed: 0, stance: "中段" },
@@ -1000,6 +1006,12 @@
       companions: [],
       companionHealth: {},
       relicFlags: {},
+      historicalFlags: {},
+      historicalChoices: [],
+      firearmsSkill: 0,
+      navalSkill: 0,
+      militarySkill: 1,
+      domain: { agriculture: 44, commerce: 38, army: 320, morale: 68, firearms: 18, ships: 2, gunTech: 1, navalTech: 0, templeRelation: 0 },
       mission: null,
       inventory: { rice: 0, firearms: 0, medicine: 1, dokudami: 2, yomogi: 1 },
       weapon: { id: "uchigatana", name: "無名打刀", atk: 0, type: "katana", speed: 0, stance: "中段" },
@@ -1019,6 +1031,7 @@
     let encounterDistance = 0;
     let encounterSafeDistance = 350;
     let travelDayDistance = 0;
+    let year = 1560;
     let day = 12;
     let month = 5;
     let weatherIndex = 0;
@@ -1027,6 +1040,8 @@
     let autosaveTimer = 0;
     let scenePulse = 0;
     let toastTimer = 0;
+    let currentHistoricalEvent = null;
+    const historicalEventQueue = [];
 
     const weatherCycle = ["初夏晴", "薄曇", "驟雨", "雨後霧", "南風"];
     const rankTable = [
@@ -1082,6 +1097,69 @@
       kiri: { id: "kiri", name: "霧隱楓", job: "忍者", maxHp: 76, maxKi: 7, atk: 17, def: 5, speed: 29, sprite: "ninja", technique: "忍術·影縫", skillCost: 3 },
       genya: { id: "genya", name: "玄也坊", job: "槍僧", maxHp: 98, maxKi: 6, atk: 20, def: 9, speed: 18, sprite: "monk", technique: "十文字槍", skillCost: 3 }
     };
+
+    const historicalEvents = [
+      {
+        id: "teppo-production", year: 1560, month: 7, day: 1, image: teppoEventCard,
+        title: "火繩與螺旋 · 鐵砲量產", subtitle: "1543年種子島傳入之後，技術正重寫戰國兵制",
+        summary: "葡萄牙人所持火繩槍經種子島時堯命人研究，鍛冶匠掌握槍管尾端螺旋後開始國產化。到了永祿年間，堺、國友等地的生產與彈藥供應，已成為大名軍備競爭的核心。",
+        choices: [
+          { label: "投資國友鍛冶與火藥 35貫", resolve: () => {
+            if (player.gold < 35) return "軍資不足，鍛冶眾只交付少量樣銃。鐵砲技術未能大幅提升。";
+            player.gold -= 35; player.domain.gunTech += 1; player.domain.firearms += 70; player.domain.commerce += 5; player.firearmsSkill += 1;
+            return "你出資改良槍管、藥室與量規。鐵砲技術 +1、鐵砲隊 +70、商業 +5。";
+          }},
+          { label: "親自修習裝填與射法", resolve: () => { player.firearmsSkill += 2; player.militarySkill += 1; player.merit += 10; return "你從火繩管理、早合裝填到雨天保護逐項操練。鐵砲技能 +2、軍學 +1、功勳 +10。"; }},
+          { label: "將樣銃轉售各地商人", resolve: () => { player.gold += 55; player.domain.commerce += 8; player.infamy += 2; return "你藉軍備需求獲利 55 貫、商業 +8；武器流向難以追查，惡名 +2。"; }}
+        ]
+      },
+      {
+        id: "hieizan-1571", year: 1571, month: 9, day: 12, image: hieizanEventCard,
+        title: "元龜二年 · 比叡山燒討", subtitle: "寺社勢力、淺井朝倉與織田政權的衝突抵達臨界點",
+        summary: "織田軍包圍比叡山東麓與坂本。這不是單純的『僧兵叛亂』，而是軍事、宗教、領地與政治勢力交纏後的慘烈清算；山門僧侶與山下居民都面臨災難。",
+        choices: [
+          { label: "服從軍令，參與全面包圍", resolve: () => { player.domain.army += 120; player.merit += 45; player.infamy += 10; player.domain.templeRelation -= 35; player.domain.morale -= 5; return "軍令被徹底執行：兵力 +120、功勳 +45；惡名 +10、寺社關係 -35、士氣 -5。"; }},
+          { label: "請命開闢百姓與學僧退路", resolve: () => {
+            const success = player.leadership + Math.floor(player.intellect / 4) >= 55;
+            if (success) { player.fame += 9; player.domain.templeRelation += 18; player.merit += 12; return "你以整隊與夜間引導控制逃生路，救下部分非戰鬥人員。名聲 +9、寺社關係 +18、功勳 +12。"; }
+            player.merit = Math.max(0, player.merit - 8); player.fame += 2; return "混亂遠超預期，只救出少數人，且因違逆部署損失功勳 8。";
+          }},
+          { label: "讓忍者先行示警山門", resolve: () => {
+            if (player.ninjaSkill < 2) { player.infamy += 4; return "密使被截，警告未能傳到。行動留下疑點，惡名 +4。"; }
+            player.domain.templeRelation += 25; player.ninjaSkill += 1; player.merit = Math.max(0, player.merit - 15); return "忍者穿過封鎖送達示警。寺社關係 +25、忍術 +1，但功勳 -15。";
+          }}
+        ]
+      },
+      {
+        id: "nagashino-1575", year: 1575, month: 5, day: 21, image: teppoEventCard,
+        title: "天正三年 · 長篠設樂原", subtitle: "勝負不只在槍數，也在陣地、彈藥、兵力與指揮",
+        summary: "織田、德川聯軍與武田軍在設樂原對峙。遊戲不把戰果簡化成傳說中的固定『三段擊』，而讓防馬柵、火繩槍、玉藥補給與預備隊共同決定結果。",
+        choices: [
+          { label: "配置鐵砲隊與防馬柵", resolve: () => {
+            if (player.domain.gunTech < 2 || player.domain.firearms < 80) { player.domain.army = Math.max(50, player.domain.army - 90); return "鐵砲或技術不足，射擊線很快中斷。兵力 -90。"; }
+            player.domain.firearms -= 35; player.domain.army += 210; player.merit += 70; player.firearmsSkill += 1; return "輪替射擊與防馬柵維持了火力線。鐵砲 -35、兵力成果 +210、功勳 +70、鐵砲技能 +1。";
+          }},
+          { label: "統籌玉藥與兵糧輸送", resolve: () => { const gain = 90 + Math.floor(player.domain.commerce / 2); player.domain.army += gain; player.merit += 52; player.militarySkill += 1; return `你以商路與軍學維持不間斷補給。戰力成果 +${gain}、功勳 +52、軍學 +1。`; }},
+          { label: "率武士預備隊迎擊突破口", resolve: () => { player.hp = Math.max(28, player.hp - 24); player.leadership += 5; player.merit += 62; player.domain.morale += 8; return "你在近戰突破口投入預備隊。體力 -24、統率 +5、功勳 +62、士氣 +8。"; }}
+        ]
+      },
+      {
+        id: "kizugawa-1578", year: 1578, month: 11, day: 6, image: kizugawaEventCard,
+        title: "天正六年 · 第二次木津川口之戰", subtitle: "九鬼水軍的大型船與毛利方補給船團爭奪大坂灣",
+        summary: "九鬼嘉隆率領異例的大型軍船，在木津川口迎擊支援石山本願寺的毛利方水軍。大型船、火器、船體防護與小早船機動，構成完全不同於陸戰的戰術。",
+        choices: [
+          { label: "投入大型安宅船與大筒 80貫", resolve: () => {
+            if (player.gold < 80) { player.domain.ships = Math.max(0, player.domain.ships - 1); return "資金不足，船體與大筒未能如期完工。軍船 -1。"; }
+            player.gold -= 80; player.domain.ships += 6; player.domain.navalTech += 2; player.navalSkill += 2; player.merit += 80; return "大型船隊完成：軍船 +6、水軍技術 +2、水軍技能 +2、功勳 +80。";
+          }},
+          { label: "率小早船迂迴切斷補給", resolve: () => { player.domain.ships += 3; player.navalSkill += 2; player.leadership += 4; player.merit += 55; return "你利用潮流與小船速度切入船團側後。軍船 +3、水軍技能 +2、統率 +4、功勳 +55。"; }},
+          { label: "以鐵砲壓制敵方甲板", resolve: () => {
+            if (player.firearmsSkill < 2) { player.domain.morale -= 8; return "海浪與船身晃動使射擊失準，士氣 -8。"; }
+            player.domain.firearms = Math.max(0, player.domain.firearms - 25); player.navalSkill += 1; player.firearmsSkill += 1; player.merit += 65; return "火繩與射界管理奏效。鐵砲 -25、水軍 +1、鐵砲 +1、功勳 +65。";
+          }}
+        ]
+      }
+    ];
 
     const enemyRoster = [
       { name: "落魄浪人", title: "無名·一段", hp: 58, atk: 14, def: 3, reward: 12, unlock: 0, weight: 34, sprite: "ronin", technique: "逆袈裟", cost: 3, power: 1.35, skillChance: .12, guardChance: .05, intro: "「留下路錢！」衣衫破舊的浪人拔刀逼近。" },
@@ -1376,7 +1454,7 @@
 
     function showArmyCard() {
       const mission = player.mission ? `${player.mission.title} ${missionProgressText(player.mission)}` : "尚未承辦評定";
-      showRetroInfo("軍團情報", `<div>織田軍團</div><div class="info-grid"><span>總大將　織田信長</span><span>士氣　100</span><span>身份　${displayRank()}</span><span>功勳　${player.merit}</span><span>軍資　${player.gold}貫</span><span>體力　${Math.ceil(player.hp)}</span></div><div class="retro-info-note">軍務：${mission}</div>`);
+      showRetroInfo("軍團情報", `<div>${year}年　黑崎隊軍備</div><div class="info-grid"><span>總大將　織田信長</span><span>身份　${displayRank()}</span><span>直屬兵力　${player.domain.army}</span><span>士氣　${player.domain.morale}</span><span>鐵砲　${player.domain.firearms}挺</span><span>軍船　${player.domain.ships}艘</span><span>軍學　LV${player.militarySkill}</span><span>水軍　LV${player.navalSkill}</span><span>功勳　${player.merit}</span><span>軍資　${player.gold}貫</span></div><div class="retro-info-note">軍務：${mission}</div>`);
     }
 
     function handleRetroAction(action) {
@@ -1399,7 +1477,7 @@
 
     function updateHUD() {
       refreshRankStrip();
-      ui.time.textContent = `1560年 ${month}月 ${day}日`;
+      ui.time.textContent = `${year}年 ${month}月 ${day}日`;
       ui.location.textContent = nearbyLocation ? nearbyLocation.area : "尾張國·街道野外";
       ui.hp.textContent = `${Math.ceil(player.hp)} / ${player.maxHp}`;
       ui.ki.textContent = `${player.ki} / ${player.maxKi}`;
@@ -1453,7 +1531,7 @@
 
     function saveGame(showNotice = false) {
       const snapshot = {
-        version: 2,
+        version: 3,
         player: {
           x: player.x, y: player.y, hp: player.hp, ki: player.ki, gold: player.gold,
           fame: player.fame, infamy: player.infamy, weapon: player.weapon, armor: player.armor,
@@ -1462,9 +1540,11 @@
           combatWins: player.combatWins, groupWins: player.groupWins, leadership: player.leadership,
           samuraiSkill: player.samuraiSkill, ninjaSkill: player.ninjaSkill,
           companions: player.companions, companionHealth: player.companionHealth,
-          relicFlags: player.relicFlags, mission: player.mission, inventory: player.inventory
+          relicFlags: player.relicFlags, historicalFlags: player.historicalFlags, historicalChoices: player.historicalChoices,
+          firearmsSkill: player.firearmsSkill, navalSkill: player.navalSkill, militarySkill: player.militarySkill,
+          domain: player.domain, mission: player.mission, inventory: player.inventory
         },
-        calendar: { day, month, weatherIndex }
+        calendar: { year, day, month, weatherIndex }
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot));
       if (showNotice) showToast("進度已保存");
@@ -1473,13 +1553,16 @@
     function loadGame() {
       try {
         const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
-        if (!saved || ![1, 2].includes(saved.version)) return;
+        if (!saved || ![1, 2, 3].includes(saved.version)) return;
         Object.assign(player, saved.player || {});
         player.inventory = { rice: 0, firearms: 0, medicine: 1, dokudami: 2, yomogi: 1, ...(player.inventory || {}) };
         player.weapon = { id: "uchigatana", type: "katana", speed: 0, stance: "中段", ...(player.weapon || {}) };
         player.companions = Array.isArray(player.companions) ? player.companions : [];
         player.companionHealth = player.companionHealth || {};
         player.relicFlags = player.relicFlags || {};
+        player.historicalFlags = player.historicalFlags || {};
+        player.historicalChoices = Array.isArray(player.historicalChoices) ? player.historicalChoices : [];
+        player.domain = { agriculture: 44, commerce: 38, army: 320, morale: 68, firearms: 18, ships: 2, gunTech: 1, navalTech: 0, templeRelation: 0, ...(player.domain || {}) };
         if (!player.isRetainer) {
           player.faction = "無";
           player.rank = "浪人";
@@ -1487,6 +1570,7 @@
           player.mission = null;
         }
         if (saved.calendar) {
+          year = saved.calendar.year || year;
           day = saved.calendar.day || day;
           month = saved.calendar.month || month;
           weatherIndex = saved.calendar.weatherIndex || 0;
@@ -1521,10 +1605,63 @@
       saveGame();
     }
 
-    function advanceDay() {
-      day++;
-      if (day > 30) { day = 1; month++; }
-      if (month > 12) month = 1;
+    function advanceDay(amount = 1) {
+      for (let i = 0; i < amount; i++) {
+        day++;
+        if (day > 30) { day = 1; month++; }
+        if (month > 12) { month = 1; year++; }
+      }
+      collectHistoricalEvents();
+      if (historicalEventQueue.length && gameState !== "COMBAT" && gameState !== "GAMBLE" && gameState !== "EVENT") {
+        setTimeout(dispatchHistoricalEvent, 0);
+      }
+    }
+
+    function dateStamp(y, m, d) { return y * 10000 + m * 100 + d; }
+
+    function collectHistoricalEvents() {
+      const now = dateStamp(year, month, day);
+      historicalEvents.forEach(event => {
+        if (player.historicalFlags[event.id]) return;
+        if (historicalEventQueue.some(queued => queued.id === event.id)) return;
+        if (now >= dateStamp(event.year, event.month, event.day)) historicalEventQueue.push(event);
+      });
+      historicalEventQueue.sort((a, b) => dateStamp(a.year, a.month, a.day) - dateStamp(b.year, b.month, b.day));
+    }
+
+    function dispatchHistoricalEvent() {
+      if (gameState === "COMBAT" || gameState === "GAMBLE" || gameState === "EVENT") return;
+      const event = historicalEventQueue.shift();
+      if (event) triggerHistoricalEvent(event);
+    }
+
+    function triggerHistoricalEvent(event) {
+      currentHistoricalEvent = event;
+      gameState = "EVENT";
+      setMode("重大史實事件 · 抉擇");
+      setMessage(event.title, event.summary);
+      setActions(event.choices.map((choice, index) => ({ label: choice.label, run: () => resolveHistoricalChoice(event, index) })));
+      sound.play("encounter");
+    }
+
+    function resolveHistoricalChoice(event, choiceIndex) {
+      if (player.historicalFlags[event.id]) return;
+      const choice = event.choices[choiceIndex];
+      const result = choice.resolve();
+      player.historicalFlags[event.id] = true;
+      player.historicalChoices.push({ id: event.id, choice: choice.label, year, month, day });
+      setMessage(event.title, `${result}<br><br>此選擇已寫入歷史年表，國力與人物能力將延續到後續事件。`);
+      setActions([{ label: historicalEventQueue.length ? "進入下一個歷史事件" : "返回天下大勢", run: finishHistoricalEvent }]);
+      updateHUD(); saveGame();
+    }
+
+    function finishHistoricalEvent() {
+      currentHistoricalEvent = null;
+      if (historicalEventQueue.length) { gameState = "SCENE"; dispatchHistoricalEvent(); return; }
+      gameState = "MAP";
+      setMode("大地圖移動");
+      setMessage("天下大勢", `歷史進入 ${year} 年。你的選擇已改變軍備、聲望與各方關係。`);
+      mapActions(); updateHUD(); saveGame();
     }
 
     function findNearbyLocation() {
@@ -1584,6 +1721,7 @@
           { label: "與家臣交談", run: retainerDialogueMenu },
           { label: "申請仕官織田家", run: applyToOda },
           { label: "請求臨時差事", run: castleErrand },
+          { label: "查看戰國歷史年表", run: showHistoryChronicle },
           { label: "返回大地圖", run: leaveScene }
         ]);
         return;
@@ -1598,6 +1736,10 @@
         { label: player.mission ? "已有評定任務" : "領取評定任務", run: receiveEvaluationMission, disabled: Boolean(player.mission) },
         { label: missionReady() ? "交付評定任務" : "任務尚未完成", run: deliverEvaluationMission, disabled: !missionReady() },
         { label: "率足輕小隊出陣（統率25）", run: commandSortie },
+        { label: "國政、鐵砲與水軍整備", run: domainManagementMenu },
+        { label: "歷史年表與事件圖卡", run: showHistoryChronicle },
+        { label: "結束本季，推進三個月", run: advanceCampaignSeason },
+        { label: "委任奉行，推進一年", run: advanceCampaignYear },
         { label: "查看官途與功勳", run: showCareerStatus },
         { label: "返回大地圖", run: leaveScene }
       ]);
@@ -1610,6 +1752,67 @@
       }
       setMessage("柴田勝家", "「今川先鋒正在鳴海北道試探。你帶足輕小隊出陣，忍者斷後、武士壓陣！」");
       startCombat("今川先鋒小隊", 94, 21, 7, 52, "party");
+    }
+
+    function domainManagementMenu(note = "") {
+      setMessage(note ? "國政完成" : "清洲城奉行所", note || `國力會影響歷史事件判定與軍事成果。農業 ${player.domain.agriculture}、商業 ${player.domain.commerce}、兵力 ${player.domain.army}、鐵砲 ${player.domain.firearms}、軍船 ${player.domain.ships}。`);
+      setActions([
+        { label: "開墾新田 20貫／30日", run: () => investDomain("agriculture") },
+        { label: "振興町商 20貫／30日", run: () => investDomain("commerce") },
+        { label: "訓練足輕與軍學 25貫／30日", run: () => investDomain("army") },
+        { label: "擴編鐵砲隊 30貫／30日", run: () => investDomain("firearms") },
+        { label: "建造關船與小早 35貫／30日", run: () => investDomain("navy") },
+        { label: "查看完整國力", run: showDomainStatus },
+        { label: "返回評定所", run: castleMainMenu }
+      ]);
+    }
+
+    function investDomain(kind) {
+      const plans = {
+        agriculture: { cost: 20, text: "修渠開田", apply: () => { player.domain.agriculture += 7; player.domain.morale += 2; } },
+        commerce: { cost: 20, text: "整頓座市與津料", apply: () => { player.domain.commerce += 7; player.gold += 5; } },
+        army: { cost: 25, text: "足輕編組與軍學推演", apply: () => { player.domain.army += 90; player.domain.morale += 4; player.militarySkill += 1; player.leadership += 2; } },
+        firearms: { cost: 30, text: "火繩、早合與射擊訓練", apply: () => { player.domain.firearms += 45 + player.domain.gunTech * 10; player.firearmsSkill += 1; } },
+        navy: { cost: 35, text: "船材、櫓手與潮路訓練", apply: () => { player.domain.ships += 2 + player.domain.navalTech; player.navalSkill += 1; } }
+      };
+      const plan = plans[kind];
+      if (!plan || player.gold < plan.cost) { setMessage("奉行", `「此項整備需 ${plan ? plan.cost : 0} 貫，軍資不足。」`); return; }
+      player.gold -= plan.cost; plan.apply(); advanceDay(30);
+      sound.play("forge"); updateHUD(); saveGame(); domainManagementMenu(`${plan.text}完成。時間推進 30 日，成果已計入國力與技能。`);
+    }
+
+    function advanceCampaignSeason() {
+      const income = Math.max(12, Math.floor((player.domain.agriculture + player.domain.commerce) / 4));
+      player.gold += income;
+      player.domain.morale = Math.min(100, player.domain.morale + 2);
+      advanceDay(90);
+      setMessage("季度結算", `領地年貢與町稅收入 ${income} 貫。時間推進三個月，下一批到期史實事件將自動展開。`);
+      sound.play("coin"); updateHUD(); saveGame();
+      setActions([{ label: "返回評定所", run: castleMainMenu }, { label: "再推進一季", run: advanceCampaignSeason }, { label: "查看歷史年表", run: showHistoryChronicle }]);
+    }
+
+    function advanceCampaignYear() {
+      const income = Math.max(48, Math.floor(player.domain.agriculture + player.domain.commerce));
+      player.gold += income;
+      player.domain.army += Math.max(20, Math.floor(player.domain.agriculture / 2));
+      player.domain.morale = Math.min(100, player.domain.morale + 4);
+      advanceDay(360);
+      setMessage("年度軍政委任", `四季年貢與町稅收入 ${income} 貫，募得新兵並完成年度整備。時間推進一年；期間到期的重大史實事件會依序展開。`);
+      sound.play("coin"); updateHUD(); saveGame();
+      setActions([{ label: "返回評定所", run: castleMainMenu }, { label: "再委任一年", run: advanceCampaignYear }, { label: "查看歷史年表", run: showHistoryChronicle }]);
+    }
+
+    function showDomainStatus() {
+      showRetroInfo("國力與軍備", `<div>${year}年　織田家軍政</div><div class="info-grid"><span>農業　${player.domain.agriculture}</span><span>商業　${player.domain.commerce}</span><span>兵力　${player.domain.army}</span><span>士氣　${player.domain.morale}</span><span>鐵砲　${player.domain.firearms}</span><span>軍船　${player.domain.ships}</span><span>鐵砲技術　LV${player.domain.gunTech}</span><span>水軍技術　LV${player.domain.navalTech}</span><span>寺社關係　${player.domain.templeRelation}</span><span>統率　${player.leadership}</span></div><div class="retro-info-note">個人技能：軍學 LV${player.militarySkill}／鐵砲 LV${player.firearmsSkill}／水軍 LV${player.navalSkill}／忍術 LV${player.ninjaSkill}</div>`);
+    }
+
+    function showHistoryChronicle() {
+      const rows = historicalEvents.map(event => {
+        const choice = player.historicalChoices.find(entry => entry.id === event.id);
+        const state = choice ? `已發生｜${choice.choice}` : dateStamp(year, month, day) >= dateStamp(event.year, event.month, event.day) ? "待觸發" : "尚未到期";
+        return `<div class="history-row"><strong>${event.year}.${String(event.month).padStart(2, "0")}　${event.title}</strong><br><span>${state}</span></div>`;
+      }).join("");
+      showRetroInfo("戰國歷史年表", `${rows}<div class="retro-info-note">史實事件不只是動畫：鐵砲、水軍、兵力、商業、忍術、寺社關係與玩家選擇，都會改變判定與後續國力。</div>`);
     }
 
     function retainerDialogueMenu() {
@@ -2487,6 +2690,7 @@
       else if (gameState === "FORGE") drawForge();
       else if (gameState === "GAMBLE") drawGamble();
       else if (gameState === "COMBAT") drawCombat();
+      else if (gameState === "EVENT") drawHistoricalEvent();
       else drawLocationScene();
       drawVignette();
     }
@@ -2817,6 +3021,34 @@
       dots[value].forEach(dot => { ctx.beginPath(); ctx.arc(x + dot[0] * size, y + dot[1] * size, value === 1 ? size * .095 : size * .065, 0, Math.PI * 2); ctx.fill(); });
     }
 
+    function drawHistoricalEvent() {
+      const event = currentHistoricalEvent;
+      const fieldH = VIEW.h - 42;
+      if (!event) { ctx.fillStyle = "#17130f"; ctx.fillRect(0, 0, VIEW.w, fieldH); return; }
+      const image = event.image;
+      if (image && image.complete && image.naturalWidth) {
+        const scale = Math.max(VIEW.w / image.naturalWidth, fieldH / image.naturalHeight);
+        const sw = VIEW.w / scale, sh = fieldH / scale;
+        const sx = Math.max(0, (image.naturalWidth - sw) / 2), sy = Math.max(0, (image.naturalHeight - sh) / 2);
+        ctx.drawImage(image, sx, sy, sw, sh, 0, 0, VIEW.w, fieldH);
+      } else {
+        ctx.fillStyle = "#26221b"; ctx.fillRect(0, 0, VIEW.w, fieldH);
+      }
+      const overlay = ctx.createLinearGradient(0, 0, 0, fieldH);
+      overlay.addColorStop(0, "rgba(5,8,10,.72)"); overlay.addColorStop(.35, "rgba(8,7,5,.05)"); overlay.addColorStop(.68, "rgba(8,7,5,.14)"); overlay.addColorStop(1, "rgba(6,5,4,.9)");
+      ctx.fillStyle = overlay; ctx.fillRect(0, 0, VIEW.w, fieldH);
+      ctx.strokeStyle = "rgba(224,190,112,.7)"; ctx.lineWidth = 3; ctx.strokeRect(12, 12, VIEW.w - 24, fieldH - 24);
+      ctx.fillStyle = "rgba(117,28,24,.92)"; ctx.fillRect(28, 24, 116, 28);
+      ctx.fillStyle = "#f2dfb5"; ctx.font = '700 14px "Microsoft JhengHei", sans-serif'; ctx.textAlign = "center"; ctx.fillText("重大史實事件", 86, 43);
+      ctx.textAlign = "left"; ctx.fillStyle = "#f5e4bd"; ctx.font = '700 30px "DFKai-SB", "BiauKai", serif'; ctx.fillText(event.title, 30, 91);
+      ctx.fillStyle = "#d9c69e"; ctx.font = '14px "Microsoft JhengHei", sans-serif'; ctx.fillText(event.subtitle, 32, 119);
+      ctx.fillStyle = "rgba(10,9,7,.78)"; ctx.fillRect(28, fieldH - 92, VIEW.w - 56, 61);
+      ctx.strokeStyle = "rgba(226,199,135,.5)"; ctx.strokeRect(28, fieldH - 92, VIEW.w - 56, 61);
+      ctx.fillStyle = "#efd9a8"; ctx.font = '700 16px "Microsoft JhengHei", sans-serif'; ctx.fillText(`時：${event.year}年 ${event.month}月　所在：天下大勢`, 44, fieldH - 66);
+      ctx.fillStyle = "#c9c0aa"; ctx.font = '12px "Microsoft JhengHei", sans-serif';
+      ctx.fillText(`兵 ${player.domain.army}　鐵砲 ${player.domain.firearms}　軍船 ${player.domain.ships}　士氣 ${player.domain.morale}　寺社關係 ${player.domain.templeRelation >= 0 ? "+" : ""}${player.domain.templeRelation}`, 44, fieldH - 43);
+    }
+
     function drawCombat() {
       const fieldH = VIEW.h - 42;
       if (battleBackground.complete && battleBackground.naturalWidth) {
@@ -2993,7 +3225,7 @@
       ctx.fillStyle = "#161d1b";
       ctx.font = '700 25px "DFKai-SB", "BiauKai", serif';
       ctx.textBaseline = "middle"; ctx.textAlign = "left";
-      ctx.fillText(`1560年${month}月${day}日`, 18, y + 24);
+      ctx.fillText(`${year}年${month}月${day}日`, 18, y + 24);
       ctx.font = '700 20px "DFKai-SB", "BiauKai", serif';
       ctx.fillText(weatherCycle[weatherIndex], 310, y + 24);
       ctx.fillText(nearbyLocation ? nearbyLocation.name : "尾張", 438, y + 24);
@@ -3047,6 +3279,8 @@
       canvas.focus();
       setMessage("旅途札記", "你踏上尾張的土路。畫面會隨角色移動捲動；靠近據點後按 Space 或 Enter 進入。 ");
       mapActions();
+      collectHistoricalEvents();
+      if (historicalEventQueue.length) setTimeout(dispatchHistoricalEvent, 0);
     }
 
     function refreshSoundButton() {
