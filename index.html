@@ -921,25 +921,35 @@
     const mapSpriteAtlas = new Image();
     mapSpriteAtlas.src = "map-sprites-v1.png";
     const battleBackground = new Image();
-    battleBackground.src = "battle-road-v1.png";
+    battleBackground.src = "battle-road-party-v2.png";
     const battleFighterAtlas = new Image();
     battleFighterAtlas.src = "battle-fighters-v1.png";
+    const partyFighterAtlas = new Image();
+    partyFighterAtlas.src = "party-fighters-v2.png";
+    const equipmentItemAtlas = new Image();
+    equipmentItemAtlas.src = "equipment-items-v1.png";
+    const heroWeaponAtlas = new Image();
+    heroWeaponAtlas.src = "hero-weapons-v1.png";
 
     const weaponLoot = [
-      { name: "打刀", atk: 5 },
-      { name: "和泉守兼定", atk: 10 },
-      { name: "備前長船", atk: 16 },
-      { name: "菊一文字", atk: 25 },
-      { name: "妖刀·村正", atk: 30, art: "muramasa", rarity: "傳說" },
-      { name: "童子切安綱", atk: 35 }
+      { id: "uchigatana", name: "量產打刀", atk: 5, type: "katana", speed: 0, stance: "中段" },
+      { id: "kodachi", name: "無銘小太刀", atk: 7, type: "kodachi", speed: 6, stance: "低身疾走" },
+      { id: "tachi", name: "備前太刀", atk: 11, type: "tachi", speed: -2, stance: "雙手大上段" },
+      { id: "yari", name: "素槍", atk: 10, type: "yari", speed: -1, stance: "長柄突陣" },
+      { id: "yumi", name: "重藤弓", atk: 9, type: "yumi", speed: 2, stance: "遠矢架勢" }
+    ];
+
+    const rareRelics = [
+      { id: "muramasa", name: "妖刀·村正", atk: 30, type: "tachi", speed: 1, stance: "妖氣大上段", art: "muramasa", rarity: "傳說", condition: "八月驟雨、擊破伊賀抜忍或劍豪後 4% 出現", check: enemy => month === 8 && weatherCycle[weatherIndex] === "驟雨" && player.combatWins >= 12 && (enemy.name.includes("伊賀") || enemy.legendary) && Math.random() < .04 },
+      { id: "daihannya", name: "大般若長光", atk: 27, type: "tachi", speed: 0, stance: "正眼", rarity: "國寶級", condition: "部將以上完成劍豪試煉後 5% 獲信長下賜", check: enemy => player.merit >= 300 && enemy.legendary && Math.random() < .05 },
+      { id: "yamanbagiri", name: "山姥切", atk: 24, type: "katana", speed: 3, stance: "霞構", rarity: "秘藏", condition: "群鬥十勝且統率達 45，野外強敵戰後 3% 發現", check: enemy => player.groupWins >= 10 && player.leadership >= 45 && enemy.unlock >= 24 && Math.random() < .03 }
     ];
 
     const armorLoot = [
       { name: "皮小札", def: 3 },
       { name: "漆塗黑胴", def: 7 },
       { name: "南蠻胴具足", def: 12 },
-      { name: "黑漆塗大鎧", def: 18 },
-      { name: "朱絲威大鎧", def: 22, art: "oyoroi", rarity: "傳說" }
+      { name: "黑漆塗大鎧", def: 18 }
     ];
 
     const locations = [
@@ -983,9 +993,16 @@
       merit: 0,
       completedMissions: 0,
       combatWins: 0,
+      groupWins: 0,
+      leadership: 18,
+      samuraiSkill: 1,
+      ninjaSkill: 0,
+      companions: [],
+      companionHealth: {},
+      relicFlags: {},
       mission: null,
-      inventory: { rice: 0, firearms: 0 },
-      weapon: { name: "無名打刀", atk: 0 },
+      inventory: { rice: 0, firearms: 0, medicine: 1, dokudami: 2, yomogi: 1 },
+      weapon: { id: "uchigatana", name: "無名打刀", atk: 0, type: "katana", speed: 0, stance: "中段" },
       armor: { name: "粗布衣", def: 0 },
       facing: "right",
       walkPhase: 0,
@@ -1051,7 +1068,19 @@
       enemySprite: "ronin",
       legendary: false,
       sparring: false,
-      turn: 1
+      turn: 1,
+      mode: "duel",
+      units: [],
+      currentActorId: null,
+      pendingEnemy: null,
+      battleLog: "",
+      effectSide: null,
+      selectedTargetId: null
+    };
+
+    const companionCatalog = {
+      kiri: { id: "kiri", name: "霧隱楓", job: "忍者", maxHp: 76, maxKi: 7, atk: 17, def: 5, speed: 29, sprite: "ninja", technique: "忍術·影縫", skillCost: 3 },
+      genya: { id: "genya", name: "玄也坊", job: "槍僧", maxHp: 98, maxKi: 6, atk: 20, def: 9, speed: 18, sprite: "monk", technique: "十文字槍", skillCost: 3 }
     };
 
     const enemyRoster = [
@@ -1322,7 +1351,7 @@
           <div class="pixel-portrait portrait-player" aria-label="黑崎龍之介像"></div>
           <div><div>${displayRank()}</div><div>信賴　${trust}</div><div>黑崎龍之介</div></div>
         </div>
-        <div class="retro-info-note">所屬 ${player.faction}　名聲 ${player.fame}　惡名 ${player.infamy}<br>武器 ${player.weapon.name}　鎧甲 ${player.armor.name}</div>
+        <div class="retro-info-note">所屬 ${player.faction}　名聲 ${player.fame}　惡名 ${player.infamy}<br>武器 ${player.weapon.name}（${player.weapon.stance || "中段"}）　鎧甲 ${player.armor.name}<br>統率 ${player.leadership}　同行 ${player.companions.length + 1} 人　群鬥 ${player.groupWins} 勝<br>傷藥 ${player.inventory.medicine || 0}　十藥 ${player.inventory.dokudami || 0}　艾草 ${player.inventory.yomogi || 0}</div>
         <div class="equipment-gallery"><button class="item-preview-button" data-item-preview="muramasa" type="button">鑑賞妖刀村正</button><button class="item-preview-button" data-item-preview="oyoroi" type="button">鑑賞戰國大鎧</button></div>`);
     }
 
@@ -1379,7 +1408,7 @@
       ui.rank.textContent = player.isRetainer ? player.rank : "浪人";
       ui.merit.textContent = player.isRetainer ? `${player.merit}` : "—";
       ui.weaponName.textContent = player.weapon.name;
-      ui.weaponStat.textContent = `攻擊 +${player.weapon.atk}`;
+      ui.weaponStat.textContent = `攻擊 +${player.weapon.atk}｜${player.weapon.stance || "中段"}｜速 ${player.weapon.speed >= 0 ? "+" : ""}${player.weapon.speed || 0}`;
       ui.armorName.textContent = player.armor.name;
       ui.armorStat.textContent = `防禦 +${player.armor.def}`;
       ui.totalAttack.textContent = totalAttack();
@@ -1389,11 +1418,11 @@
 
     function updateObjective() {
       if (!player.isRetainer) {
-        ui.objective.textContent = "前往清洲城求見織田家臣，累積名聲並尋求仕官機會。";
+        ui.objective.textContent = `前往清洲城求見織田家臣。同行 ${player.companions.length + 1} 人｜統率 ${player.leadership}｜群鬥 ${player.groupWins} 勝。`;
         return;
       }
       if (!player.mission) {
-        ui.objective.textContent = `織田家·${player.rank}｜功勳 ${player.merit}。返回清洲城參加評定，領取下一項任務。`;
+        ui.objective.textContent = `織田家·${player.rank}｜功勳 ${player.merit}｜統率 ${player.leadership}｜隊伍 ${player.companions.length + 1} 人。返回清洲城參加評定。`;
         return;
       }
       const progress = missionProgressText(player.mission);
@@ -1424,13 +1453,16 @@
 
     function saveGame(showNotice = false) {
       const snapshot = {
-        version: 1,
+        version: 2,
         player: {
           x: player.x, y: player.y, hp: player.hp, ki: player.ki, gold: player.gold,
           fame: player.fame, infamy: player.infamy, weapon: player.weapon, armor: player.armor,
           distance: player.distance, isRetainer: player.isRetainer, faction: player.faction,
           rank: player.rank, merit: player.merit, completedMissions: player.completedMissions,
-          mission: player.mission, inventory: player.inventory
+          combatWins: player.combatWins, groupWins: player.groupWins, leadership: player.leadership,
+          samuraiSkill: player.samuraiSkill, ninjaSkill: player.ninjaSkill,
+          companions: player.companions, companionHealth: player.companionHealth,
+          relicFlags: player.relicFlags, mission: player.mission, inventory: player.inventory
         },
         calendar: { day, month, weatherIndex }
       };
@@ -1441,9 +1473,13 @@
     function loadGame() {
       try {
         const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
-        if (!saved || saved.version !== 1) return;
+        if (!saved || ![1, 2].includes(saved.version)) return;
         Object.assign(player, saved.player || {});
-        player.inventory = { rice: 0, firearms: 0, ...(player.inventory || {}) };
+        player.inventory = { rice: 0, firearms: 0, medicine: 1, dokudami: 2, yomogi: 1, ...(player.inventory || {}) };
+        player.weapon = { id: "uchigatana", type: "katana", speed: 0, stance: "中段", ...(player.weapon || {}) };
+        player.companions = Array.isArray(player.companions) ? player.companions : [];
+        player.companionHealth = player.companionHealth || {};
+        player.relicFlags = player.relicFlags || {};
         if (!player.isRetainer) {
           player.faction = "無";
           player.rank = "浪人";
@@ -1561,9 +1597,19 @@
         { label: "與家臣交談", run: retainerDialogueMenu },
         { label: player.mission ? "已有評定任務" : "領取評定任務", run: receiveEvaluationMission, disabled: Boolean(player.mission) },
         { label: missionReady() ? "交付評定任務" : "任務尚未完成", run: deliverEvaluationMission, disabled: !missionReady() },
+        { label: "率足輕小隊出陣（統率25）", run: commandSortie },
         { label: "查看官途與功勳", run: showCareerStatus },
         { label: "返回大地圖", run: leaveScene }
       ]);
+    }
+
+    function commandSortie() {
+      if (player.leadership < 25 || player.companions.length < 1) {
+        setMessage("柴田勝家", `「帶兵不是一人逞勇。至少找一名可信同伴，並把統率磨到 25。」目前統率 ${player.leadership}、同行 ${player.companions.length + 1} 人。`);
+        return;
+      }
+      setMessage("柴田勝家", "「今川先鋒正在鳴海北道試探。你帶足輕小隊出陣，忍者斷後、武士壓陣！」");
+      startCombat("今川先鋒小隊", 94, 21, 7, 52, "party");
     }
 
     function retainerDialogueMenu() {
@@ -1684,7 +1730,8 @@
       const oldRank = player.rank;
       player.rank = nextRank;
       player.gold += 20;
-      return `信長公准予晉升：由【${oldRank}】升為【${nextRank}】，另賜 20 貫。`;
+      player.leadership = Math.min(100, player.leadership + 6);
+      return `信長公准予晉升：由【${oldRank}】升為【${nextRank}】，另賜 20 貫；帶兵經驗使統率提升至 ${player.leadership}。`;
     }
 
     function showCareerStatus() {
@@ -1697,8 +1744,23 @@
     function enterRiver() {
       enterScene("木曾川渡口", "川並衆舟子", "蘆葦後停著數艘小早船。粗獷舟子打量你的刀，問你是過路人，還是來找蜂須賀小六。", [
         { label: "請舟子喝酒", run: riverDrink },
-        { label: "打聽蜂須賀小六", run: () => setMessage("川並衆舟子", "「親分不吃空話。會賭、會打、懂得分帳的人，才有資格上他的船。」") }
+        { label: "打聽蜂須賀小六", run: () => setMessage("川並衆舟子", "「親分不吃空話。會賭、會打、懂得分帳的人，才有資格上他的船。」") },
+        { label: player.companions.includes("kiri") ? "霧隱楓已同行" : "邀請女忍者霧隱楓同行", run: recruitKiri, disabled: player.companions.includes("kiri") }
       ]);
+    }
+
+    function recruitKiri() {
+      if (player.companions.includes("kiri")) return;
+      if (player.combatWins < 2 || player.fame < 7) {
+        setMessage("霧隱楓", "「連兩場真刀勝負都沒有撐過，我不能把背後交給你。」需要至少 2 勝、名聲 7。 ");
+        return;
+      }
+      player.companions.push("kiri");
+      player.companionHealth.kiri = companionCatalog.kiri.maxHp;
+      player.ninjaSkill = Math.max(1, player.ninjaSkill);
+      sound.play("victory");
+      setMessage("霧隱楓", "「我走影路，你走陽關。遭遇圍攻時，我會先封住對方的腳。」【忍者·霧隱楓】加入，已解鎖群鬥與影縫忍術。 ");
+      updateHUD(); saveGame();
     }
 
     function riverDrink() {
@@ -1713,6 +1775,9 @@
 
     function enterMarket() {
       const actions = [
+        { label: "購買傷藥 8貫", run: () => buyMedicine("medicine", 8, "傷藥") },
+        { label: "購買十藥（どくだみ）3貫", run: () => buyMedicine("dokudami", 3, "十藥·どくだみ") },
+        { label: "購買艾草（よもぎ）4貫", run: () => buyMedicine("yomogi", 4, "艾草·よもぎ") },
         { label: "出售沿路雜物", run: () => {
           const gain = 5 + Math.floor(Math.random() * 5);
           player.gold += gain;
@@ -1726,6 +1791,15 @@
         actions.unshift({ label: "採購評定軍糧 6貫", run: buyEvaluationRice });
       }
       enterScene("津島町", "米商", "碼頭上鹽包、木棉與米俵堆成小山。戰事將近，商人都在觀望價格。", actions);
+    }
+
+    function buyMedicine(key, cost, label) {
+      if (player.gold < cost) { setMessage("藥種商", `「【${label}】要 ${cost} 貫，不能賒欠。」`); return; }
+      player.gold -= cost;
+      player.inventory[key] = (player.inventory[key] || 0) + 1;
+      sound.play("coin");
+      setMessage("藥種商", `購得【${label}】。傷藥可大量回復；どくだみ又稱「十藥」；よもぎ可調息並回復氣力。`);
+      updateHUD(); saveGame();
     }
 
     function buyEvaluationRice() {
@@ -1748,6 +1822,7 @@
     function enterShrine() {
       enterScene("熱田神宮", "神宮巫女", "古杉間的風忽然安靜。你在拜殿前放下刀，聽見清澈鈴音。", [
         { label: "奉納二貫祈福", run: shrineHeal },
+        { label: player.companions.includes("genya") ? "玄也坊已同行" : "請槍僧玄也坊同行", run: recruitGenya, disabled: player.companions.includes("genya") },
         { label: "求取桶狹間籤", run: () => {
           sound.play("shrine");
           setMessage("神籤", "【中吉】驟雨遮天，狹路藏機。弱者若先看見風向，也能擊倒強敵。 ");
@@ -1755,13 +1830,28 @@
       ]);
     }
 
+    function recruitGenya() {
+      if (player.companions.includes("genya")) return;
+      if (!player.isRetainer && player.combatWins < 5) {
+        setMessage("玄也坊", "「三人同行不是比武，是陣。你尚未證明自己懂得護住同伴。」需要仕官，或累積 5 場勝利。 ");
+        return;
+      }
+      player.companions.push("genya");
+      player.companionHealth.genya = companionCatalog.genya.maxHp;
+      player.leadership += 4;
+      sound.play("victory");
+      setMessage("玄也坊", "「長槍守前，忍者斷後。你若能下令，我便替你撐住陣腳。」【槍僧·玄也坊】加入，統率 +4，隊伍可擴充為三人。 ");
+      updateHUD(); saveGame();
+    }
+
     function shrineHeal() {
       if (player.gold < 2) { setMessage("神宮巫女", "巫女仍替你搖鈴祈福，但你的行囊裡已沒有可奉納的錢。 "); return; }
       player.gold -= 2;
       player.hp = player.maxHp;
       player.ki = player.maxKi;
+      player.companions.forEach(id => { player.companionHealth[id] = companionCatalog[id].maxHp; });
       sound.play("shrine");
-      setMessage("神宮巫女", "祝詞與鈴聲洗去旅途疲憊。體力與氣力完全恢復。 ");
+      setMessage("神宮巫女", "祝詞與鈴聲洗去旅途疲憊。主角與同行者的體力、氣力完全恢復。 ");
       updateHUD();
       saveGame();
     }
@@ -1802,7 +1892,10 @@
       const actions = [
         { label: `強化武器 ${weaponUpgradeCost()}貫`, run: upgradeWeapon },
         { label: `強化鎧甲 ${armorUpgradeCost()}貫`, run: upgradeArmor },
-        { label: "買妖刀村正 180貫", run: buyMuramasa },
+        { label: "購買小太刀 42貫（快速）", run: () => buyForgeWeapon("kodachi", 42) },
+        { label: "購買備前太刀 60貫（重斬）", run: () => buyForgeWeapon("tachi", 60) },
+        { label: "購買素槍 48貫（破防）", run: () => buyForgeWeapon("yari", 48) },
+        { label: "詢問名物刀與妖刀傳聞", run: showRelicRumors },
         { label: "買八幡大鎧 160貫", run: buyArmor }
       ];
       if (player.mission && player.mission.type === "firearms" && !missionReady()) {
@@ -1848,14 +1941,20 @@
       updateHUD(); forgeActions(); saveGame();
     }
 
-    function buyMuramasa() {
-      if (player.gold < 180) { setMessage("鍛冶屋主人", "「村正不是尋常貨色。少一文都不賣。」"); return; }
-      if (player.weapon.atk >= 28 && !player.weapon.name.includes("村正")) { setMessage("鍛冶屋主人", "「你手裡的刀不比村正差。真要買，先想清楚。」"); return; }
-      player.gold -= 180;
-      player.weapon = { name: "妖刀村正", atk: 28 };
+    function buyForgeWeapon(id, cost) {
+      const item = weaponLoot.find(entry => entry.id === id);
+      if (!item) return;
+      if (player.gold < cost) { setMessage("鍛冶屋主人", `「【${item.name}】連工帶料要 ${cost} 貫。」`); return; }
+      player.gold -= cost;
+      player.weapon = { ...item };
       forge.glow = 1; sound.play("forge");
-      setMessage("鍛冶屋主人", "刀身離鞘時像有低鳴。你取得【妖刀村正】，但店主警告不要讓殺意反噬心神。 ");
-      updateHUD(); saveGame();
+      setMessage("鍛冶屋主人", `你換上【${item.name}】。戰鬥持姿改為「${item.stance}」，行動速度 ${item.speed >= 0 ? "+" : ""}${item.speed}。名物與妖刀不在店頭販售，只能從特殊事件取得。`);
+      updateHUD(); forgeActions(); saveGame();
+    }
+
+    function showRelicRumors() {
+      const rumors = rareRelics.map(item => `【${item.name}】${item.condition}`).join("<br>");
+      setMessage("鍛冶屋主人", `「名物不是有錢就能買。時日、天候、對手與戰功缺一不可。」<br>${rumors}`);
     }
 
     function buyArmor() {
@@ -1966,152 +2065,276 @@
       return pool[0];
     }
 
-    function startCombat(enemyName = null, hp = null, atk = null, def = null, reward = null) {
+    function startCombat(enemyName = null, hp = null, atk = null, def = null, reward = null, requestedMode = null) {
       if (gamble.rollTimer) { clearInterval(gamble.rollTimer); gamble.rollTimer = null; }
-      gameState = "COMBAT";
       const enemy = enemyName
-        ? { name: enemyName, title: "任務敵兵", hp: hp ?? 68, atk: atk ?? 15, def: def ?? 4, reward: reward ?? 18, sprite: "ronin", technique: "奮迅斬", cost: 3, power: 1.45, skillChance: .18, guardChance: .08, intro: `【${enemyName}】拔出兵刃，封住你的去路。` }
+        ? { name: enemyName, title: "任務敵兵", hp: hp ?? 68, atk: atk ?? 15, def: def ?? 4, reward: reward ?? 18, unlock: 0, sprite: "ronin", technique: "奮迅斬", cost: 3, power: 1.45, skillChance: .18, guardChance: .08, intro: `【${enemyName}】拔出兵刃，封住你的去路。` }
         : chooseEncounterEnemy();
+      combat.pendingEnemy = enemy;
+      if (!requestedMode && player.companions.length && !enemy.legendary) {
+        gameState = "SCENE";
+        setMode("野外遭遇 · 戰法選擇");
+        setMessage(`${enemy.title}｜${enemy.name}`, `${enemy.intro} 你可以以武者身分【單挑】，或率領同行者進行【群鬥】。群鬥勝利會磨練統率。`);
+        setActions([
+          { label: "單挑：一對一決勝", run: () => beginCombat(enemy, "duel") },
+          { label: `群鬥：${Math.min(3, player.companions.length + 1)}人迎戰`, run: () => beginCombat(enemy, "party") },
+          { label: "趁尚未交鋒撤離", run: returnToMapFromCombat }
+        ]);
+        sound.play("encounter");
+        return;
+      }
+      beginCombat(enemy, requestedMode || "duel");
+    }
+
+    function makePlayerUnit() {
+      const type = player.weapon.type || "katana";
+      return { id: "player", name: "黑崎龍之介", job: "武士", side: "party", hp: Math.max(1, player.hp), maxHp: player.maxHp, ki: player.ki, maxKi: player.maxKi, atk: totalAttack(), def: totalDefense(), speed: 21 + (player.weapon.speed || 0), atb: 18, guarding: false, sprite: "hero", weaponType: type, technique: playerTechnique(), skillCost: type === "tachi" ? 4 : 3, flash: 0 };
+    }
+
+    function makeCompanionUnit(id, index) {
+      const base = companionCatalog[id];
+      return { ...base, side: "party", hp: clamp(player.companionHealth[id] ?? base.maxHp, 1, base.maxHp), ki: 2, atb: 6 + index * 9, guarding: false, flash: 0 };
+    }
+
+    function makeEnemyUnit(enemy, index, total) {
+      const scale = index === 0 ? 1 : Math.max(.68, .88 - index * .08);
+      const supportNames = [enemy.name, "野武士槍頭", "陣借り弓足輕"];
+      const supportSprites = [enemy.sprite === "monk" ? "ashigaru" : "ronin", "ashigaru", "healer"];
+      return {
+        id: `enemy-${index}`, name: supportNames[index] || `敵兵${index + 1}`, job: index === 2 ? "弓足輕" : "野武士", side: "enemy",
+        hp: Math.round(enemy.hp * scale), maxHp: Math.round(enemy.hp * scale), ki: index === 0 && enemy.legendary ? 3 : 1, maxKi: enemy.legendary ? 8 : 6,
+        atk: Math.max(8, Math.round(enemy.atk * scale)), def: Math.max(2, Math.round(enemy.def * scale)), speed: 17 + index * 3 + Math.min(8, Math.floor(enemy.unlock / 12)),
+        atb: 8 + index * 12, guarding: false, sprite: supportSprites[index], technique: index === 0 ? enemy.technique : (index === 1 ? "槍衾突" : "遠矢"),
+        skillCost: index === 0 ? enemy.cost : 3, skillPower: index === 0 ? enemy.power : 1.4, skillChance: index === 0 ? enemy.skillChance : .2,
+        guardChance: index === 0 ? enemy.guardChance : .08, flash: 0
+      };
+    }
+
+    function beginCombat(enemy, mode) {
+      gameState = "COMBAT";
+      combat.mode = mode;
+      combat.pendingEnemy = enemy;
       combat.enemyName = enemy.name;
       combat.enemyTitle = enemy.title;
-      combat.enemyMaxHp = enemy.hp;
-      combat.enemyHp = combat.enemyMaxHp;
-      combat.enemyAtk = enemy.atk;
-      combat.enemyDef = enemy.def;
       combat.rewardGold = enemy.reward;
       combat.enemyTechnique = enemy.technique;
-      combat.enemySkillCost = enemy.cost;
-      combat.enemySkillPower = enemy.power;
-      combat.enemySkillChance = enemy.skillChance;
-      combat.enemyGuardChance = enemy.guardChance;
-      combat.enemySprite = enemy.sprite;
       combat.legendary = Boolean(enemy.legendary);
       combat.sparring = Boolean(enemy.sparring);
-      combat.enemyKi = combat.legendary ? 3 : 1;
-      combat.enemyMaxKi = combat.legendary ? 8 : 6;
-      combat.guarding = false;
-      combat.enemyGuarding = false;
       combat.resolved = false;
-      combat.flash = 0;
+      combat.currentActorId = null;
+      combat.turn = 1;
       combat.slash = 0;
       combat.enemySlash = 0;
-      combat.turn = 1;
-      player.ki = Math.max(2, player.ki);
-      setMode(combat.legendary ? "劍豪試煉 · 個人戰" : "野外遭遇 · 個人戰");
-      setMessage(`${combat.enemyTitle}｜${combat.enemyName}`, `${enemy.intro} 對手體力 ${combat.enemyMaxHp}、攻 ${combat.enemyAtk}、防 ${combat.enemyDef}，秘技【${combat.enemyTechnique}】。`);
+      combat.effectSide = null;
+      const party = [makePlayerUnit()];
+      if (mode === "party") player.companions.slice(0, 2).forEach((id, index) => party.push(makeCompanionUnit(id, index)));
+      const enemyCount = mode === "party" ? Math.max(2, Math.min(3, party.length)) : 1;
+      const enemies = Array.from({ length: enemyCount }, (_, index) => makeEnemyUnit(enemy, index, enemyCount));
+      combat.units = [...party, ...enemies];
+      setMode(combat.legendary ? "劍豪試煉 · 單挑" : mode === "party" ? `${party.length}人群鬥 · 行動計時制` : "武者單挑 · 行動計時制");
+      setMessage(`${combat.enemyTitle}｜${combat.enemyName}`, `${enemy.intro} 每名角色的【行動計時條】蓄滿後才能出招；速度、武器與忍術會改變先後手。`);
+      setWaitingCombatActions();
       sound.play("encounter");
-      combatActions();
+    }
+
+    function playerTechnique() {
+      const techniques = { katana: "燕返", tachi: "一之太刀", kodachi: "霞二連", yari: "十文字突", yumi: "遠矢" };
+      return techniques[player.weapon.type] || "燕返";
+    }
+
+    function setWaitingCombatActions() {
+      if (combat.resolved) return;
+      setActions([{ label: "行動計時條蓄力中…", run: () => {}, disabled: true }]);
+    }
+
+    function updateCombatATB(dt) {
+      if (combat.resolved || combat.currentActorId) return;
+      const living = combat.units.filter(unit => unit.hp > 0);
+      living.forEach(unit => { unit.atb = Math.min(100, unit.atb + unit.speed * dt * 1.5); unit.flash = Math.max(0, unit.flash - dt * 3); });
+      const readyParty = living.find(unit => unit.side === "party" && unit.atb >= 100);
+      if (readyParty) {
+        combat.currentActorId = readyParty.id;
+        setMessage(`${readyParty.job}｜${readyParty.name}`, `行動計時條已滿。氣力 ${readyParty.ki}/${readyParty.maxKi}，選擇斬擊、奧義、防禦或道具／術法。`);
+        combatActions();
+        sound.play("ui");
+        return;
+      }
+      const readyEnemy = living.find(unit => unit.side === "enemy" && unit.atb >= 100);
+      if (readyEnemy) enemyATBAction(readyEnemy);
     }
 
     function combatActions() {
+      const actor = combat.units.find(unit => unit.id === combat.currentActorId);
+      if (!actor) { setWaitingCombatActions(); return; }
       setActions([
-        { label: "普通斬擊", run: () => playerCombatTurn("attack") },
-        { label: "架刀防禦 氣力+2", run: () => playerCombatTurn("guard") },
-        { label: `燕返 氣力3`, run: () => playerCombatTurn("skill"), disabled: player.ki < 3 },
-        { label: "看破對手", run: inspectEnemy },
-        { label: "嘗試逃跑", run: () => playerCombatTurn("flee") }
+        { label: "一般斬擊", run: () => performPlayerAction("attack") },
+        { label: `${actor.technique} 氣力${actor.skillCost}`, run: () => performPlayerAction("skill"), disabled: actor.ki < actor.skillCost },
+        { label: "防禦架勢 氣力+2", run: () => performPlayerAction("guard") },
+        { label: actor.job === "忍者" ? "道具／忍術" : actor.job === "槍僧" ? "道具／槍陣" : "道具／武士技", run: openBattleItemMenu }
       ]);
     }
 
-    function inspectEnemy() {
-      const ratio = combat.enemyHp / combat.enemyMaxHp;
-      const condition = ratio > .65 ? "氣息未亂" : ratio > .3 ? "呼吸漸重" : "已露破綻";
-      setMessage("戰況判讀", `【${combat.enemyTitle}｜${combat.enemyName}】${condition}。體力 ${combat.enemyHp}/${combat.enemyMaxHp}，氣力 ${combat.enemyKi}/${combat.enemyMaxKi}，防禦 ${combat.enemyDef}。秘技【${combat.enemyTechnique}】需 ${combat.enemySkillCost} 氣力；對手有 ${Math.round(combat.enemyGuardChance * 100)}% 的基本防守傾向。`);
-      combatActions();
+    function firstLiving(side) { return combat.units.find(unit => unit.side === side && unit.hp > 0); }
+
+    function performPlayerAction(action) {
+      const actor = combat.units.find(unit => unit.id === combat.currentActorId);
+      const target = firstLiving("enemy");
+      if (!actor || !target || combat.resolved) return;
+      let message = "";
+      if (action === "guard") {
+        actor.guarding = true;
+        actor.ki = Math.min(actor.maxKi, actor.ki + 2);
+        sound.play("guard");
+        message = `${actor.name}沉腰守中，受到的傷害大幅降低，氣力回復 2。`;
+      } else {
+        actor.guarding = false;
+        if (action === "attack") {
+          let damage = Math.max(3, actor.atk - target.def + Math.floor(Math.random() * 7));
+          if (target.guarding) damage = Math.max(1, Math.floor(damage / 3));
+          target.hp = Math.max(0, target.hp - damage);
+          actor.ki = Math.min(actor.maxKi, actor.ki + 1);
+          message = `${actor.name}以【${actor.id === "player" ? player.weapon.name : actor.technique.replace(/忍術·|十文字/g, "")}】攻擊 ${target.name}，造成 ${damage} 點傷害。`;
+        } else {
+          actor.ki -= actor.skillCost;
+          let defense = Math.floor(target.def * .45);
+          let power = actor.id === "player" && player.weapon.type === "tachi" ? 1.9 : actor.job === "忍者" ? 1.48 : actor.job === "槍僧" ? 1.62 : 1.68;
+          if (actor.technique.includes("十文字")) defense = 0;
+          let damage = Math.max(12, Math.floor(actor.atk * power) - defense);
+          if (target.guarding) damage = Math.max(6, Math.floor(damage * .66));
+          target.hp = Math.max(0, target.hp - damage);
+          if (actor.technique.includes("影縫")) target.atb = Math.max(0, target.atb - 45);
+          if (actor.technique.includes("霞二連")) actor.nextAtb = 28;
+          target.guarding = false;
+          message = `${actor.name}發動奧義【${actor.technique}】，對 ${target.name} 造成 ${damage} 點傷害${actor.technique.includes("影縫") ? "並封住其行動" : ""}！`;
+        }
+        target.flash = 1;
+        combat.slash = 1.25;
+        combat.effectSide = "party";
+        sound.play("sword");
+      }
+      finishPlayerAction(actor, message);
     }
 
-    function playerCombatTurn(action) {
-      if (combat.resolved || combat.enemyHp <= 0 || player.hp <= 0) return;
-      combat.guarding = false;
-      let message = "";
-      if (action === "attack") {
-        let damage = Math.max(3, totalAttack() - combat.enemyDef + Math.floor(Math.random() * 7));
-        if (combat.enemyGuarding) damage = Math.max(1, Math.floor(damage / 3));
-        combat.enemyHp = Math.max(0, combat.enemyHp - damage);
-        combat.slash = 1;
-        combat.flash = 1;
-        player.ki = Math.min(player.maxKi, player.ki + 1);
-        sound.play("sword");
-        message = `你拔出【${player.weapon.name}】迅速斬進，造成 ${damage} 點傷害。${combat.enemyGuarding ? " 對手架刀卸開了大半力道。" : ""}`;
-        combat.enemyGuarding = false;
-      } else if (action === "guard") {
-        combat.guarding = true;
-        player.ki = Math.min(player.maxKi, player.ki + 2);
-        sound.play("guard");
-        message = "你沉腰架刀，準備卸開對手攻勢。氣力回復 2 點。";
-      } else if (action === "skill") {
-        if (player.ki < 3) { setMessage("秘技", "氣力不足，無法使出燕返。 "); return; }
-        player.ki -= 3;
-        let damage = Math.max(18, Math.floor(totalAttack() * 1.72) - Math.floor(combat.enemyDef / 2));
-        if (combat.enemyGuarding) damage = Math.max(8, Math.floor(damage * .62));
-        combat.enemyHp = Math.max(0, combat.enemyHp - damage);
-        combat.slash = 1.4;
-        combat.flash = 1;
-        sound.play("sword");
-        setTimeout(() => sound.play("hit"), 80);
-        message = `秘技【燕返】！刀光折返，無視大半防禦，造成 ${damage} 點傷害。`;
-        combat.enemyGuarding = false;
-      } else if (action === "flee") {
-        const chance = .48 + (player.hp / player.maxHp) * .18 - (combat.legendary ? .22 : 0);
-        if (Math.random() < chance) {
-          setMessage("脫身", `你揚起砂土、穿入林間，甩開了【${combat.enemyName}】。`);
-          encounterSafeDistance = 500;
-          setTimeout(returnToMapFromCombat, 450);
-          return;
-        }
-        message = "你試圖抽身，卻被對手搶先封住退路。";
-      }
+    function openBattleItemMenu() {
+      const actor = combat.units.find(unit => unit.id === combat.currentActorId);
+      if (!actor) return;
+      setActions([
+        { label: `傷藥 ×${player.inventory.medicine || 0}（回復36）`, run: () => useBattleItem("medicine"), disabled: !player.inventory.medicine },
+        { label: `十藥 ×${player.inventory.dokudami || 0}（回復20／解毒）`, run: () => useBattleItem("dokudami"), disabled: !player.inventory.dokudami },
+        { label: `艾草 ×${player.inventory.yomogi || 0}（回復12／氣力+3）`, run: () => useBattleItem("yomogi"), disabled: !player.inventory.yomogi },
+        { label: actor.job === "忍者" ? "忍術·煙遁 氣力2" : actor.job === "槍僧" ? "槍陣·堅守 氣力2" : "武士·一喝 氣力2", run: useProfessionArt, disabled: actor.ki < 2 },
+        { label: "返回戰鬥指令", run: combatActions }
+      ]);
+    }
 
-      if (combat.enemyHp <= 0) {
-        winCombat(message);
-        return;
-      }
+    function weakestLivingParty() {
+      return combat.units.filter(unit => unit.side === "party" && unit.hp > 0).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+    }
 
-      combat.enemyKi = Math.min(combat.enemyMaxKi, combat.enemyKi + 1);
-      const hpRatio = combat.enemyHp / combat.enemyMaxHp;
-      const wantsGuard = Math.random() < combat.enemyGuardChance * (hpRatio < .42 ? 1.8 : .45);
-      const usesSkill = !wantsGuard && combat.enemyKi >= combat.enemySkillCost && Math.random() < combat.enemySkillChance;
-      if (wantsGuard) {
-        combat.enemyGuarding = true;
-        combat.enemyKi = Math.min(combat.enemyMaxKi, combat.enemyKi + 2);
-        sound.play("guard");
-        message += ` 【${combat.enemyName}】收刀守中、靜待破綻，氣力回復 2。`;
+    function useBattleItem(key) {
+      const actor = combat.units.find(unit => unit.id === combat.currentActorId);
+      const target = weakestLivingParty();
+      if (!actor || !target || !player.inventory[key]) return;
+      const data = { medicine: { name: "傷藥", heal: 36, ki: 0 }, dokudami: { name: "十藥·どくだみ", heal: 20, ki: 0 }, yomogi: { name: "艾草·よもぎ", heal: 12, ki: 3 } }[key];
+      player.inventory[key] -= 1;
+      target.hp = Math.min(target.maxHp, target.hp + data.heal);
+      target.ki = Math.min(target.maxKi, target.ki + data.ki);
+      target.flash = .5;
+      sound.play("shrine");
+      finishPlayerAction(actor, `${actor.name}替 ${target.name} 使用【${data.name}】，體力回復 ${data.heal}${data.ki ? `、氣力回復 ${data.ki}` : ""}。`);
+    }
+
+    function useProfessionArt() {
+      const actor = combat.units.find(unit => unit.id === combat.currentActorId);
+      if (!actor || actor.ki < 2) return;
+      actor.ki -= 2;
+      let message;
+      if (actor.job === "忍者") {
+        combat.units.filter(unit => unit.side === "enemy" && unit.hp > 0).forEach(unit => { unit.atb = Math.max(0, unit.atb - 32); });
+        message = `${actor.name}施展【煙遁】，敵方全員行動計時條後退。`;
+      } else if (actor.job === "槍僧") {
+        combat.units.filter(unit => unit.side === "party" && unit.hp > 0).forEach(unit => { unit.guarding = true; });
+        message = `${actor.name}布下【槍衾堅守】，全隊進入防禦架勢。`;
       } else {
-        let rawDamage;
-        if (usesSkill) {
-          combat.enemyKi -= combat.enemySkillCost;
-          rawDamage = Math.max(6, Math.floor(combat.enemyAtk * combat.enemySkillPower) - Math.floor(totalDefense() * .35));
-          if (combat.enemyTechnique.includes("十文字")) rawDamage += 4;
-          if (combat.enemyTechnique.includes("無刀取")) player.ki = Math.max(0, player.ki - 2);
-          combat.enemySlash = 1.35;
-          sound.play("sword");
-          setTimeout(() => sound.play("hit"), 90);
-        } else {
-          rawDamage = Math.max(2, combat.enemyAtk - Math.floor(totalDefense() * .72) + Math.floor(Math.random() * 6));
-          combat.enemySlash = .72;
-          sound.play(combat.guarding ? "guard" : "hit");
-        }
-        const enemyDamage = combat.guarding ? Math.max(1, Math.floor(rawDamage / (usesSkill ? 1.8 : 3))) : rawDamage;
-        player.hp = Math.max(0, player.hp - enemyDamage);
-        combat.enemyFlash = 1;
-        message += usesSkill
-          ? ` 【${combat.enemyName}】發動秘技【${combat.enemyTechnique}】，造成 ${enemyDamage} 點傷害${combat.enemyTechnique.includes("無刀取") ? "並削減你 2 點氣力" : ""}！`
-          : ` 【${combat.enemyName}】反擊，對你造成 ${enemyDamage} 點傷害。`;
+        const gain = 14 + Math.floor(player.leadership / 5);
+        combat.units.filter(unit => unit.side === "party" && unit.hp > 0 && unit.id !== actor.id).forEach(unit => { unit.atb = Math.min(100, unit.atb + gain); });
+        message = `${actor.name}以統率 ${player.leadership} 發動【武士·一喝】，同伴行動計時條提升 ${gain}。`;
       }
-      combat.turn += 1;
+      sound.play("encounter");
+      finishPlayerAction(actor, message);
+    }
 
-      if (player.hp <= 0) {
-        loseCombat(message);
+    function finishPlayerAction(actor, message) {
+      actor.atb = actor.nextAtb || 0;
+      actor.nextAtb = 0;
+      combat.currentActorId = null;
+      combat.turn += 1;
+      syncBattleHealth();
+      if (checkCombatEnd(message)) return;
+      setMessage("戰況", message);
+      updateHUD();
+      setWaitingCombatActions();
+    }
+
+    function enemyATBAction(actor) {
+      const targets = combat.units.filter(unit => unit.side === "party" && unit.hp > 0);
+      if (!targets.length) { loseCombat("隊伍已無人能戰。"); return; }
+      const target = Math.random() < .38 ? [...targets].sort((a, b) => a.hp - b.hp)[0] : targets[Math.floor(Math.random() * targets.length)];
+      actor.atb = 0;
+      actor.ki = Math.min(actor.maxKi, actor.ki + 1);
+      const wantsGuard = Math.random() < actor.guardChance * (actor.hp / actor.maxHp < .42 ? 1.8 : .7);
+      if (wantsGuard) {
+        actor.guarding = true;
+        actor.ki = Math.min(actor.maxKi, actor.ki + 2);
+        setMessage(actor.name, `${actor.name}架起兵刃守勢，氣力回復 2。`);
+        sound.play("guard");
         return;
       }
-      setMessage("刀劍交鋒", message);
-      updateHUD(); combatActions();
+      actor.guarding = false;
+      const usesSkill = actor.ki >= actor.skillCost && Math.random() < actor.skillChance;
+      if (usesSkill) actor.ki -= actor.skillCost;
+      let raw = usesSkill ? Math.floor(actor.atk * actor.skillPower) - Math.floor(target.def * .35) : actor.atk - Math.floor(target.def * .7) + Math.floor(Math.random() * 5);
+      let damage = Math.max(2, raw);
+      if (target.guarding) damage = Math.max(1, Math.floor(damage / (usesSkill ? 1.8 : 3)));
+      target.hp = Math.max(0, target.hp - damage);
+      target.flash = 1;
+      combat.enemySlash = usesSkill ? 1.35 : .75;
+      combat.effectSide = "enemy";
+      sound.play(usesSkill ? "sword" : target.guarding ? "guard" : "hit");
+      const message = usesSkill ? `${actor.name}發動【${actor.technique}】，對 ${target.name} 造成 ${damage} 點傷害！` : `${actor.name}攻擊 ${target.name}，造成 ${damage} 點傷害。`;
+      syncBattleHealth();
+      if (checkCombatEnd(message)) return;
+      setMessage("敵方行動", message);
+      updateHUD();
+    }
+
+    function syncBattleHealth() {
+      const main = combat.units.find(unit => unit.id === "player");
+      if (main) { player.hp = main.hp; player.ki = main.ki; }
+      player.companions.forEach(id => {
+        const unit = combat.units.find(entry => entry.id === id);
+        if (unit) player.companionHealth[id] = unit.hp;
+      });
+    }
+
+    function checkCombatEnd(message) {
+      if (!combat.units.some(unit => unit.side === "enemy" && unit.hp > 0)) { winCombat(message); return true; }
+      if (!combat.units.some(unit => unit.side === "party" && unit.hp > 0)) { loseCombat(message); return true; }
+      return false;
     }
 
     function winCombat(opening) {
       combat.resolved = true;
-      player.gold += combat.rewardGold;
+      syncBattleHealth();
+      player.hp = Math.max(1, player.hp);
+      const enemyCount = combat.units.filter(unit => unit.side === "enemy").length;
+      const battleReward = combat.rewardGold + (combat.mode === "party" ? (enemyCount - 1) * 9 : 0);
+      player.gold += battleReward;
       player.combatWins += 1;
+      if (combat.mode === "party") {
+        player.groupWins += 1;
+        player.leadership = Math.min(100, player.leadership + 2 + Math.floor(enemyCount / 2));
+      }
       player.fame += combat.legendary ? 4 : 1;
       let masteryText = "";
       if (combat.legendary) {
@@ -2131,7 +2354,13 @@
       let lootText = "";
       let revealedItem = null;
       let revealedKind = null;
-      if (!combat.sparring && Math.random() < .58) {
+      const relic = !combat.sparring && rareRelics.find(item => !player.relicFlags[item.id] && item.check(combat.pendingEnemy));
+      if (relic) {
+        player.relicFlags[relic.id] = true;
+        player.weapon = { ...relic };
+        lootText = ` 特殊時序與戰功條件交會，你取得【${relic.name}】；這不是商店貨，也不會由普通浪人隨機掉落。`;
+        if (relic.art) { revealedItem = relic; revealedKind = relic.art; }
+      } else if (!combat.sparring && Math.random() < .38) {
         const isWeapon = Math.random() < .5;
         const table = isWeapon ? weaponLoot : armorLoot;
         const item = { ...table[Math.floor(Math.random() * table.length)] };
@@ -2150,9 +2379,10 @@
       }
       sound.play("victory");
       const closing = combat.sparring
-        ? `${combat.enemyName}收勢還刀，承認你通過了這場試煉。你獲得謝禮 ${combat.rewardGold} 貫。`
-        : `對手棄刀倒地，你取得 ${combat.rewardGold} 貫。`;
-      setMessage(combat.legendary ? "劍豪試煉勝利" : "勝利", `${opening} ${closing}${masteryText}${lootText}${missionText}`);
+        ? `${combat.enemyName}收勢還刀，承認你通過了這場試煉。你獲得謝禮 ${battleReward} 貫。`
+        : `${combat.mode === "party" ? "敵方隊伍潰散" : "對手棄刀倒地"}，你取得 ${battleReward} 貫。`;
+      const commandText = combat.mode === "party" ? ` 群鬥勝場 ${player.groupWins}，統率提升為 ${player.leadership}。` : "";
+      setMessage(combat.legendary ? "劍豪試煉勝利" : combat.mode === "party" ? "群鬥勝利" : "單挑勝利", `${opening} ${closing}${commandText}${masteryText}${lootText}${missionText}`);
       setActions([{ label: "收刀返回地圖", run: returnToMapFromCombat }]);
       if (revealedItem) showItemReveal(revealedKind, revealedItem);
       updateHUD(); saveGame();
@@ -2164,7 +2394,8 @@
       player.gold -= loss;
       player.hp = 45;
       player.ki = 2;
-      setMessage("敗北", `${opening} 你失去意識後被樵夫救醒，損失 ${loss} 貫，體力恢復至 45。`);
+      player.companions.forEach(id => { player.companionHealth[id] = Math.max(20, Math.floor(companionCatalog[id].maxHp * .35)); });
+      setMessage("敗北", `${opening} 隊伍被樵夫與行腳僧救回街道，損失 ${loss} 貫。主角體力恢復至 45，同伴仍帶傷，需要藥草或神宮療養。`);
       setActions([{ label: "養傷後返回", run: returnToMapFromCombat }]);
       updateHUD(); saveGame();
     }
@@ -2244,7 +2475,9 @@
       combat.enemyFlash = Math.max(0, combat.enemyFlash - dt * 3);
       combat.slash = Math.max(0, combat.slash - dt * 2.7);
       combat.enemySlash = Math.max(0, combat.enemySlash - dt * 2.7);
+      combat.units.forEach(unit => { unit.flash = Math.max(0, (unit.flash || 0) - dt * 3); });
       if (gameState === "MAP" && started) updateMap(dt);
+      if (gameState === "COMBAT" && started) updateCombatATB(dt);
     }
 
     function draw() {
@@ -2599,11 +2832,21 @@
         ctx.fillStyle = grad; ctx.fillRect(0, 0, VIEW.w, fieldH);
       }
       const shade = ctx.createLinearGradient(0, 0, 0, fieldH);
-      shade.addColorStop(0, "rgba(13,18,17,.18)"); shade.addColorStop(.55, "rgba(16,14,10,.02)"); shade.addColorStop(1, "rgba(12,8,5,.58)");
+      shade.addColorStop(0, "rgba(13,18,17,.32)"); shade.addColorStop(.55, "rgba(16,14,10,.01)"); shade.addColorStop(1, "rgba(12,8,5,.58)");
       ctx.fillStyle = shade; ctx.fillRect(0, 0, VIEW.w, fieldH);
 
-      drawBattleSprite(58, 126, "player", combat.enemyFlash);
-      drawBattleSprite(582, 126, combat.enemySprite || "ronin", combat.flash);
+      const party = combat.units.filter(unit => unit.side === "party");
+      const enemies = combat.units.filter(unit => unit.side === "enemy");
+      const partyPositions = combat.mode === "party" ? [[18, 214], [132, 250], [246, 286]] : [[74, 205]];
+      const enemyPositions = combat.mode === "party" ? [[706, 214], [590, 250], [474, 286]] : [[622, 205]];
+      party.forEach((unit, index) => {
+        const pos = partyPositions[index] || partyPositions[partyPositions.length - 1];
+        drawPartyUnitSprite(pos[0], pos[1], unit, 238);
+      });
+      enemies.forEach((unit, index) => {
+        const pos = enemyPositions[index] || enemyPositions[enemyPositions.length - 1];
+        drawPartyUnitSprite(pos[0], pos[1], unit, 238);
+      });
       if (combat.slash > 0) {
         ctx.save(); ctx.globalAlpha = Math.min(1, combat.slash);
         ctx.shadowBlur = 16; ctx.shadowColor = "#ffd37a"; ctx.strokeStyle = "#ffe4a0"; ctx.lineWidth = 8;
@@ -2619,23 +2862,79 @@
         ctx.restore();
       }
 
-      ctx.fillStyle = "rgba(18,16,13,.82)"; ctx.fillRect(36, 27, 364, 104); ctx.fillRect(560, 27, 364, 104);
-      ctx.strokeStyle = "rgba(234,209,146,.55)"; ctx.lineWidth = 2; ctx.strokeRect(36, 27, 364, 104); ctx.strokeRect(560, 27, 364, 104);
-      drawBar(58, 67, 320, 15, player.hp / player.maxHp, "#4d9f65", "黑崎龍之介", `${Math.ceil(player.hp)} / ${player.maxHp}`);
-      drawBar(582, 67, 320, 15, combat.enemyHp / combat.enemyMaxHp, combat.legendary ? "#7e4fb0" : "#b5453d", combat.enemyName, `${combat.enemyHp} / ${combat.enemyMaxHp}`);
-      ctx.fillStyle = "#e6d2a5"; ctx.font = '700 13px "Microsoft JhengHei", sans-serif'; ctx.textAlign = "left";
-      ctx.fillText(`浪人　氣力 ${player.ki}/${player.maxKi}`, 58, 50);
-      ctx.font = '12px "Microsoft JhengHei", sans-serif'; ctx.fillText(`攻 ${player.attack}　防 ${player.defense}　武器 ${player.weapon.name}`, 58, 111);
-      ctx.textAlign = "right"; ctx.font = '700 13px "Microsoft JhengHei", sans-serif';
-      ctx.fillText(combat.enemyTitle || "無名浪人", 902, 50);
-      ctx.font = '12px "Microsoft JhengHei", sans-serif'; ctx.fillText(`氣力 ${combat.enemyKi}/${combat.enemyMaxKi}　攻 ${combat.enemyAtk}　防 ${combat.enemyDef}`, 902, 111);
+      party.forEach((unit, index) => drawCombatUnitCard(18, 18 + index * 59, 286, unit, false));
+      enemies.forEach((unit, index) => drawCombatUnitCard(656, 18 + index * 59, 286, unit, true));
 
-      ctx.fillStyle = "rgba(14,12,10,.78)"; ctx.fillRect(310, 397, 340, 56);
-      ctx.strokeStyle = "rgba(231,205,143,.46)"; ctx.strokeRect(310, 397, 340, 56);
-      ctx.fillStyle = "#e8d4a2"; ctx.textAlign = "center"; ctx.font = '700 14px "Microsoft JhengHei", sans-serif';
-      ctx.fillText(`第 ${combat.turn || 1} 合　對手奧義：${combat.enemyTechnique || "逆袈裟"}`, VIEW.w / 2, 421);
-      ctx.fillStyle = combat.enemyGuarding ? "#8bd5d0" : "#b8aa89"; ctx.font = '12px "Microsoft JhengHei", sans-serif';
-      ctx.fillText(combat.enemyGuarding ? "對手正凝神架刀，防備反擊" : "觀察架勢，掌握出招時機", VIEW.w / 2, 442);
+      ctx.fillStyle = "rgba(14,12,10,.82)"; ctx.fillRect(304, 397, 352, 58);
+      ctx.strokeStyle = combat.mode === "party" ? "rgba(105,191,190,.72)" : "rgba(231,205,143,.6)"; ctx.lineWidth = 2; ctx.strokeRect(304, 397, 352, 58);
+      ctx.fillStyle = "#f0deb1"; ctx.textAlign = "center"; ctx.font = '700 15px "Microsoft JhengHei", sans-serif';
+      ctx.fillText(`${combat.mode === "party" ? "群鬥" : "單挑"}｜行動計時制｜第 ${combat.turn || 1} 動`, VIEW.w / 2, 420);
+      const active = combat.units.find(unit => unit.id === combat.currentActorId);
+      ctx.fillStyle = active ? "#ffda72" : "#aebdc0"; ctx.font = '12px "Microsoft JhengHei", sans-serif';
+      ctx.fillText(active ? `${active.name} 已可行動：${active.technique}` : "計時條蓄滿者先行動；藍條代表我方、赤條代表敵方", VIEW.w / 2, 442);
+
+      const main = party.find(unit => unit.id === "player");
+      if (main) drawEquipmentIcon(player.weapon.type || "katana", 310, 25, 54);
+    }
+
+    function drawPartyUnitSprite(x, y, unit, size) {
+      if (unit.id === "player" && heroWeaponAtlas.complete && heroWeaponAtlas.naturalWidth) {
+        const weaponCells = { katana: 0, tachi: 0, kodachi: 1, yari: 2, yumi: 3 };
+        const cell = weaponCells[unit.weaponType] ?? 0;
+        const sw = heroWeaponAtlas.naturalWidth / 4;
+        const sh = heroWeaponAtlas.naturalHeight;
+        ctx.save();
+        ctx.globalAlpha = unit.hp > 0 ? 1 : .32;
+        if (unit.flash > 0) ctx.translate(Math.sin(scenePulse * 58) * 7, 0);
+        ctx.shadowColor = "rgba(0,0,0,.62)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 8;
+        ctx.drawImage(heroWeaponAtlas, cell * sw, 0, sw, sh, x, y, size, size);
+        if (unit.flash > 0) { ctx.globalCompositeOperation = "source-atop"; ctx.fillStyle = "rgba(255,235,205,.42)"; ctx.fillRect(x, y, size, size); }
+        ctx.restore();
+        return;
+      }
+      if (!(partyFighterAtlas.complete && partyFighterAtlas.naturalWidth)) {
+        drawFighter(x + size / 2, y + size * .82, unit.side === "party", unit.flash, unit.side === "party" ? "#344555" : "#9f2f2d");
+        return;
+      }
+      const cells = { samurai: [0, 0], ninja: [1, 0], monk: [2, 0], ronin: [0, 1], ashigaru: [1, 1], healer: [2, 1] };
+      const cell = cells[unit.sprite] || (unit.side === "party" ? cells.samurai : cells.ronin);
+      const sw = partyFighterAtlas.naturalWidth / 3;
+      const sh = partyFighterAtlas.naturalHeight / 2;
+      ctx.save();
+      ctx.globalAlpha = unit.hp > 0 ? 1 : .32;
+      if (unit.flash > 0) ctx.translate(Math.sin(scenePulse * 58) * 7, 0);
+      ctx.shadowColor = "rgba(0,0,0,.62)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 8;
+      ctx.drawImage(partyFighterAtlas, cell[0] * sw, cell[1] * sh, sw, sh, x, y, size, size);
+      if (unit.flash > 0) {
+        ctx.globalCompositeOperation = "source-atop"; ctx.fillStyle = "rgba(255,235,205,.42)"; ctx.fillRect(x, y, size, size);
+      }
+      ctx.restore();
+    }
+
+    function drawCombatUnitCard(x, y, w, unit, alignRight) {
+      const active = unit.id === combat.currentActorId;
+      ctx.fillStyle = active ? "rgba(52,45,25,.92)" : "rgba(15,16,14,.8)"; ctx.fillRect(x, y, w, 52);
+      ctx.strokeStyle = active ? "#f1ca62" : unit.side === "party" ? "rgba(105,176,181,.62)" : "rgba(193,91,72,.6)"; ctx.lineWidth = active ? 2 : 1; ctx.strokeRect(x, y, w, 52);
+      ctx.textAlign = alignRight ? "right" : "left"; ctx.fillStyle = unit.hp > 0 ? "#f0dfb7" : "#847d6d"; ctx.font = '700 12px "Microsoft JhengHei", sans-serif';
+      ctx.fillText(`${unit.name}｜${unit.job}${unit.guarding ? "【守】" : ""}`, alignRight ? x + w - 8 : x + 8, y + 14);
+      ctx.font = '10px "Microsoft JhengHei", sans-serif';
+      ctx.fillText(`HP ${Math.ceil(unit.hp)}/${unit.maxHp}　氣 ${unit.ki}/${unit.maxKi}`, alignRight ? x + w - 8 : x + 8, y + 28);
+      const bx = x + 8, bw = w - 16;
+      ctx.fillStyle = "rgba(0,0,0,.62)"; ctx.fillRect(bx, y + 32, bw, 6);
+      ctx.fillStyle = unit.side === "party" ? "#4fa06d" : "#b54b43"; ctx.fillRect(bx, y + 32, bw * Math.max(0, unit.hp / unit.maxHp), 6);
+      ctx.fillStyle = "rgba(0,0,0,.62)"; ctx.fillRect(bx, y + 42, bw, 5);
+      ctx.fillStyle = unit.atb >= 100 ? "#ffd45e" : unit.side === "party" ? "#55b9c6" : "#d1794f"; ctx.fillRect(bx, y + 42, bw * Math.max(0, unit.atb / 100), 5);
+    }
+
+    function drawEquipmentIcon(type, x, y, size) {
+      if (!(equipmentItemAtlas.complete && equipmentItemAtlas.naturalWidth)) return;
+      const cells = { katana: [0, 0], tachi: [0, 0], kodachi: [1, 0], yari: [2, 0], yumi: [3, 0] };
+      const cell = cells[type] || cells.katana;
+      const sw = equipmentItemAtlas.naturalWidth / 4;
+      const sh = equipmentItemAtlas.naturalHeight / 2;
+      ctx.save(); ctx.globalAlpha = .92;
+      ctx.drawImage(equipmentItemAtlas, cell[0] * sw, cell[1] * sh, sw, sh, x, y, size, size);
+      ctx.restore();
     }
 
     function drawBattleSprite(x, y, type, flash) {
