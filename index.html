@@ -215,6 +215,27 @@
 
     .interaction-tip.visible { opacity: 1; transform: translateY(0); }
 
+    .mission-tracker {
+      position: absolute;
+      top: 58px;
+      left: 14px;
+      z-index: 7;
+      width: min(330px, calc(100% - 28px));
+      padding: 10px 12px;
+      border: 2px solid rgba(236, 192, 80, .86);
+      background: linear-gradient(135deg, rgba(31, 20, 13, .95), rgba(73, 34, 22, .93));
+      box-shadow: 0 8px 24px rgba(0,0,0,.48), inset 0 0 22px rgba(215,157,65,.08);
+      color: #f3e4bb;
+      pointer-events: auto;
+    }
+    .mission-tracker-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .mission-tracker-head strong { color: #ffd777; font-size: 13px; letter-spacing: .12em; }
+    .mission-deadline { padding: 3px 7px; background: #9f2f2d; color: #fff1c7; font-size: 11px; font-weight: 800; }
+    .mission-title { margin-top: 6px; font-weight: 800; font-size: 14px; }
+    .mission-next { margin-top: 3px; color: #d7c7a4; font-size: 11px; line-height: 1.55; }
+    .mission-route-button { width: 100%; margin-top: 7px; padding: 6px 9px; border: 1px solid rgba(237,204,125,.65); background: rgba(18,39,40,.9); color: #ffe0a0; font-size: 11px; font-weight: 800; }
+    .mission-route-button:hover { background: #244b4c; }
+
     .start-overlay {
       position: absolute;
       inset: 0;
@@ -722,6 +743,9 @@
       .dpad { scale: .78; transform-origin: left bottom; }
       .touch-interact { width: 58px; height: 58px; bottom: 42px; right: 12px; }
       .interaction-tip { bottom: 74px; font-size: 10px; }
+      .mission-tracker { top: 45px; left: 8px; width: min(285px, calc(100% - 80px)); padding: 8px 9px; }
+      .mission-tracker-head strong, .mission-title { font-size: 11px; }
+      .mission-next, .mission-route-button, .mission-deadline { font-size: 9px; }
       .dialog-panel { min-height: 150px; margin-top: 10px; border-width: 4px; }
       #message { font-size: 13px; }
       .retro-info-panel { top: 19%; width: calc(100% - 54px); }
@@ -793,6 +817,12 @@
             <div class="retro-info-body" id="retroInfoBody"></div>
           </section>
           <div class="interaction-tip" id="interactionTip">按 Space 進入據點</div>
+          <section class="mission-tracker" id="missionTracker" aria-live="polite" hidden>
+            <div class="mission-tracker-head"><strong>評定任務</strong><span class="mission-deadline" id="missionDeadline">尚餘 10 日</span></div>
+            <div class="mission-title" id="missionTitle">軍糧採購</div>
+            <div class="mission-next" id="missionNext">下一步：前往津島町｜預估 1 日</div>
+            <button class="mission-route-button" id="missionRouteButton" type="button">自動導航至下一個目的地</button>
+          </section>
 
           <div class="touch-controls map-visible" id="touchControls" aria-label="觸控移動控制">
             <div class="dpad">
@@ -808,7 +838,7 @@
             <div class="start-card">
               <p class="start-kicker">一五六〇 · 桶狹間前夜</p>
               <h2>尾張風雲錄</h2>
-              <p>以方向鍵或 WASD 在卷軸大地圖行走。沿路探索清洲城、町場、博戲場與木曾川，也可能遭遇攔路浪人。</p>
+              <p>點擊全日本卷軸地圖即可沿街道自動行走，也可使用方向鍵或 WASD。路上會遇見實際行走的浪人與他國家臣；調查身分後，再決定交談、挖角或動武。</p>
               <div class="start-actions">
                 <button class="primary-button" id="startSound" type="button">啟用音效並開始</button>
                 <button class="ghost-button" id="startSilent" type="button">靜音開始</button>
@@ -911,15 +941,24 @@
       rankStrip: document.getElementById("rankStrip"),
       retroInfoPanel: document.getElementById("retroInfoPanel"),
       retroInfoTitle: document.getElementById("retroInfoTitle"),
-      retroInfoBody: document.getElementById("retroInfoBody")
+      retroInfoBody: document.getElementById("retroInfoBody"),
+      missionTracker: document.getElementById("missionTracker"),
+      missionDeadline: document.getElementById("missionDeadline"),
+      missionTitle: document.getElementById("missionTitle"),
+      missionNext: document.getElementById("missionNext"),
+      missionRouteButton: document.getElementById("missionRouteButton")
     };
 
     const VIEW = { w: canvas.width, h: canvas.height };
-    const WORLD = { w: 2700, h: 1680 };
+    const WORLD = { w: 7200, h: 3600 };
     const SAVE_KEY = "taikou-classic-scroll-v1";
     const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const mapSpriteAtlas = new Image();
     mapSpriteAtlas.src = "map-sprites-v1.png";
+    const mapHeroDirectionAtlas = new Image();
+    mapHeroDirectionAtlas.src = "map-hero-directions-v2.png";
+    const mapNpcDirectionAtlas = new Image();
+    mapNpcDirectionAtlas.src = "map-npcs-directions-v2.png";
     const battleBackground = new Image();
     battleBackground.src = "battle-road-party-v2.png";
     const battleFighterAtlas = new Image();
@@ -959,29 +998,80 @@
     ];
 
     const locations = [
-      { id: "kiyosu-castle", name: "清洲城", area: "尾張國·清洲城", x: 610, y: 390, radius: 92, type: "castle", desc: "織田家居城，兵馬與傳令使往來不絕。" },
-      { id: "kiyosu-town", name: "清洲町", area: "尾張國·清洲町", x: 790, y: 610, radius: 82, type: "town", desc: "城下町商聲鼎沸，爐火與酒香自巷內飄出。" },
-      { id: "gambling", name: "黑市博戲場", area: "清洲町·博戲場", x: 1015, y: 715, radius: 70, type: "gambling", desc: "竹盅落桌聲隔著布簾傳來。" },
-      { id: "kiso-port", name: "木曾川渡口", area: "尾張國·木曾川渡口", x: 2080, y: 430, radius: 96, type: "river", desc: "川並衆的舟船泊在蘆葦間，陌生人都會被盤問。" },
-      { id: "tsushima", name: "津島町", area: "尾張國·津島町", x: 1510, y: 1110, radius: 86, type: "market", desc: "水陸商貨匯集，米、布與鹽包堆滿碼頭。" },
-      { id: "atsuta", name: "熱田神宮", area: "尾張國·熱田神宮", x: 560, y: 1320, radius: 82, type: "shrine", desc: "古木掩映參道，鈴音使旅人心神沉靜。" },
-      { id: "narumi", name: "鳴海砦", area: "尾張國·鳴海砦外", x: 2250, y: 1290, radius: 82, type: "fort", desc: "今川方軍旗立於土壘上，戒備森嚴。" }
+      { id: "satsuma", name: "鹿兒島町", area: "薩摩國·鹿兒島町", x: 520, y: 2920, radius: 86, type: "village", desc: "南九州的武家町，火山灰覆在屋瓦與田畦上。" },
+      { id: "nagasaki", name: "長崎港", area: "肥前國·長崎港", x: 690, y: 2520, radius: 94, type: "market", desc: "異國帆船與唐船並泊，香料、火藥與珍奇貨物流入港町。" },
+      { id: "hirado", name: "平戶港", area: "肥前國·平戶港", x: 720, y: 2220, radius: 86, type: "river", desc: "松浦氏控制的海港，南蠻商人與水手在碼頭交換消息。" },
+      { id: "hakata", name: "博多町", area: "筑前國·博多町", x: 1050, y: 2110, radius: 90, type: "town", desc: "商人自治傳統深厚的大町，倉庫與寺社沿街林立。" },
+      { id: "yamaguchi", name: "山口町", area: "周防國·山口町", x: 1450, y: 2110, radius: 84, type: "village", desc: "大內文化留下的雅致町場，西國使者在此往來。" },
+      { id: "hiroshima", name: "安藝郡山城", area: "安藝國·郡山城", x: 1880, y: 2020, radius: 92, type: "castle", desc: "毛利氏的山城，層層曲輪俯視中國路。" },
+      { id: "miyajima", name: "嚴島神社", area: "安藝國·嚴島", x: 1840, y: 2280, radius: 82, type: "shrine", desc: "朱紅大鳥居立於潮間，水軍與參詣者同望海面。" },
+      { id: "imabari", name: "來島水軍砦", area: "伊予國·來島海峽", x: 2250, y: 2470, radius: 88, type: "river", desc: "急潮環繞的水軍據點，小早船在島影間穿梭。" },
+      { id: "himeji", name: "姬路城", area: "播磨國·姬路城", x: 2650, y: 1900, radius: 92, type: "castle", desc: "西國通往畿內的要衝，城下驛路終日塵土飛揚。" },
+      { id: "sakai", name: "界町", area: "和泉國·界町", x: 3020, y: 2180, radius: 92, type: "market", desc: "會合眾與豪商掌握的大港，茶器、鐵砲與外國貨在此競價。" },
+      { id: "osaka", name: "石山本願寺", area: "攝津國·石山", x: 3160, y: 1990, radius: 92, type: "fort", desc: "河海交通匯聚的巨大寺內町，防備與信仰同樣堅固。" },
+      { id: "kyoto", name: "京町", area: "山城國·京都", x: 3300, y: 1630, radius: 96, type: "town", desc: "公家、寺社、商人與諸國武家交錯的天下中心。" },
+      { id: "hieizan", name: "比叡山延曆寺", area: "近江國·比叡山", x: 3420, y: 1390, radius: 90, type: "shrine", desc: "山門堂塔隱於雲霧，宗教與政治影響遍及畿內。" },
+      { id: "azuchi", name: "安土城下", area: "近江國·安土", x: 3650, y: 1570, radius: 92, type: "castle", desc: "琵琶湖東岸的戰略據點，未來將成為天下布武的象徵。" },
+      { id: "kitanosho", name: "北之庄", area: "越前國·北之庄", x: 3780, y: 1060, radius: 84, type: "village", desc: "北陸街道的城下町，雪國物資由此南運。" },
+      { id: "kanazawa", name: "尾山御坊", area: "加賀國·尾山", x: 4140, y: 900, radius: 88, type: "fort", desc: "加賀一向宗門徒的重要據點，周邊村落結盟自守。" },
+      { id: "kiyosu-castle", name: "清洲城", area: "尾張國·清洲城", x: 4160, y: 1660, radius: 96, type: "castle", desc: "織田家居城，兵馬與傳令使往來不絕。" },
+      { id: "kiyosu-town", name: "清洲町", area: "尾張國·清洲町", x: 4350, y: 1870, radius: 88, type: "town", desc: "城下町商聲鼎沸，爐火與酒香自巷內飄出。" },
+      { id: "gambling", name: "黑市博戲場", area: "清洲町·博戲場", x: 4540, y: 1970, radius: 72, type: "gambling", desc: "竹盅落桌聲隔著布簾傳來。" },
+      { id: "kiso-port", name: "木曾川渡口", area: "尾張國·木曾川渡口", x: 4440, y: 1390, radius: 96, type: "river", desc: "川並衆的舟船泊在蘆葦間，陌生人都會被盤問。" },
+      { id: "tsushima", name: "津島町", area: "尾張國·津島町", x: 3970, y: 2020, radius: 88, type: "market", desc: "水陸商貨匯集，米、布與鹽包堆滿碼頭。" },
+      { id: "atsuta", name: "熱田神宮", area: "尾張國·熱田神宮", x: 4250, y: 2210, radius: 86, type: "shrine", desc: "古木掩映參道，鈴音使旅人心神沉靜。" },
+      { id: "narumi", name: "鳴海砦", area: "尾張國·鳴海砦外", x: 4660, y: 2160, radius: 86, type: "fort", desc: "今川方軍旗立於土壘上，戒備森嚴。" },
+      { id: "matsumoto", name: "深志城", area: "信濃國·深志城", x: 4700, y: 1370, radius: 88, type: "castle", desc: "山道與盆地交會的堅城，甲斐與越後勢力都注視此處。" },
+      { id: "kofu", name: "躑躅崎館", area: "甲斐國·府中", x: 5050, y: 1770, radius: 92, type: "castle", desc: "武田氏政廳所在，騎馬武者與傳令不斷進出。" },
+      { id: "odawara", name: "小田原城", area: "相模國·小田原城", x: 5480, y: 2110, radius: 96, type: "castle", desc: "北條氏的大城，箱根山路與相模灣盡在控制之下。" },
+      { id: "kamakura", name: "鎌倉町", area: "相模國·鎌倉", x: 5730, y: 2320, radius: 84, type: "village", desc: "古武家政權的故地，寺院與谷戶沿海而立。" },
+      { id: "edo", name: "江戶城", area: "武藏國·江戶城", x: 5960, y: 1960, radius: 92, type: "castle", desc: "利根川水系與江戶灣之間的新興據點。" },
+      { id: "aizu", name: "黑川城", area: "陸奧國·會津", x: 6060, y: 1500, radius: 88, type: "castle", desc: "山間盆地的要城，奧州諸勢力在此角力。" },
+      { id: "yonezawa", name: "米澤城", area: "出羽國·米澤", x: 6350, y: 1260, radius: 86, type: "castle", desc: "伊達氏的重要根據地，山道連結陸奧與出羽。" },
+      { id: "sendai", name: "宮城郡", area: "陸奧國·宮城郡", x: 6660, y: 1080, radius: 84, type: "village", desc: "廣闊平野面向太平洋，奧州商路由此延伸。" }
     ];
 
     const roads = [
-      [[180, 870], [480, 780], [790, 610], [1015, 715], [1320, 870], [1510, 1110], [1880, 1190], [2250, 1290], [2550, 1440]],
-      [[610, 390], [720, 500], [790, 610], [920, 810], [820, 1070], [560, 1320]],
-      [[1015, 715], [1320, 610], [1660, 520], [2080, 430]],
-      [[1510, 1110], [1570, 870], [1660, 520]]
+      [[720,2220],[1050,2110],[1450,2110],[1880,2020],[2250,1960],[2650,1900],[2940,1940],[3160,1990],[3020,2180]],
+      [[2940,1940],[3300,1630],[3650,1570],[3970,1740],[4160,1660],[4350,1870],[4540,1970],[4660,2160],[5050,1770],[5480,2110],[5730,2320],[5960,1960]],
+      [[690,2520],[720,2220],[1050,2110]],
+      [[520,2920],[610,2700],[690,2520]],
+      [[1880,2020],[1840,2280],[2250,2470],[2650,2320],[3020,2180]],
+      [[3300,1630],[3420,1390],[3650,1570]],
+      [[3300,1630],[3480,1280],[3780,1060],[4140,900]],
+      [[3650,1570],[3950,1400],[4160,1660]],
+      [[4160,1660],[4300,1510],[4440,1390],[4700,1370],[5050,1770]],
+      [[3970,1740],[3970,2020],[4250,2210],[4660,2160]],
+      [[4350,1870],[4540,1970]],
+      [[5050,1770],[5250,1520],[5600,1510],[6060,1500],[6350,1260],[6660,1080]],
+      [[5960,1960],[6060,1500]],
+      [[5480,2110],[5730,2320]]
     ];
 
-    const riverPath = [[1900, -80], [1870, 210], [1980, 410], [1910, 650], [2020, 850], [1970, 1080], [2110, 1320], [2040, 1760]];
+    const riverPath = [[4370,970],[4400,1180],[4440,1390],[4380,1620],[4480,1840],[4430,2040],[4540,2290],[4510,2550]];
+    const landPolygons = [
+      [[360,1750],[720,1680],[1110,1840],[1320,2110],[1190,2480],[980,2700],[920,3150],[580,3260],[350,2910],[420,2520],[250,2190]],
+      [[980,1880],[1390,1780],[1880,1810],[2320,1680],[2820,1670],[3210,1450],[3570,1250],[3990,1230],[4440,1160],[4860,1260],[5300,1440],[5700,1570],[6160,1470],[6620,1180],[6960,860],[7060,1120],[6840,1430],[6470,1660],[6180,2050],[5840,2390],[5450,2490],[5040,2260],[4680,2360],[4300,2280],[3900,2110],[3500,2200],[3100,2310],[2670,2180],[2240,2240],[1830,2170],[1450,2260],[1120,2140]],
+      [[1710,2220],[2080,2140],[2510,2200],[2940,2170],[3170,2350],[2940,2610],[2550,2680],[2140,2600],[1790,2470]],
+      [[6350,270],[6720,180],[7030,390],[6950,720],[6630,860],[6310,650]]
+    ];
+
+    function pointInPolygon(x, y, polygon) {
+      let inside = false;
+      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        const xi = polygon[i][0], yi = polygon[i][1], xj = polygon[j][0], yj = polygon[j][1];
+        if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / ((yj - yi) || .0001) + xi) inside = !inside;
+      }
+      return inside;
+    }
+
+    function pointOnLand(x, y) { return landPolygons.some(polygon => pointInPolygon(x, y, polygon)); }
 
     const player = {
-      x: 420,
-      y: 830,
-      radius: 12,
-      speed: 190,
+      x: 3890,
+      y: 1860,
+      radius: 24,
+      speed: 245,
       hp: 100,
       maxHp: 100,
       ki: 3,
@@ -1005,6 +1095,10 @@
       ninjaSkill: 0,
       companions: [],
       companionHealth: {},
+      visited: [],
+      npcRelations: {},
+      recruitedRoadNpcs: [],
+      battlePreference: "party",
       relicFlags: {},
       historicalFlags: {},
       historicalChoices: [],
@@ -1016,7 +1110,7 @@
       inventory: { rice: 0, firearms: 0, medicine: 1, dokudami: 2, yomogi: 1 },
       weapon: { id: "uchigatana", name: "無名打刀", atk: 0, type: "katana", speed: 0, stance: "中段" },
       armor: { name: "粗布衣", def: 0 },
-      facing: "right",
+      facing: "down",
       walkPhase: 0,
       distance: 0
     };
@@ -1042,6 +1136,10 @@
     let toastTimer = 0;
     let currentHistoricalEvent = null;
     const historicalEventQueue = [];
+    let nearbyNpc = null;
+    let navTarget = null;
+    let navPath = [];
+    let navIndex = 0;
 
     const weatherCycle = ["初夏晴", "薄曇", "驟雨", "雨後霧", "南風"];
     const rankTable = [
@@ -1053,10 +1151,10 @@
     ];
 
     const missionTemplates = [
-      { type: "rice", title: "軍糧採購", baseTarget: 3, reward: 28, merit: 35, advance: 20, brief: "前往津島町採購軍糧，備戰期間不得延誤。" },
-      { type: "pacify", title: "街道治安討伐", baseTarget: 2, reward: 36, merit: 42, advance: 0, brief: "掃蕩尾張街道上的攔路浪人，確保兵糧車通行。" },
-      { type: "firearms", title: "鐵砲軍備採購", baseTarget: 2, reward: 48, merit: 52, advance: 30, brief: "至清洲町鍛冶屋採購火繩槍，補充織田家的鐵砲隊。" },
-      { type: "recon", title: "鳴海砦敵情偵查", baseTarget: 1, reward: 55, merit: 60, advance: 0, brief: "前往鳴海砦暗中查明今川方守軍與糧秣。" }
+      { type: "rice", title: "軍糧採購", baseTarget: 3, reward: 28, merit: 35, advance: 20, days: 12, brief: "前往津島町採購軍糧，備戰期間不得延誤。" },
+      { type: "pacify", title: "街道治安討伐", baseTarget: 2, reward: 36, merit: 42, advance: 0, days: 18, brief: "掃蕩尾張街道上的攔路浪人，確保兵糧車通行。" },
+      { type: "firearms", title: "鐵砲軍備採購", baseTarget: 2, reward: 48, merit: 52, advance: 30, days: 15, brief: "至清洲町鍛冶屋採購火繩槍，補充織田家的鐵砲隊。" },
+      { type: "recon", title: "鳴海砦敵情偵查", baseTarget: 1, reward: 55, merit: 60, advance: 0, days: 10, brief: "前往鳴海砦暗中查明今川方守軍與糧秣。" }
     ];
     const combat = {
       enemyName: "流浪野武士",
@@ -1095,8 +1193,17 @@
 
     const companionCatalog = {
       kiri: { id: "kiri", name: "霧隱楓", job: "忍者", maxHp: 76, maxKi: 7, atk: 17, def: 5, speed: 29, sprite: "ninja", technique: "忍術·影縫", skillCost: 3 },
-      genya: { id: "genya", name: "玄也坊", job: "槍僧", maxHp: 98, maxKi: 6, atk: 20, def: 9, speed: 18, sprite: "monk", technique: "十文字槍", skillCost: 3 }
+      genya: { id: "genya", name: "玄也坊", job: "槍僧", maxHp: 98, maxKi: 6, atk: 20, def: 9, speed: 18, sprite: "monk", technique: "十文字槍", skillCost: 3 },
+      genshiro: { id: "genshiro", name: "松永源四郎", job: "浪人", maxHp: 92, maxKi: 6, atk: 21, def: 7, speed: 22, sprite: "ronin", technique: "霞袈裟", skillCost: 3 },
+      yahichi: { id: "yahichi", name: "林彌七", job: "足輕頭", maxHp: 104, maxKi: 6, atk: 20, def: 11, speed: 18, sprite: "ashigaru", technique: "槍衾突", skillCost: 3 },
+      munetaka: { id: "munetaka", name: "朝比奈宗孝", job: "駿河武士", maxHp: 110, maxKi: 7, atk: 23, def: 10, speed: 19, sprite: "samurai", technique: "海道一文字", skillCost: 4 }
     };
+
+    const roadNpcs = [
+      { id: "npc-genshiro", companionId: "genshiro", name: "松永源四郎", job: "美濃浪人", faction: "無所属", origin: "美濃國稻葉山城下出身，主家內訌後離散，在諸國尋找值得侍奉之人。", x: 4040, y: 1775, route: [[3970,1740],[4160,1660],[4350,1870],[4540,1970]], routeIndex: 1, routeDir: 1, speed: 52, facing: "right", spriteRow: 0, level: 4, hp: 96, atk: 22, def: 8, affinity: 0, recruitable: true, defeated: false },
+      { id: "npc-yahichi", companionId: "yahichi", name: "林彌七", job: "織田家足輕頭", faction: "織田家", origin: "清洲奉行所配下的足輕頭，負責巡視津島與熱田之間的兵糧道。", x: 4140, y: 1970, route: [[3970,2020],[4250,2210],[4660,2160],[4350,1870]], routeIndex: 0, routeDir: 1, speed: 45, facing: "down", spriteRow: 1, level: 5, hp: 112, atk: 21, def: 12, affinity: 1, recruitable: true, defeated: false },
+      { id: "npc-munetaka", companionId: "munetaka", name: "朝比奈宗孝", job: "今川家使番", faction: "今川家", origin: "駿河朝比奈氏旁支武士，奉命往返鳴海砦與三河，身上可能帶有軍情。", x: 4800, y: 2075, route: [[4660,2160],[5050,1770],[5480,2110]], routeIndex: 0, routeDir: 1, speed: 58, facing: "right", spriteRow: 2, level: 7, hp: 126, atk: 25, def: 12, affinity: -1, recruitable: true, defeated: false }
+    ];
 
     const historicalEvents = [
       {
@@ -1197,20 +1304,20 @@
     }
 
     const mapRandom = mulberry32(156005);
-    const terrainDots = Array.from({ length: 520 }, () => ({
+    const terrainDots = Array.from({ length: 1900 }, () => ({
       x: mapRandom() * WORLD.w,
       y: mapRandom() * WORLD.h,
       r: 1 + mapRandom() * 3,
       a: .025 + mapRandom() * .06
     }));
-    const forests = Array.from({ length: 94 }, () => ({
+    const forests = Array.from({ length: 260 }, () => ({
       x: 120 + mapRandom() * (WORLD.w - 240),
       y: 100 + mapRandom() * (WORLD.h - 200),
       scale: .7 + mapRandom() * .8
     })).filter(tree => locations.every(loc => Math.hypot(tree.x - loc.x, tree.y - loc.y) > loc.radius + 85));
-    const mountains = Array.from({ length: 26 }, (_, i) => ({
-      x: 150 + (i % 9) * 290 + mapRandom() * 90,
-      y: i < 9 ? 120 + mapRandom() * 90 : 1460 + mapRandom() * 120,
+    const mountains = Array.from({ length: 92 }, (_, i) => ({
+      x: 180 + mapRandom() * (WORLD.w - 360),
+      y: 180 + mapRandom() * (WORLD.h - 360),
       scale: .7 + mapRandom() * .7
     }));
 
@@ -1377,9 +1484,21 @@
     function mapActions() {
       setActions([
         { label: "調查附近", run: interact },
-        { label: "查看旅途情報", run: showTravelInfo },
+        { label: "前往已訪據點", run: showVisitedTravelMenu },
+        { label: `戰鬥方針：${player.companions.length && player.battlePreference === "party" ? "群鬥" : "單挑"}`, run: toggleBattlePreference },
         { label: "原地休息", run: restOnRoad }
       ]);
+    }
+
+    function toggleBattlePreference() {
+      if (!player.companions.length) {
+        player.battlePreference = "duel";
+        setMessage("戰鬥編成", "目前沒有同行伙伴，遭遇戰只能進行單挑。招募伙伴後可切換群鬥。");
+      } else {
+        player.battlePreference = player.battlePreference === "party" ? "duel" : "party";
+        setMessage("戰鬥編成", player.battlePreference === "party" ? `已設定【群鬥】。遭遇敵人時，${player.companions.length + 1} 名隊員會各自出現在戰場並擁有獨立計時條。` : "已設定【單挑】。一般遭遇只由主角出戰，伙伴在陣外待命。 ");
+      }
+      mapActions(); updateHUD(); saveGame();
     }
 
     function displayRank(rank = player.rank) {
@@ -1492,6 +1611,7 @@
       ui.totalAttack.textContent = totalAttack();
       ui.totalDefense.textContent = totalDefense();
       updateObjective();
+      updateMissionTracker();
     }
 
     function updateObjective() {
@@ -1505,6 +1625,60 @@
       }
       const progress = missionProgressText(player.mission);
       ui.objective.textContent = `評定任務【${player.mission.title}】${progress}。${player.mission.brief}`;
+    }
+
+    function calendarOrdinal(y = year, m = month, d = day) { return y * 360 + (m - 1) * 30 + (d - 1); }
+
+    function remainingMissionDays() {
+      if (!player.mission) return 0;
+      return Math.max(0, (player.mission.deadlineOrdinal ?? calendarOrdinal() + 1) - calendarOrdinal());
+    }
+
+    function missionDestination() {
+      if (!player.mission) return null;
+      if (missionReady()) return locations.find(loc => loc.id === "kiyosu-castle");
+      const ids = { rice: "tsushima", firearms: "kiyosu-town", recon: "narumi" };
+      return locations.find(loc => loc.id === ids[player.mission.type]) || null;
+    }
+
+    function missionNextStep() {
+      if (!player.mission) return "";
+      if (missionReady()) return "任務目標已完成，返回清洲城交付評定";
+      const steps = {
+        rice: "前往津島町，向米商採購評定軍糧",
+        firearms: "前往清洲町鍛冶屋，採購評定鐵砲",
+        pacify: "在尾張街道接近流浪武者，調查後進行討伐",
+        recon: "前往鳴海砦，選擇暗中偵查"
+      };
+      return steps[player.mission.type] || player.mission.brief;
+    }
+
+    function estimateTravelDays(destination) {
+      if (!destination) return 1;
+      return Math.max(1, Math.ceil(Math.hypot(destination.x - player.x, destination.y - player.y) / 1350));
+    }
+
+    function updateMissionTracker() {
+      if (!ui.missionTracker) return;
+      ui.missionTracker.hidden = !player.mission || gameState === "COMBAT" || gameState === "EVENT";
+      if (!player.mission) return;
+      const destination = missionDestination();
+      const remaining = remainingMissionDays();
+      ui.missionDeadline.textContent = `尚餘 ${remaining} 日`;
+      ui.missionDeadline.style.background = remaining <= 3 ? "#c3372f" : remaining <= 7 ? "#9b6324" : "#315f59";
+      ui.missionTitle.textContent = `${player.mission.title}　${missionProgressText(player.mission).trim()}`;
+      ui.missionNext.textContent = `下一步：${missionNextStep()}｜${destination ? `預估 ${estimateTravelDays(destination)} 日` : "目標在移動中"}`;
+      ui.missionRouteButton.textContent = destination ? `自動導航：${destination.name}` : "搜尋附近任務目標";
+    }
+
+    function navigateMission() {
+      if (!player.mission) return;
+      const destination = missionDestination();
+      if (destination) startAutoTravel(destination.x, destination.y, destination.name, destination.id);
+      else {
+        const npc = roadNpcs.find(item => !item.recruited && !item.defeated && item.faction === "無所属");
+        if (npc) startAutoTravel(npc.x, npc.y, `${npc.name}附近`, null);
+      }
     }
 
     function missionProgressText(mission) {
@@ -1531,7 +1705,7 @@
 
     function saveGame(showNotice = false) {
       const snapshot = {
-        version: 3,
+        version: 4,
         player: {
           x: player.x, y: player.y, hp: player.hp, ki: player.ki, gold: player.gold,
           fame: player.fame, infamy: player.infamy, weapon: player.weapon, armor: player.armor,
@@ -1540,11 +1714,14 @@
           combatWins: player.combatWins, groupWins: player.groupWins, leadership: player.leadership,
           samuraiSkill: player.samuraiSkill, ninjaSkill: player.ninjaSkill,
           companions: player.companions, companionHealth: player.companionHealth,
+          visited: player.visited, npcRelations: player.npcRelations, recruitedRoadNpcs: player.recruitedRoadNpcs,
+          battlePreference: player.battlePreference,
           relicFlags: player.relicFlags, historicalFlags: player.historicalFlags, historicalChoices: player.historicalChoices,
           firearmsSkill: player.firearmsSkill, navalSkill: player.navalSkill, militarySkill: player.militarySkill,
           domain: player.domain, mission: player.mission, inventory: player.inventory
         },
-        calendar: { year, day, month, weatherIndex }
+        calendar: { year, day, month, weatherIndex },
+        roadNpcs: roadNpcs.map(npc => ({ id: npc.id, x: npc.x, y: npc.y, routeIndex: npc.routeIndex, routeDir: npc.routeDir, facing: npc.facing, defeated: npc.defeated }))
       };
       localStorage.setItem(SAVE_KEY, JSON.stringify(snapshot));
       if (showNotice) showToast("進度已保存");
@@ -1553,12 +1730,16 @@
     function loadGame() {
       try {
         const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
-        if (!saved || ![1, 2, 3].includes(saved.version)) return;
+        if (!saved || ![1, 2, 3, 4].includes(saved.version)) return;
         Object.assign(player, saved.player || {});
         player.inventory = { rice: 0, firearms: 0, medicine: 1, dokudami: 2, yomogi: 1, ...(player.inventory || {}) };
         player.weapon = { id: "uchigatana", type: "katana", speed: 0, stance: "中段", ...(player.weapon || {}) };
         player.companions = Array.isArray(player.companions) ? player.companions : [];
         player.companionHealth = player.companionHealth || {};
+        player.visited = Array.isArray(player.visited) ? player.visited : [];
+        player.npcRelations = player.npcRelations || {};
+        player.recruitedRoadNpcs = Array.isArray(player.recruitedRoadNpcs) ? player.recruitedRoadNpcs : [];
+        player.battlePreference = player.battlePreference || "party";
         player.relicFlags = player.relicFlags || {};
         player.historicalFlags = player.historicalFlags || {};
         player.historicalChoices = Array.isArray(player.historicalChoices) ? player.historicalChoices : [];
@@ -1575,6 +1756,16 @@
           month = saved.calendar.month || month;
           weatherIndex = saved.calendar.weatherIndex || 0;
         }
+        if (saved.version < 4) {
+          const legacyX = Number(player.x) || 420, legacyY = Number(player.y) || 830;
+          player.x = clamp(3890 + (legacyX - 420) * .31, 3600, 4740);
+          player.y = clamp(1860 + (legacyY - 830) * .31, 1320, 2300);
+          if (player.mission && !player.mission.deadlineOrdinal) player.mission.deadlineOrdinal = calendarOrdinal() + 12;
+        }
+        if (Array.isArray(saved.roadNpcs)) {
+          saved.roadNpcs.forEach(state => { const npc = roadNpcs.find(item => item.id === state.id); if (npc) Object.assign(npc, state); });
+        }
+        roadNpcs.forEach(npc => { if (player.recruitedRoadNpcs.includes(npc.id)) npc.recruited = true; });
         setMessage("旅途札記", "已接續上次旅程。尾張的風向仍在變化，路上務必留神。 ");
       } catch (error) {
         console.warn("存檔讀取失敗", error);
@@ -1588,7 +1779,92 @@
     }
 
     function showTravelInfo() {
-      setMessage("行商人的地圖", "清洲城在東北，清洲町與博戲場沿街道相連；向東可至木曾川，南行則通往津島與熱田。小地圖上的金點就是據點。 ");
+      setMessage("諸國街道圖", "大地圖已延伸至九州、畿內、東海、關東與奧州。可直接點擊地圖行走；曾親自進入的據點會加入【前往已訪據點】列表。 ");
+    }
+
+    function showVisitedTravelMenu() {
+      gameState = "SCENE";
+      setMode("諸國移動 · 已訪據點");
+      const visited = locations.filter(loc => player.visited.includes(loc.id));
+      if (!visited.length) {
+        setMessage("旅人手帳", "尚無已登錄據點。靠近城、町、村、港或神社並調查一次，就會寫入旅人手帳。 ");
+        setActions([{ label: "返回大地圖", run: leaveScene }]);
+        return;
+      }
+      setMessage("旅人手帳", `已記錄 ${visited.length} 處。選擇後角色會沿主要街道自動前往；途中時間、天候與遭遇仍會正常推進。`);
+      setActions([
+        ...visited.map(loc => ({ label: `${loc.name}｜約 ${estimateTravelDays(loc)} 日`, run: () => startAutoTravel(loc.x, loc.y, loc.name, loc.id) })),
+        { label: "返回大地圖", run: leaveScene }
+      ]);
+    }
+
+    function buildRoadGraph() {
+      const nodes = new Map();
+      const addNode = point => {
+        const key = `${point[0]},${point[1]}`;
+        if (!nodes.has(key)) nodes.set(key, { key, x: point[0], y: point[1], edges: [] });
+        return nodes.get(key);
+      };
+      roads.forEach(road => road.forEach((point, index) => {
+        const node = addNode(point);
+        if (!index) return;
+        const prev = addNode(road[index - 1]);
+        const cost = Math.hypot(node.x - prev.x, node.y - prev.y);
+        if (!node.edges.some(edge => edge.key === prev.key)) node.edges.push({ key: prev.key, cost });
+        if (!prev.edges.some(edge => edge.key === node.key)) prev.edges.push({ key: node.key, cost });
+      }));
+      return nodes;
+    }
+
+    function nearestGraphNode(nodes, x, y) {
+      let best = null, distance = Infinity;
+      nodes.forEach(node => { const d = Math.hypot(node.x - x, node.y - y); if (d < distance) { best = node; distance = d; } });
+      return best;
+    }
+
+    function buildNavigationPath(targetX, targetY) {
+      const nodes = buildRoadGraph();
+      const start = nearestGraphNode(nodes, player.x, player.y);
+      const finish = nearestGraphNode(nodes, targetX, targetY);
+      if (!start || !finish) return [[targetX, targetY]];
+      const dist = new Map(), previous = new Map(), unvisited = new Set(nodes.keys());
+      nodes.forEach((_, key) => dist.set(key, Infinity));
+      dist.set(start.key, 0);
+      while (unvisited.size) {
+        let currentKey = null, currentDistance = Infinity;
+        unvisited.forEach(key => { if (dist.get(key) < currentDistance) { currentKey = key; currentDistance = dist.get(key); } });
+        if (!currentKey || currentKey === finish.key) break;
+        unvisited.delete(currentKey);
+        const current = nodes.get(currentKey);
+        current.edges.forEach(edge => {
+          if (!unvisited.has(edge.key)) return;
+          const nextDistance = currentDistance + edge.cost;
+          if (nextDistance < dist.get(edge.key)) { dist.set(edge.key, nextDistance); previous.set(edge.key, currentKey); }
+        });
+      }
+      const route = [];
+      let cursor = finish.key;
+      while (cursor) { const node = nodes.get(cursor); if (node) route.unshift([node.x, node.y]); if (cursor === start.key) break; cursor = previous.get(cursor); }
+      if (!route.length || route[0][0] !== start.x || route[0][1] !== start.y) return [[targetX, targetY]];
+      route.push([targetX, targetY]);
+      return route;
+    }
+
+    function startAutoTravel(x, y, label = "指定地點", locationId = null) {
+      hideRetroInfo();
+      gameState = "MAP";
+      navTarget = { x, y, label, locationId };
+      navPath = buildNavigationPath(x, y);
+      navIndex = 0;
+      setMode(`自動導航 · ${label}`);
+      setMessage("旅人手帳", `已設定目的地【${label}】。角色會沿街道前進；按方向鍵或再次點擊地圖可變更路線。`);
+      mapActions(); updateHUD();
+    }
+
+    function cancelNavigation(message = "已取消自動導航。") {
+      navTarget = null; navPath = []; navIndex = 0;
+      setMode("大地圖移動");
+      if (message) showToast(message);
     }
 
     function restOnRoad() {
@@ -1611,10 +1887,24 @@
         if (day > 30) { day = 1; month++; }
         if (month > 12) { month = 1; year++; }
       }
+      checkMissionDeadline();
       collectHistoricalEvents();
       if (historicalEventQueue.length && gameState !== "COMBAT" && gameState !== "GAMBLE" && gameState !== "EVENT") {
         setTimeout(dispatchHistoricalEvent, 0);
       }
+    }
+
+    function checkMissionDeadline() {
+      if (!player.mission || missionReady()) return;
+      if (calendarOrdinal() <= (player.mission.deadlineOrdinal ?? Infinity)) return;
+      const failed = player.mission.title;
+      player.merit = Math.max(0, player.merit - 12);
+      player.fame = Math.max(0, player.fame - 2);
+      player.mission = null;
+      cancelNavigation("");
+      setMessage("評定期限超過", `【${failed}】未能在期限內完成。功勳 -12、名聲 -2；返回清洲城可重新領取評定。`);
+      sound.play("hit");
+      updateHUD(); saveGame();
     }
 
     function dateStamp(y, m, d) { return y * 10000 + m * 100 + d; }
@@ -1674,21 +1964,98 @@
       return closest;
     }
 
+    function findNearbyNpc() {
+      let closest = null, best = Infinity;
+      for (const npc of roadNpcs) {
+        if (npc.recruited || npc.defeated) continue;
+        const distance = Math.hypot(player.x - npc.x, player.y - npc.y);
+        if (distance < 112 && distance < best) { closest = npc; best = distance; }
+      }
+      return closest;
+    }
+
     function interact() {
       if (gameState !== "MAP") return;
+      if (nearbyNpc) { inspectRoadNpc(nearbyNpc); return; }
       if (!nearbyLocation) {
-        setMessage("旅途札記", "四周只有風吹草聲。沿土路前行，等據點名稱浮現後再調查。 ");
+        setMessage("旅途札記", "四周只有風吹草聲。可點擊地圖自動前往，或沿泥土街道尋找城町與旅行者。 ");
         return;
       }
-      switch (nearbyLocation.type) {
-        case "town": enterForge(); break;
-        case "gambling": enterGamble(); break;
-        case "castle": enterCastle(); break;
-        case "river": enterRiver(); break;
-        case "market": enterMarket(); break;
-        case "shrine": enterShrine(); break;
-        case "fort": enterFort(); break;
+      if (!player.visited.includes(nearbyLocation.id)) player.visited.push(nearbyLocation.id);
+      if (nearbyLocation.id === "kiyosu-town") enterForge();
+      else if (nearbyLocation.id === "gambling") enterGamble();
+      else if (nearbyLocation.id === "kiyosu-castle") enterCastle();
+      else if (nearbyLocation.id === "kiso-port") enterRiver();
+      else if (nearbyLocation.id === "tsushima") enterMarket();
+      else if (nearbyLocation.id === "atsuta") enterShrine();
+      else if (nearbyLocation.id === "narumi") enterFort();
+      else enterGenericLocation(nearbyLocation);
+      saveGame();
+    }
+
+    function enterGenericLocation(loc) {
+      enterScene(loc.name, "旅人手帳", `${loc.desc}【${loc.name}】已登錄為到訪據點，今後可從列表自動導航回到此地。`, [
+        { label: "打聽當地局勢", run: () => setMessage("當地古老", `${loc.area}近日人馬往來增加。商旅談論著各家軍勢，也提醒你莫在陌生領地隨意拔刀。`) },
+        { label: "在宿場休息 2貫", run: () => { if (player.gold < 2) { setMessage("宿場主人", "「沒有宿錢，只能借你屋簷避雨。」"); return; } player.gold -= 2; player.hp = Math.min(player.maxHp, player.hp + 28); advanceDay(); updateHUD(); saveGame(); setMessage("宿場主人", "熱粥與乾淨草席讓你恢復 28 體力，時間推進一日。 "); } },
+        { label: "查看已訪據點", run: showVisitedTravelMenu }
+      ]);
+    }
+
+    function npcRelation(npc) { return player.npcRelations[npc.id] ?? npc.affinity ?? 0; }
+
+    function npcRiskLabel(npc) {
+      const power = npc.atk + npc.def * 1.4 + npc.level * 3;
+      const own = totalAttack() + totalDefense() * 1.4 + player.combatWins * 1.2;
+      if (power > own * 1.35) return "極危險";
+      if (power > own * 1.05) return "強敵";
+      if (power > own * .75) return "勢均力敵";
+      return "優勢";
+    }
+
+    function inspectRoadNpc(npc) {
+      gameState = "SCENE";
+      setMode("街道人物 · 身分判讀");
+      setMessage(`${npc.job}｜${npc.name}`, `所屬：${npc.faction}｜武藝：LV${npc.level}｜關係：${npcRelation(npc)}｜動武評估：【${npcRiskLabel(npc)}】。對方停下腳步，把手放在容易拔刀的位置。`);
+      setActions([
+        { label: "查問來歷", run: () => setMessage(npc.name, npc.origin) },
+        { label: "攀談與交換情報", run: () => talkRoadNpc(npc) },
+        { label: "試著挖角同行", run: () => recruitRoadNpc(npc) },
+        { label: "拔刀攻擊", run: () => attackRoadNpc(npc), danger: true },
+        { label: "各走各路", run: leaveScene }
+      ]);
+    }
+
+    function talkRoadNpc(npc) {
+      const gain = Math.max(1, Math.min(3, 1 + Math.floor(player.fame / 18)));
+      player.npcRelations[npc.id] = npcRelation(npc) + gain;
+      const factionNote = npc.faction === player.faction ? "同家臣的身分讓話題很快轉到軍務。" : npc.faction === "今川家" ? "他避談鳴海砦兵力，但透露三河道路正在徵發馬匹。" : "他願意交換宿場與山賊出沒的消息。";
+      setMessage(npc.name, `${factionNote} 關係 +${gain}，目前 ${npcRelation(npc)}。`);
+      sound.play("ui"); updateHUD(); saveGame();
+    }
+
+    function recruitRoadNpc(npc) {
+      const relation = npcRelation(npc);
+      const factionGate = npc.faction === "織田家" ? player.faction === "織田家" : npc.faction === "今川家" ? player.fame >= 22 : true;
+      const need = npc.faction === "今川家" ? 5 : 3;
+      if (!npc.recruitable || relation < need || !factionGate) {
+        setMessage(npc.name, `「只憑幾句話便要我改換門庭？」需要關係 ${need}${npc.faction === "織田家" ? " 且同屬織田家" : npc.faction === "今川家" ? "、名聲 22 以上" : ""}。目前關係 ${relation}。`);
+        return;
       }
+      npc.recruited = true;
+      player.recruitedRoadNpcs.push(npc.id);
+      if (!player.companions.includes(npc.companionId)) player.companions.push(npc.companionId);
+      player.companionHealth[npc.companionId] = companionCatalog[npc.companionId].maxHp;
+      player.battlePreference = "party";
+      player.leadership += 2;
+      sound.play("victory");
+      setMessage(npc.name, `「好，我把這條命押在你的軍旗上。」【${npc.name}】加入同行隊伍；群鬥已設為預設，統率 +2。`);
+      updateHUD(); saveGame(); mapActions();
+    }
+
+    function attackRoadNpc(npc) {
+      player.infamy += npc.faction === "無所属" ? 2 : 6;
+      startCombat(npc.name, npc.hp, npc.atk, npc.def, 18 + npc.level * 5, null, { roadNpcId: npc.id, title: npc.job, sprite: npc.spriteRow === 1 ? "ashigaru" : npc.spriteRow === 2 ? "samurai" : "ronin" });
+      updateHUD(); saveGame();
     }
 
     function enterScene(label, speaker, message, actions) {
@@ -1878,12 +2245,12 @@
       const template = missionTemplates[player.completedMissions % missionTemplates.length];
       const tier = Math.max(0, rankTable.findIndex(entry => entry.name === player.rank));
       const target = template.baseTarget + (template.type === "recon" ? 0 : Math.floor(tier / 2));
-      player.mission = { ...template, target, progress: 0, issuedMonth: month, issuedDay: day };
+      player.mission = { ...template, target, progress: 0, issuedYear: year, issuedMonth: month, issuedDay: day, deadlineOrdinal: calendarOrdinal() + template.days };
       if (template.advance) {
         player.gold += template.advance;
         sound.play("coin");
       }
-      setMessage("織田信長", `「${template.brief}」你領取評定任務【${template.title}】，目標 ${target}。${template.advance ? `另發前金 ${template.advance} 貫。` : ""}`);
+      setMessage("織田信長", `「${template.brief}」你領取評定任務【${template.title}】，目標 ${target}，期限 ${template.days} 日。${template.advance ? `另發前金 ${template.advance} 貫。` : ""}`);
       updateHUD();
       saveGame();
       setActions([
@@ -1961,8 +2328,10 @@
       player.companions.push("kiri");
       player.companionHealth.kiri = companionCatalog.kiri.maxHp;
       player.ninjaSkill = Math.max(1, player.ninjaSkill);
+      player.battlePreference = "party";
       sound.play("victory");
-      setMessage("霧隱楓", "「我走影路，你走陽關。遭遇圍攻時，我會先封住對方的腳。」【忍者·霧隱楓】加入，已解鎖群鬥與影縫忍術。 ");
+      setMessage("霧隱楓", "「我走影路，你走陽關。遭遇圍攻時，我會先封住對方的腳。」【忍者·霧隱楓】加入；一般遭遇已預設為二人群鬥，她會以獨立人物、生命與計時條出現在戰場。 ");
+      setActions([{ label: "立刻進行二人群鬥演練", run: () => startCombat("川並衆試刀客", 78, 17, 5, 20, "party") }, { label: "返回渡口", run: enterRiver }, { label: "返回大地圖", run: leaveScene }]);
       updateHUD(); saveGame();
     }
 
@@ -2268,25 +2637,14 @@
       return pool[0];
     }
 
-    function startCombat(enemyName = null, hp = null, atk = null, def = null, reward = null, requestedMode = null) {
+    function startCombat(enemyName = null, hp = null, atk = null, def = null, reward = null, requestedMode = null, metadata = {}) {
       if (gamble.rollTimer) { clearInterval(gamble.rollTimer); gamble.rollTimer = null; }
       const enemy = enemyName
-        ? { name: enemyName, title: "任務敵兵", hp: hp ?? 68, atk: atk ?? 15, def: def ?? 4, reward: reward ?? 18, unlock: 0, sprite: "ronin", technique: "奮迅斬", cost: 3, power: 1.45, skillChance: .18, guardChance: .08, intro: `【${enemyName}】拔出兵刃，封住你的去路。` }
+        ? { name: enemyName, title: "任務敵兵", hp: hp ?? 68, atk: atk ?? 15, def: def ?? 4, reward: reward ?? 18, unlock: 0, sprite: "ronin", technique: "奮迅斬", cost: 3, power: 1.45, skillChance: .18, guardChance: .08, intro: `【${enemyName}】拔出兵刃，封住你的去路。`, ...metadata }
         : chooseEncounterEnemy();
       combat.pendingEnemy = enemy;
-      if (!requestedMode && player.companions.length && !enemy.legendary) {
-        gameState = "SCENE";
-        setMode("野外遭遇 · 戰法選擇");
-        setMessage(`${enemy.title}｜${enemy.name}`, `${enemy.intro} 你可以以武者身分【單挑】，或率領同行者進行【群鬥】。群鬥勝利會磨練統率。`);
-        setActions([
-          { label: "單挑：一對一決勝", run: () => beginCombat(enemy, "duel") },
-          { label: `群鬥：${Math.min(3, player.companions.length + 1)}人迎戰`, run: () => beginCombat(enemy, "party") },
-          { label: "趁尚未交鋒撤離", run: returnToMapFromCombat }
-        ]);
-        sound.play("encounter");
-        return;
-      }
-      beginCombat(enemy, requestedMode || "duel");
+      const automaticMode = player.companions.length && player.battlePreference === "party" && !enemy.legendary ? "party" : "duel";
+      beginCombat(enemy, requestedMode || automaticMode);
     }
 
     function makePlayerUnit() {
@@ -2302,7 +2660,7 @@
     function makeEnemyUnit(enemy, index, total) {
       const scale = index === 0 ? 1 : Math.max(.68, .88 - index * .08);
       const supportNames = [enemy.name, "野武士槍頭", "陣借り弓足輕"];
-      const supportSprites = [enemy.sprite === "monk" ? "ashigaru" : "ronin", "ashigaru", "healer"];
+      const supportSprites = [enemy.sprite || "ronin", "ashigaru", "healer"];
       return {
         id: `enemy-${index}`, name: supportNames[index] || `敵兵${index + 1}`, job: index === 2 ? "弓足輕" : "野武士", side: "enemy",
         hp: Math.round(enemy.hp * scale), maxHp: Math.round(enemy.hp * scale), ki: index === 0 && enemy.legendary ? 3 : 1, maxKi: enemy.legendary ? 8 : 6,
@@ -2317,6 +2675,7 @@
       gameState = "COMBAT";
       combat.mode = mode;
       combat.pendingEnemy = enemy;
+      combat.roadNpcId = enemy.roadNpcId || null;
       combat.enemyName = enemy.name;
       combat.enemyTitle = enemy.title;
       combat.rewardGold = enemy.reward;
@@ -2539,6 +2898,10 @@
         player.leadership = Math.min(100, player.leadership + 2 + Math.floor(enemyCount / 2));
       }
       player.fame += combat.legendary ? 4 : 1;
+      if (combat.roadNpcId) {
+        const roadNpc = roadNpcs.find(npc => npc.id === combat.roadNpcId);
+        if (roadNpc) { roadNpc.defeated = true; player.npcRelations[roadNpc.id] = Math.min(-2, npcRelation(roadNpc) - 2); }
+      }
       let masteryText = "";
       if (combat.legendary) {
         const oldMaxKi = player.maxKi;
@@ -2612,12 +2975,51 @@
       updateHUD();
     }
 
+    function updateRoadNpcs(dt) {
+      roadNpcs.forEach(npc => {
+        if (npc.recruited || npc.defeated || !npc.route.length) return;
+        const target = npc.route[npc.routeIndex];
+        let dx = target[0] - npc.x, dy = target[1] - npc.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance < 8) {
+          if (npc.routeIndex >= npc.route.length - 1) npc.routeDir = -1;
+          if (npc.routeIndex <= 0) npc.routeDir = 1;
+          npc.routeIndex = clamp(npc.routeIndex + npc.routeDir, 0, npc.route.length - 1);
+          return;
+        }
+        dx /= distance; dy /= distance;
+        npc.x += dx * npc.speed * dt; npc.y += dy * npc.speed * dt;
+        npc.facing = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
+      });
+    }
+
     function updateMap(dt) {
+      updateRoadNpcs(dt);
       let dx = 0, dy = 0;
       if (keys.ArrowUp || keys.w || keys.W || keys.touchUp) dy -= 1;
       if (keys.ArrowDown || keys.s || keys.S || keys.touchDown) dy += 1;
       if (keys.ArrowLeft || keys.a || keys.A || keys.touchLeft) dx -= 1;
       if (keys.ArrowRight || keys.d || keys.D || keys.touchRight) dx += 1;
+
+      const manualMove = Boolean(dx || dy);
+      if (manualMove && navTarget) cancelNavigation("改為手動移動");
+      if (!manualMove && navTarget && navPath.length) {
+        const point = navPath[Math.min(navIndex, navPath.length - 1)];
+        dx = point[0] - player.x; dy = point[1] - player.y;
+        const distance = Math.hypot(dx, dy);
+        if (distance < 18) {
+          navIndex += 1;
+          if (navIndex >= navPath.length) {
+            const arrived = navTarget;
+            cancelNavigation("");
+            setMessage("抵達目的地", `已抵達【${arrived.label}】附近。靠近人物或據點後可按 Space／Enter 調查。`);
+            sound.play("chime");
+            dx = 0; dy = 0;
+          } else {
+            const next = navPath[navIndex]; dx = next[0] - player.x; dy = next[1] - player.y;
+          }
+        }
+      }
 
       if (dx || dy) {
         const length = Math.hypot(dx, dy) || 1;
@@ -2657,6 +3059,8 @@
 
       const previous = nearbyLocation;
       nearbyLocation = findNearbyLocation();
+      const previousNpc = nearbyNpc;
+      nearbyNpc = findNearbyNpc();
       if (previous !== nearbyLocation) {
         updateHUD();
         if (nearbyLocation) {
@@ -2664,7 +3068,13 @@
           setMessage(nearbyLocation.name, nearbyLocation.desc);
         }
       }
-      ui.interactionTip.classList.toggle("visible", Boolean(nearbyLocation));
+      if (previousNpc !== nearbyNpc && nearbyNpc) {
+        ui.interactionTip.textContent = `Space / Enter：調查 ${nearbyNpc.name}`;
+        setMessage("街道遭遇", `前方有一名【${nearbyNpc.job}】正在行走。可先調查來歷與實力，再決定交談、挖角或攻擊。`);
+      } else if (!nearbyNpc && nearbyLocation) {
+        ui.interactionTip.textContent = `Space / Enter：進入 ${nearbyLocation.name}`;
+      }
+      ui.interactionTip.classList.toggle("visible", Boolean(nearbyNpc || nearbyLocation));
 
       autosaveTimer += dt;
       if (autosaveTimer > 20) { autosaveTimer = 0; saveGame(); }
@@ -2699,12 +3109,15 @@
       ctx.save();
       ctx.translate(-camera.x, -camera.y);
       const skyTone = weatherCycle[weatherIndex] === "驟雨" ? "#70794e" : weatherCycle[weatherIndex] === "雨後霧" ? "#8b9066" : "#97945b";
-      ctx.fillStyle = skyTone;
+      ctx.fillStyle = weatherCycle[weatherIndex] === "驟雨" ? "#315f68" : "#347f91";
       ctx.fillRect(camera.x, camera.y, VIEW.w, VIEW.h);
+
+      drawCoast(skyTone);
 
       ctx.fillStyle = "rgba(229, 208, 157, .10)";
       for (const dot of terrainDots) {
         if (dot.x < camera.x - 5 || dot.x > camera.x + VIEW.w + 5 || dot.y < camera.y - 5 || dot.y > camera.y + VIEW.h + 5) continue;
+        if (!pointOnLand(dot.x, dot.y)) continue;
         ctx.globalAlpha = .22 + dot.a;
         ctx.fillStyle = (Math.floor(dot.x + dot.y) % 3) ? "#b3ad6a" : "#6f7d46";
         const size = Math.max(2, Math.round(dot.r));
@@ -2712,12 +3125,13 @@
       }
       ctx.globalAlpha = 1;
 
-      drawCoast();
       drawMountains();
       drawRiver();
       drawRoads();
       drawForests();
       locations.forEach(drawLocation);
+      drawRoadNpcs();
+      drawNavigationMarker();
       drawPlayer();
       ctx.restore();
 
@@ -2729,37 +3143,53 @@
       }
     }
 
-    function drawCoast() {
-      ctx.fillStyle = "#26839a";
-      ctx.beginPath();
-      ctx.moveTo(0, 0); ctx.lineTo(420, 0);
-      for (let y = 0; y <= WORLD.h; y += 90) ctx.lineTo(330 + Math.sin(y * .013) * 105, y);
-      ctx.lineTo(0, WORLD.h); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = "#d4c985"; ctx.lineWidth = 9; ctx.stroke();
-      ctx.strokeStyle = "rgba(194,232,219,.24)"; ctx.lineWidth = 2;
-      for (let y = 35; y < WORLD.h; y += 34) {
-        const length = 210 + Math.sin(y * .11) * 46;
-        for (let x = 18; x < length; x += 32) {
-          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 14, y); ctx.stroke();
+    function drawCoast(landTone) {
+      landPolygons.forEach((polygon, index) => {
+        ctx.beginPath();
+        polygon.forEach((point, pointIndex) => pointIndex ? ctx.lineTo(point[0], point[1]) : ctx.moveTo(point[0], point[1]));
+        ctx.closePath();
+        ctx.fillStyle = index === 3 ? "#7d8659" : landTone;
+        ctx.fill();
+        ctx.strokeStyle = "#d6c98b"; ctx.lineWidth = 11; ctx.stroke();
+        ctx.strokeStyle = "rgba(61,79,50,.55)"; ctx.lineWidth = 3; ctx.stroke();
+      });
+      ctx.save(); ctx.strokeStyle = "rgba(211,235,225,.2)"; ctx.lineWidth = 2;
+      for (let x = Math.floor(camera.x / 90) * 90; x < camera.x + VIEW.w + 100; x += 90) {
+        for (let y = Math.floor(camera.y / 70) * 70; y < camera.y + VIEW.h + 80; y += 70) {
+          if (pointOnLand(x, y)) continue;
+          ctx.beginPath(); ctx.moveTo(x - 18, y); ctx.quadraticCurveTo(x, y - 6, x + 18, y); ctx.stroke();
         }
       }
+      ctx.restore();
     }
 
     function drawRoads() {
       roads.forEach(points => {
         ctx.lineCap = "round"; ctx.lineJoin = "round";
-        ctx.strokeStyle = "rgba(48, 55, 30, .38)"; ctx.lineWidth = 42;
+        ctx.strokeStyle = "rgba(54, 42, 25, .45)"; ctx.lineWidth = 54;
         pathThrough(points); ctx.stroke();
-        ctx.strokeStyle = "#78633d"; ctx.lineWidth = 35;
+        ctx.strokeStyle = "#7b633d"; ctx.lineWidth = 46;
         pathThrough(points); ctx.stroke();
-        ctx.strokeStyle = "#bda469"; ctx.lineWidth = 27;
+        ctx.strokeStyle = "#ad915d"; ctx.lineWidth = 37;
         pathThrough(points); ctx.stroke();
-        ctx.strokeStyle = "rgba(238, 219, 161, .34)"; ctx.lineWidth = 3;
+        ctx.strokeStyle = "rgba(218, 190, 127, .32)"; ctx.lineWidth = 19;
         pathThrough(points); ctx.stroke();
-        ctx.setLineDash([5, 12]);
-        ctx.strokeStyle = "rgba(89, 68, 39, .38)"; ctx.lineWidth = 2;
+        ctx.setLineDash([18, 24]);
+        ctx.strokeStyle = "rgba(78, 57, 31, .34)"; ctx.lineWidth = 4;
         pathThrough(points); ctx.stroke();
         ctx.setLineDash([]);
+        points.slice(1).forEach((point, index) => {
+          const previous = points[index];
+          const dx = point[0] - previous[0], dy = point[1] - previous[1];
+          const length = Math.hypot(dx, dy), steps = Math.floor(length / 42);
+          const nx = -dy / (length || 1), ny = dx / (length || 1);
+          for (let step = 1; step < steps; step++) {
+            const t = step / steps, offset = Math.sin((index + 1) * 7.3 + step * 3.1) * 12;
+            const x = previous[0] + dx * t + nx * offset, y = previous[1] + dy * t + ny * offset;
+            ctx.fillStyle = step % 3 ? "rgba(74,55,33,.28)" : "rgba(222,196,140,.26)";
+            ctx.beginPath(); ctx.ellipse(x, y, 3 + step % 4, 1.5 + step % 2, Math.atan2(dy, dx), 0, Math.PI * 2); ctx.fill();
+          }
+        });
       });
     }
 
@@ -2787,6 +3217,7 @@
 
     function drawMountains() {
       mountains.forEach(m => {
+        if (!pointOnLand(m.x, m.y)) return;
         ctx.save(); ctx.translate(m.x, m.y); ctx.scale(m.scale, m.scale);
         ctx.fillStyle = "rgba(46,55,27,.25)"; ctx.fillRect(-58, 31, 122, 12);
         ctx.fillStyle = "#5f782b";
@@ -2802,6 +3233,7 @@
 
     function drawForests() {
       forests.forEach(tree => {
+        if (!pointOnLand(tree.x, tree.y)) return;
         if (tree.x < camera.x - 30 || tree.x > camera.x + VIEW.w + 30 || tree.y < camera.y - 40 || tree.y > camera.y + VIEW.h + 40) return;
         ctx.save(); ctx.translate(tree.x, tree.y); ctx.scale(tree.scale, tree.scale);
         ctx.fillStyle = "rgba(30, 42, 28, .2)"; ctx.beginPath(); ctx.ellipse(3, 14, 17, 7, 0, 0, Math.PI * 2); ctx.fill();
@@ -2836,9 +3268,9 @@
       if (loc.type === "castle") atlasArt = drawMapAtlasSprite(1, 0, -78, -87, 156, 156);
       else if (loc.type === "fort") atlasArt = drawMapAtlasSprite(1, 0, -61, -66, 122, 122);
       else if (loc.type === "town") atlasArt = drawMapAtlasSprite(0, 1, -78, -82, 156, 156);
-      else if (loc.type === "market") atlasArt = drawMapAtlasSprite(1, 1, -74, -78, 148, 148);
+      else if (loc.type === "market" || loc.type === "village") atlasArt = drawMapAtlasSprite(1, 1, -74, -78, 148, 148);
       if (!atlasArt && (loc.type === "castle" || loc.type === "fort")) drawCastleIcon(loc.type === "fort");
-      else if (!atlasArt && (loc.type === "town" || loc.type === "market")) drawTownIcon(loc.type === "market");
+      else if (!atlasArt && (loc.type === "town" || loc.type === "market" || loc.type === "village")) drawTownIcon(loc.type === "market");
       else if (loc.type === "gambling") drawGambleIcon();
       else if (loc.type === "river") drawPortIcon();
       else if (loc.type === "shrine") drawShrineIcon();
@@ -2903,22 +3335,61 @@
       ctx.strokeStyle = "#201a13"; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-46, -31); ctx.lineTo(46, -31); ctx.stroke();
     }
 
-    function drawPlayer() {
-      const bob = REDUCE_MOTION ? 0 : Math.sin(player.walkPhase) * 2;
-      ctx.save(); ctx.translate(player.x, player.y + bob);
-      ctx.fillStyle = "rgba(25,20,15,.32)"; ctx.beginPath(); ctx.ellipse(0, 14, 15, 6, 0, 0, Math.PI * 2); ctx.fill();
-      if (mapSpriteAtlas.complete && mapSpriteAtlas.naturalWidth) {
-        ctx.save();
-        if (player.facing === "left") ctx.scale(-1, 1);
-        drawMapAtlasSprite(0, 0, -45, -75, 90, 90);
+    function drawDirectionalCell(image, columns, rows, column, row, x, y, width, height) {
+      if (!image.complete || !image.naturalWidth) return false;
+      const sw = image.naturalWidth / columns, sh = image.naturalHeight / rows;
+      ctx.drawImage(image, column * sw, row * sh, sw, sh, x, y, width, height);
+      return true;
+    }
+
+    function directionColumn(direction) { return ({ down: 0, up: 1, left: 2, right: 3 })[direction] ?? 0; }
+
+    function drawRoadNpcs() {
+      roadNpcs.forEach(npc => {
+        if (npc.recruited || npc.defeated) return;
+        if (npc.x < camera.x - 110 || npc.x > camera.x + VIEW.w + 110 || npc.y < camera.y - 150 || npc.y > camera.y + VIEW.h + 80) return;
+        ctx.save(); ctx.translate(npc.x, npc.y);
+        const active = nearbyNpc && nearbyNpc.id === npc.id;
+        ctx.fillStyle = active ? "rgba(255,205,92,.38)" : "rgba(28,20,14,.35)";
+        ctx.beginPath(); ctx.ellipse(0, 5, 31, 10, 0, 0, Math.PI * 2); ctx.fill();
+        if (active) { ctx.strokeStyle = "#f1ca62"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 4, 39, 15, 0, 0, Math.PI * 2); ctx.stroke(); }
+        const drawn = drawDirectionalCell(mapNpcDirectionAtlas, 4, 3, directionColumn(npc.facing), npc.spriteRow, -67, -128, 134, 134);
+        if (!drawn) {
+          ctx.fillStyle = npc.spriteRow === 1 ? "#26394a" : npc.spriteRow === 2 ? "#8a7654" : "#51473a";
+          ctx.beginPath(); ctx.arc(0, -38, 25, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(-22, -31, 44, 35);
+        }
+        ctx.font = '700 12px "Microsoft JhengHei", sans-serif'; ctx.textAlign = "center";
+        const label = `${npc.faction}·${npc.name}`, width = ctx.measureText(label).width;
+        ctx.fillStyle = "rgba(25,19,14,.82)"; ctx.fillRect(-width / 2 - 7, 12, width + 14, 21);
+        ctx.fillStyle = active ? "#ffe19a" : "#e5d7b3"; ctx.fillText(label, 0, 27);
         ctx.restore();
-        ctx.fillStyle = "#fff0a0"; ctx.fillRect(-3, -63, 6, 6);
-        ctx.strokeStyle = "rgba(255,238,135,.55)"; ctx.lineWidth = 2; ctx.strokeRect(-8, -68, 16, 16);
+      });
+    }
+
+    function drawNavigationMarker() {
+      if (!navTarget) return;
+      ctx.save(); ctx.translate(navTarget.x, navTarget.y);
+      const pulse = REDUCE_MOTION ? 0 : Math.sin(scenePulse * 5) * 5;
+      ctx.strokeStyle = "rgba(255,218,103,.86)"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, 22 + pulse, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = "#b43631"; ctx.beginPath(); ctx.moveTo(0, -38); ctx.lineTo(10, -20); ctx.lineTo(0, -24); ctx.lineTo(-10, -20); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+
+    function drawPlayer() {
+      const sway = REDUCE_MOTION ? 0 : Math.sin(player.walkPhase) * 1.2;
+      ctx.save(); ctx.translate(player.x + sway, player.y);
+      ctx.fillStyle = "rgba(25,20,15,.38)"; ctx.beginPath(); ctx.ellipse(0, 5, 35, 11, 0, 0, Math.PI * 2); ctx.fill();
+      if (mapHeroDirectionAtlas.complete && mapHeroDirectionAtlas.naturalWidth) {
+        const cells = { down: [0,0], up: [1,0], left: [0,1], right: [1,1] };
+        const cell = cells[player.facing] || cells.down;
+        drawDirectionalCell(mapHeroDirectionAtlas, 2, 2, cell[0], cell[1], -92, -174, 184, 184);
+        ctx.strokeStyle = "rgba(255,226,133,.82)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 5, 41, 15, 0, 0, Math.PI * 2); ctx.stroke();
         ctx.restore();
         return;
       }
       ctx.fillStyle = "#9f2f2d";
-      ctx.beginPath(); ctx.moveTo(-10, -6); ctx.lineTo(10, -6); ctx.lineTo(13, 14); ctx.lineTo(-13, 14); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-20, -12); ctx.lineTo(20, -12); ctx.lineTo(26, 10); ctx.lineTo(-26, 10); ctx.closePath(); ctx.fill();
       ctx.fillStyle = "#e1c88c"; ctx.fillRect(-10, -4, 20, 3);
       ctx.fillStyle = "#d0a66f"; ctx.beginPath(); ctx.arc(0, -13, 8, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = "#24201c"; ctx.beginPath(); ctx.moveTo(-10, -16); ctx.lineTo(10, -16); ctx.lineTo(0, -25); ctx.closePath(); ctx.fill();
@@ -2934,11 +3405,18 @@
       ctx.save();
       ctx.fillStyle = "rgba(25,19,13,.82)"; ctx.fillRect(x, y, w, h);
       ctx.strokeStyle = "rgba(225,198,130,.55)"; ctx.strokeRect(x, y, w, h);
-      ctx.fillStyle = "#6a7351"; ctx.fillRect(x + 5, y + 5, w - 10, h - 10);
+      ctx.fillStyle = "#2c7587"; ctx.fillRect(x + 5, y + 5, w - 10, h - 10);
+      landPolygons.forEach(polygon => {
+        ctx.beginPath();
+        polygon.forEach((p, i) => { const px = x + 5 + p[0] / WORLD.w * (w - 10), py = y + 5 + p[1] / WORLD.h * (h - 10); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+        ctx.closePath(); ctx.fillStyle = "#7c8755"; ctx.fill();
+      });
+      ctx.strokeStyle = "rgba(219,193,131,.48)"; ctx.lineWidth = 1;
+      roads.forEach(road => { ctx.beginPath(); road.forEach((p, i) => { const px = x + 5 + p[0] / WORLD.w * (w - 10), py = y + 5 + p[1] / WORLD.h * (h - 10); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }); ctx.stroke(); });
       ctx.strokeStyle = "rgba(80,117,136,.75)"; ctx.lineWidth = 5;
       ctx.beginPath(); riverPath.forEach((p, i) => { const px = x + 5 + p[0] / WORLD.w * (w - 10); const py = y + 5 + p[1] / WORLD.h * (h - 10); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }); ctx.stroke();
       locations.forEach(loc => {
-        ctx.fillStyle = "#e5bf64"; ctx.beginPath(); ctx.arc(x + 5 + loc.x / WORLD.w * (w - 10), y + 5 + loc.y / WORLD.h * (h - 10), 2.6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = player.visited.includes(loc.id) ? "#ffe07b" : "rgba(234,219,176,.5)"; ctx.beginPath(); ctx.arc(x + 5 + loc.x / WORLD.w * (w - 10), y + 5 + loc.y / WORLD.h * (h - 10), player.visited.includes(loc.id) ? 2.6 : 1.7, 0, Math.PI * 2); ctx.fill();
       });
       ctx.fillStyle = "#d64b43"; ctx.beginPath(); ctx.arc(x + 5 + player.x / WORLD.w * (w - 10), y + 5 + player.y / WORLD.h * (h - 10), 3.4, 0, Math.PI * 2); ctx.fill();
       ctx.strokeStyle = "rgba(255,255,255,.28)"; ctx.lineWidth = 1;
@@ -3069,15 +3547,16 @@
 
       const party = combat.units.filter(unit => unit.side === "party");
       const enemies = combat.units.filter(unit => unit.side === "enemy");
-      const partyPositions = combat.mode === "party" ? [[18, 214], [132, 250], [246, 286]] : [[74, 205]];
-      const enemyPositions = combat.mode === "party" ? [[706, 214], [590, 250], [474, 286]] : [[622, 205]];
+      const fighterSize = combat.mode === "party" ? 190 : 270;
+      const partyPositions = combat.mode === "party" ? [[18, 190], [180, 224], [332, 260]] : [[72, 165]];
+      const enemyPositions = combat.mode === "party" ? [[752, 190], [590, 224], [438, 260]] : [[618, 165]];
       party.forEach((unit, index) => {
         const pos = partyPositions[index] || partyPositions[partyPositions.length - 1];
-        drawPartyUnitSprite(pos[0], pos[1], unit, 238);
+        drawPartyUnitSprite(pos[0], pos[1], unit, fighterSize);
       });
       enemies.forEach((unit, index) => {
         const pos = enemyPositions[index] || enemyPositions[enemyPositions.length - 1];
-        drawPartyUnitSprite(pos[0], pos[1], unit, 238);
+        drawPartyUnitSprite(pos[0], pos[1], unit, fighterSize);
       });
       if (combat.slash > 0) {
         ctx.save(); ctx.globalAlpha = Math.min(1, combat.slash);
@@ -3257,6 +3736,26 @@
 
     function handleKeyUp(event) { keys[event.key] = false; }
 
+    function handleCanvasPointer(event) {
+      if (!started || gameState !== "MAP") return;
+      const rect = canvas.getBoundingClientRect();
+      const sx = (event.clientX - rect.left) / rect.width * VIEW.w;
+      const sy = (event.clientY - rect.top) / rect.height * VIEW.h;
+      let worldX = camera.x + sx, worldY = camera.y + sy;
+      const mini = { x: VIEW.w - 190, y: 18, w: 170, h: 104 };
+      if (sx >= mini.x && sx <= mini.x + mini.w && sy >= mini.y && sy <= mini.y + mini.h) {
+        worldX = clamp((sx - mini.x - 5) / (mini.w - 10) * WORLD.w, 0, WORLD.w);
+        worldY = clamp((sy - mini.y - 5) / (mini.h - 10) * WORLD.h, 0, WORLD.h);
+      }
+      const clickedLocation = locations.find(loc => Math.hypot(loc.x - worldX, loc.y - worldY) < Math.max(90, loc.radius));
+      const clickedNpc = roadNpcs.find(npc => !npc.recruited && !npc.defeated && Math.hypot(npc.x - worldX, npc.y - worldY) < 92);
+      if (clickedNpc) startAutoTravel(clickedNpc.x, clickedNpc.y, clickedNpc.name, null);
+      else if (clickedLocation) startAutoTravel(clickedLocation.x, clickedLocation.y, clickedLocation.name, clickedLocation.id);
+      else if (pointOnLand(worldX, worldY)) startAutoTravel(clamp(worldX, 30, WORLD.w - 30), clamp(worldY, 30, WORLD.h - 30), "地圖標記", null);
+      else { setMessage("海路未開", "此處位於海上。尚未取得船隻與水軍航路，請點擊陸地、港口或已訪據點。 "); return; }
+      sound.play("ui");
+    }
+
     function bindTouchControls() {
       const mapping = { up: "touchUp", down: "touchDown", left: "touchLeft", right: "touchRight" };
       document.querySelectorAll(".touch-key").forEach(button => {
@@ -3290,6 +3789,7 @@
 
     document.addEventListener("keydown", handleKeyDown, { passive: false });
     document.addEventListener("keyup", handleKeyUp);
+    canvas.addEventListener("pointerdown", handleCanvasPointer);
     window.addEventListener("blur", () => Object.keys(keys).forEach(key => keys[key] = false));
     document.getElementById("startSound").addEventListener("click", () => beginGame(true));
     document.getElementById("startSilent").addEventListener("click", () => beginGame(false));
@@ -3301,8 +3801,9 @@
     document.getElementById("saveButton").addEventListener("click", () => saveGame(true));
     document.getElementById("resetButton").addEventListener("click", resetGame);
     document.getElementById("helpButton").addEventListener("click", () => {
-      setMessage("操作說明", "大地圖：WASD／方向鍵移動，Space／Enter／E 進入據點。戰鬥、賭場與鍛冶屋可按畫面按鈕或數字鍵選擇；Esc 返回。手機可用畫面搖桿。 ");
+      setMessage("操作說明", "大地圖：可直接點擊目的地自動行走，也可使用 WASD／方向鍵。Space／Enter／E 調查據點或路上人物；已訪據點可從列表導航。戰鬥方針可切換單挑／群鬥。 ");
     });
+    ui.missionRouteButton.addEventListener("click", navigateMission);
     document.getElementById("retroInfoClose").addEventListener("click", hideRetroInfo);
     document.querySelectorAll("[data-retro-action]").forEach(button => {
       button.addEventListener("click", () => handleRetroAction(button.dataset.retroAction));
