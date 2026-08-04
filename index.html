@@ -1378,6 +1378,8 @@
         this.master = null;
         this.enabled = false;
         this.ambientStarted = false;
+        this.ambientNodes = [];
+        this.lastPlayed = Object.create(null);
         this.volume = Number(ui.volume.value);
       }
 
@@ -1390,9 +1392,12 @@
           this.master.gain.value = this.volume;
           this.master.connect(this.ctx.destination);
         }
-        if (this.ctx.state === "suspended") await this.ctx.resume();
+        if (this.ctx.state !== "running") await this.ctx.resume();
         this.enabled = true;
-        this.master.gain.setTargetAtTime(this.volume, this.ctx.currentTime, .03);
+        const now = this.ctx.currentTime;
+        this.master.gain.cancelScheduledValues(now);
+        this.master.gain.setValueAtTime(Math.max(.0001, this.master.gain.value), now);
+        this.master.gain.linearRampToValueAtTime(this.volume, now + .16);
         if (!this.ambientStarted) this.startAmbient();
         this.play("chime");
         return true;
@@ -1400,25 +1405,48 @@
 
       disable() {
         this.enabled = false;
-        if (this.master && this.ctx) this.master.gain.setTargetAtTime(0, this.ctx.currentTime, .04);
+        if (this.master && this.ctx) {
+          const now = this.ctx.currentTime;
+          this.master.gain.cancelScheduledValues(now);
+          this.master.gain.setValueAtTime(Math.max(.0001, this.master.gain.value), now);
+          this.master.gain.linearRampToValueAtTime(.0001, now + .12);
+        }
       }
 
       setVolume(value) {
         this.volume = Number(value);
-        if (this.master && this.ctx && this.enabled) this.master.gain.setTargetAtTime(this.volume, this.ctx.currentTime, .03);
+        if (this.master && this.ctx && this.enabled) {
+          const now = this.ctx.currentTime;
+          this.master.gain.cancelScheduledValues(now);
+          this.master.gain.setValueAtTime(Math.max(.0001, this.master.gain.value), now);
+          this.master.gain.linearRampToValueAtTime(this.volume, now + .08);
+        }
+      }
+
+      ensureRunning() {
+        if (!this.enabled || !this.ctx || this.ctx.state === "running") return;
+        this.ctx.resume().catch(() => {});
       }
 
       startAmbient() {
         if (!this.ctx || !this.master || this.ambientStarted) return;
         this.ambientStarted = true;
-        const length = this.ctx.sampleRate * 2;
+        const seconds = 8;
+        const length = this.ctx.sampleRate * seconds;
+        const fadeLength = Math.floor(this.ctx.sampleRate * .7);
         const buffer = this.ctx.createBuffer(1, length, this.ctx.sampleRate);
         const data = buffer.getChannelData(0);
+        const raw = new Float32Array(length + fadeLength);
         let last = 0;
-        for (let i = 0; i < length; i++) {
+        for (let i = 0; i < raw.length; i++) {
           const white = Math.random() * 2 - 1;
-          last = last * .985 + white * .015;
-          data[i] = last * .34;
+          last = last * .992 + white * .008;
+          raw[i] = last;
+        }
+        for (let i = 0; i < length; i++) data[i] = raw[i] * .3;
+        for (let i = 0; i < fadeLength; i++) {
+          const mix = i / fadeLength;
+          data[i] = (raw[length + i] * (1 - mix) + raw[i] * mix) * .3;
         }
         const noise = this.ctx.createBufferSource();
         const filter = this.ctx.createBiquadFilter();
@@ -1426,18 +1454,28 @@
         noise.buffer = buffer;
         noise.loop = true;
         filter.type = "lowpass";
-        filter.frequency.value = 900;
-        gain.gain.value = .24;
+        filter.frequency.value = 620;
+        filter.Q.value = .35;
+        gain.gain.value = .045;
         noise.connect(filter).connect(gain).connect(this.master);
         noise.start();
+
+        const lfo = this.ctx.createOscillator();
+        const lfoGain = this.ctx.createGain();
+        lfo.type = "sine";
+        lfo.frequency.value = .065;
+        lfoGain.gain.value = .012;
+        lfo.connect(lfoGain).connect(gain.gain);
+        lfo.start();
 
         const drone = this.ctx.createOscillator();
         const droneGain = this.ctx.createGain();
         drone.type = "sine";
         drone.frequency.value = 73.4;
-        droneGain.gain.value = .018;
+        droneGain.gain.value = .007;
         drone.connect(droneGain).connect(this.master);
         drone.start();
+        this.ambientNodes = [noise, filter, gain, lfo, lfoGain, drone, droneGain];
       }
 
       tone(freq, duration, type = "sine", gainValue = .12, delay = 0, endFreq = null) {
@@ -1452,31 +1490,49 @@
         gain.gain.exponentialRampToValueAtTime(gainValue, now + .012);
         gain.gain.exponentialRampToValueAtTime(.0001, now + duration);
         osc.connect(gain).connect(this.master);
+        osc.onended = () => {
+          osc.disconnect();
+          gain.disconnect();
+        };
         osc.start(now);
         osc.stop(now + duration + .02);
       }
 
       noise(duration = .15, gainValue = .1, highpass = 300) {
         if (!this.enabled || !this.ctx || !this.master) return;
+        const now = this.ctx.currentTime;
         const size = Math.ceil(this.ctx.sampleRate * duration);
         const buffer = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
         const data = buffer.getChannelData(0);
-        for (let i = 0; i < size; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / size);
+        for (let i = 0; i < size; i++) data[i] = Math.random() * 2 - 1;
         const src = this.ctx.createBufferSource();
         const filter = this.ctx.createBiquadFilter();
         const gain = this.ctx.createGain();
         filter.type = "highpass";
         filter.frequency.value = highpass;
-        gain.gain.value = gainValue;
+        gain.gain.setValueAtTime(.0001, now);
+        gain.gain.exponentialRampToValueAtTime(gainValue, now + Math.min(.008, duration * .2));
+        gain.gain.exponentialRampToValueAtTime(.0001, now + duration);
         src.buffer = buffer;
         src.connect(filter).connect(gain).connect(this.master);
-        src.start();
+        src.onended = () => {
+          src.disconnect();
+          filter.disconnect();
+          gain.disconnect();
+        };
+        src.start(now);
+        src.stop(now + duration + .015);
       }
 
       play(name) {
-        if (!this.enabled) return;
+        if (!this.enabled || !this.ctx || this.ctx.state !== "running") return;
+        const cooldowns = { step: 360, ui: 55, dice: 75, sword: 70, hit: 55, guard: 70, coin: 80, forge: 90 };
+        const now = performance.now();
+        const cooldown = cooldowns[name] || 0;
+        if (cooldown && now - (this.lastPlayed[name] || 0) < cooldown) return;
+        this.lastPlayed[name] = now;
         switch (name) {
-          case "step": this.noise(.045, .026, 120); this.tone(95, .045, "sine", .025); break;
+          case "step": this.noise(.075, .014, 140); this.tone(92, .08, "sine", .012, 0, 72); break;
           case "ui": this.tone(520, .055, "triangle", .045, 0, 620); break;
           case "chime": [523, 659, 784].forEach((f, i) => this.tone(f, .45, "sine", .05, i * .08)); break;
           case "encounter": this.tone(95, .25, "square", .13); this.tone(72, .32, "square", .13, .16); break;
@@ -3365,7 +3421,7 @@
         player.walkPhase += dt * 11;
         player.facing = Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : (dy < 0 ? "up" : "down");
         footstepTimer -= dt;
-        if (footstepTimer <= 0) { sound.play("step"); footstepTimer = .28; }
+        if (footstepTimer <= 0) { sound.play("step"); footstepTimer = .42; }
 
         if (travelDayDistance > 1450) {
           travelDayDistance = 0;
@@ -4123,6 +4179,8 @@
     }
 
     document.addEventListener("keydown", handleKeyDown, { passive: false });
+    document.addEventListener("pointerdown", () => sound.ensureRunning(), { passive: true });
+    window.addEventListener("pageshow", () => sound.ensureRunning());
     document.addEventListener("keyup", handleKeyUp);
     canvas.addEventListener("pointerdown", handleCanvasPointer);
     window.addEventListener("blur", () => Object.keys(keys).forEach(key => keys[key] = false));
