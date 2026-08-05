@@ -979,7 +979,7 @@
     const weaponLoot = [
       { id: "uchigatana", name: "量產打刀", atk: 5, type: "katana", speed: 0, stance: "中段" },
       { id: "kodachi", name: "無銘小太刀", atk: 7, type: "kodachi", speed: 6, stance: "低身疾走" },
-      { id: "tachi", name: "備前太刀", atk: 11, type: "tachi", speed: -2, stance: "雙手大上段" },
+      { id: "tachi", name: "無銘太刀", atk: 11, type: "tachi", speed: -2, stance: "雙手大上段" },
       { id: "yari", name: "素槍", atk: 10, type: "yari", speed: -1, stance: "長柄突陣" },
       { id: "yumi", name: "重藤弓", atk: 9, type: "yumi", speed: 2, stance: "遠矢架勢" }
     ];
@@ -993,34 +993,45 @@
     const armorLoot = [
       { name: "皮小札", def: 3 },
       { name: "漆塗黑胴", def: 7 },
-      { name: "南蠻胴具足", def: 12 },
+      { name: "南蠻胴具足", def: 12, fromYear: 1575 },
       { name: "黑漆塗大鎧", def: 18 }
     ];
 
     const locations = [
       { id: "satsuma", name: "鹿兒島町", area: "薩摩國·鹿兒島町", x: 520, y: 2920, radius: 86, type: "village", desc: "南九州的武家町，火山灰覆在屋瓦與田畦上。" },
-      { id: "nagasaki", name: "長崎港", area: "肥前國·長崎港", x: 690, y: 2520, radius: 94, type: "market", desc: "異國帆船與唐船並泊，香料、火藥與珍奇貨物流入港町。" },
+      { id: "nagasaki", name: "長崎港", area: "肥前國·長崎港", x: 690, y: 2520, radius: 94, type: "market", fromYear: 1571, desc: "1571 年開港後，葡萄牙帆船與唐船並泊，香料、火藥與珍奇貨物流入港町。" },
       { id: "hirado", name: "平戶港", area: "肥前國·平戶港", x: 720, y: 2220, radius: 86, type: "river", desc: "松浦氏控制的海港，南蠻商人與水手在碼頭交換消息。" },
       { id: "hakata", name: "博多町", area: "筑前國·博多町", x: 1050, y: 2110, radius: 90, type: "town", desc: "商人自治傳統深厚的大町，倉庫與寺社沿街林立。" },
       { id: "yamaguchi", name: "山口町", area: "周防國·山口町", x: 1450, y: 2110, radius: 84, type: "village", desc: "大內文化留下的雅致町場，西國使者在此往來。" },
       { id: "hiroshima", name: "安藝郡山城", area: "安藝國·郡山城", x: 1880, y: 2020, radius: 92, type: "castle", desc: "毛利氏的山城，層層曲輪俯視中國路。" },
+      { id: "osafune", name: "長船町", area: "備前國·長船", x: 2320, y: 1930, radius: 82, type: "town", desc: "吉井川水運滋養的刀工町，備前長船鍛冶在爐火間鍛造太刀。" },
       { id: "miyajima", name: "嚴島神社", area: "安藝國·嚴島", x: 1840, y: 2280, radius: 82, type: "shrine", desc: "朱紅大鳥居立於潮間，水軍與參詣者同望海面。" },
       { id: "imabari", name: "來島水軍砦", area: "伊予國·來島海峽", x: 2250, y: 2470, radius: 88, type: "river", desc: "急潮環繞的水軍據點，小早船在島影間穿梭。" },
       { id: "himeji", name: "姬路城", area: "播磨國·姬路城", x: 2650, y: 1900, radius: 92, type: "castle", desc: "西國通往畿內的要衝，城下驛路終日塵土飛揚。" },
       { id: "sakai", name: "界町", area: "和泉國·界町", x: 3020, y: 2180, radius: 92, type: "market", desc: "會合眾與豪商掌握的大港，茶器、鐵砲與外國貨在此競價。" },
-      { id: "osaka", name: "石山本願寺", area: "攝津國·石山", x: 3160, y: 1990, radius: 92, type: "fort", desc: "河海交通匯聚的巨大寺內町，防備與信仰同樣堅固。" },
+      { id: "osaka", name: "石山本願寺", area: "攝津國·石山", x: 3160, y: 1990, radius: 92, type: "fort", desc: "河海交通匯聚的巨大寺內町，防備與信仰同樣堅固。", eras: [{ from: 1580, name: "石山跡", area: "攝津國·石山跡", type: "village", desc: "本願寺退去後留下的廣大寺內町遺址，商旅仍沿水路聚集。" }, { from: 1583, name: "大坂城", area: "攝津國·大坂城", type: "castle", desc: "羽柴秀吉開始築造的大城，城下町沿水路迅速擴張。" }] },
       { id: "kyoto", name: "京町", area: "山城國·京都", x: 3300, y: 1630, radius: 96, type: "town", desc: "公家、寺社、商人與諸國武家交錯的天下中心。" },
-      { id: "hieizan", name: "比叡山延曆寺", area: "近江國·比叡山", x: 3420, y: 1390, radius: 90, type: "shrine", desc: "山門堂塔隱於雲霧，宗教與政治影響遍及畿內。" },
-      { id: "azuchi", name: "安土城下", area: "近江國·安土", x: 3650, y: 1570, radius: 92, type: "castle", desc: "琵琶湖東岸的戰略據點，未來將成為天下布武的象徵。" },
-      { id: "kitanosho", name: "北之庄", area: "越前國·北之庄", x: 3780, y: 1060, radius: 84, type: "village", desc: "北陸街道的城下町，雪國物資由此南運。" },
+      { id: "hieizan", name: "比叡山延曆寺", area: "近江國·比叡山", x: 3325, y: 1370, radius: 90, type: "shrine", desc: "琵琶湖西南山地的堂塔隱於雲霧，宗教與政治影響遍及畿內。" },
+      { id: "kannonji", name: "觀音寺城", area: "近江國·觀音寺城", x: 3690, y: 1640, radius: 82, type: "castle", toYear: 1568, desc: "六角氏的巨大山城，控制琵琶湖南岸與東山道。" },
+      { id: "azuchi", name: "安土城", area: "近江國·安土城", x: 3735, y: 1450, radius: 92, type: "castle", fromYear: 1576, toYear: 1582, desc: "1576 年起築於琵琶湖東岸安土山，成為信長天下布武與商路統合的象徵。" },
+      { id: "kunitomo", name: "國友村", area: "近江國·國友村", x: 3850, y: 1285, radius: 80, type: "market", desc: "北近江鍛冶村，火繩槍傳入後發展成重要鐵砲產地。" },
+      { id: "odani", name: "小谷城", area: "近江國·小谷城", x: 3820, y: 1125, radius: 84, type: "castle", toYear: 1573, desc: "淺井氏據守北近江的山城，俯瞰琵琶湖北方與北國街道。" },
+      { id: "nagahama", name: "長濱城", area: "近江國·長濱城", x: 3915, y: 1190, radius: 82, type: "castle", fromYear: 1573, desc: "羽柴秀吉受封北近江後在湖岸築城，城下町依水陸商路成長。" },
+      { id: "inabayama", name: "稻葉山城", area: "美濃國·稻葉山城", x: 3990, y: 1390, radius: 94, type: "castle", desc: "齋藤氏據守金華山的山城，扼守濃尾平野北方。", eras: [{ from: 1567, name: "岐阜城", area: "美濃國·岐阜城", desc: "信長入城後改稱岐阜，以此為天下布武的東海根據地。" }] },
+      { id: "seki", name: "關町", area: "美濃國·關町", x: 4170, y: 1235, radius: 78, type: "town", desc: "美濃刀鍛冶聚集的刃物町，打刀、小太刀與槍穗沿街交易。" },
+      { id: "kitanosho", name: "一乘谷城", area: "越前國·一乘谷", x: 3780, y: 1060, radius: 84, type: "castle", desc: "朝倉氏的山城與城下町，北陸文化與商貨由此南運。", eras: [{ from: 1575, name: "北之庄城", area: "越前國·北之庄城", desc: "柴田勝家整備的北陸根據地，城下町連接越前水陸商路。" }] },
       { id: "kanazawa", name: "尾山御坊", area: "加賀國·尾山", x: 4140, y: 900, radius: 88, type: "fort", desc: "加賀一向宗門徒的重要據點，周邊村落結盟自守。" },
       { id: "kiyosu-castle", name: "清洲城", area: "尾張國·清洲城", x: 4160, y: 1660, radius: 96, type: "castle", desc: "織田家居城，兵馬與傳令使往來不絕。" },
-      { id: "kiyosu-town", name: "清洲町", area: "尾張國·清洲町", x: 4350, y: 1870, radius: 88, type: "town", desc: "城下町商聲鼎沸，爐火與酒香自巷內飄出。" },
-      { id: "gambling", name: "黑市博戲場", area: "清洲町·博戲場", x: 4540, y: 1970, radius: 72, type: "gambling", desc: "竹盅落桌聲隔著布簾傳來。" },
-      { id: "kiso-port", name: "木曾川渡口", area: "尾張國·木曾川渡口", x: 4440, y: 1390, radius: 96, type: "river", desc: "川並衆的舟船泊在蘆葦間，陌生人都會被盤問。" },
-      { id: "tsushima", name: "津島町", area: "尾張國·津島町", x: 3970, y: 2020, radius: 88, type: "market", desc: "水陸商貨匯集，米、布與鹽包堆滿碼頭。" },
-      { id: "atsuta", name: "熱田神宮", area: "尾張國·熱田神宮", x: 4250, y: 2210, radius: 86, type: "shrine", desc: "古木掩映參道，鈴音使旅人心神沉靜。" },
-      { id: "narumi", name: "鳴海砦", area: "尾張國·鳴海砦外", x: 4660, y: 2160, radius: 86, type: "fort", desc: "今川方軍旗立於土壘上，戒備森嚴。" },
+      { id: "kiyosu-town", name: "清洲町", area: "尾張國·清洲町", x: 4230, y: 1735, radius: 88, type: "town", desc: "城下町商聲鼎沸，爐火與酒香自巷內飄出。" },
+      { id: "gambling", name: "黑市博戲場", area: "清洲町·博戲場", x: 4295, y: 1810, radius: 72, type: "gambling", desc: "竹盅落桌聲隔著布簾傳來。" },
+      { id: "kiso-port", name: "木曾川渡口", area: "尾張國·木曾川渡口", x: 4215, y: 1475, radius: 96, type: "river", desc: "川並衆的舟船泊在蘆葦間，陌生人都會被盤問。" },
+      { id: "inuyama", name: "犬山城", area: "尾張國·犬山城", x: 4380, y: 1390, radius: 80, type: "castle", desc: "木曾川南岸的尾張北方要衝，監視美濃與尾張之間的渡河點。" },
+      { id: "tsushima", name: "津島町", area: "尾張國·津島町", x: 3970, y: 1850, radius: 88, type: "market", desc: "水陸商貨匯集，米、布與鹽包堆滿碼頭。" },
+      { id: "atsuta", name: "熱田神宮", area: "尾張國·熱田神宮", x: 4250, y: 1945, radius: 86, type: "shrine", desc: "古木掩映參道，鈴音使旅人心神沉靜。" },
+      { id: "narumi", name: "鳴海砦", area: "尾張國·鳴海砦外", x: 4440, y: 1920, radius: 86, type: "fort", desc: "今川方軍旗立於土壘上，戒備森嚴。" },
+      { id: "okazaki", name: "岡崎城", area: "三河國·岡崎城", x: 4650, y: 1940, radius: 86, type: "castle", desc: "松平氏的三河根據地，矢作川與東海道在城下交會。" },
+      { id: "hikuma", name: "引間城", area: "遠江國·引間城", x: 4880, y: 2020, radius: 82, type: "castle", desc: "遠江平野的街道城，夾在今川、德川與武田勢力之間。", eras: [{ from: 1570, name: "濱松城", area: "遠江國·濱松城", desc: "德川家康整備的遠江根據地，向西連結三河、向北面對武田。" }] },
+      { id: "sunpu", name: "駿府館", area: "駿河國·駿府", x: 5150, y: 2050, radius: 90, type: "castle", desc: "今川氏的政廳與城下町，東海道文化、商業與軍勢在此匯聚。" },
       { id: "matsumoto", name: "深志城", area: "信濃國·深志城", x: 4700, y: 1370, radius: 88, type: "castle", desc: "山道與盆地交會的堅城，甲斐與越後勢力都注視此處。" },
       { id: "kofu", name: "躑躅崎館", area: "甲斐國·府中", x: 5050, y: 1770, radius: 92, type: "castle", desc: "武田氏政廳所在，騎馬武者與傳令不斷進出。" },
       { id: "odawara", name: "小田原城", area: "相模國·小田原城", x: 5480, y: 2110, radius: 96, type: "castle", desc: "北條氏的大城，箱根山路與相模灣盡在控制之下。" },
@@ -1031,24 +1042,46 @@
       { id: "sendai", name: "宮城郡", area: "陸奧國·宮城郡", x: 6660, y: 1080, radius: 84, type: "village", desc: "廣闊平野面向太平洋，奧州商路由此延伸。" }
     ];
 
+    const locationBaseState = new Map(locations.map(loc => [loc.id, { name: loc.name, area: loc.area, type: loc.type, desc: loc.desc }]));
+
+    function isLocationActive(loc, atYear = year) {
+      return atYear >= (loc.fromYear || 0) && atYear <= (loc.toYear || 9999);
+    }
+
+    function syncHistoricalLocations() {
+      locations.forEach(loc => {
+        const base = locationBaseState.get(loc.id);
+        if (base) Object.assign(loc, base);
+        (loc.eras || []).filter(era => year >= era.from).sort((a, b) => a.from - b.from).forEach(era => Object.assign(loc, era));
+      });
+    }
+
+    function activeLocations() { return locations.filter(loc => isLocationActive(loc)); }
+
     const roads = [
-      [[720,2220],[1050,2110],[1450,2110],[1880,2020],[2250,1960],[2650,1900],[2940,1940],[3160,1990],[3020,2180]],
-      [[2940,1940],[3300,1630],[3650,1570],[3970,1740],[4160,1660],[4350,1870],[4540,1970],[4660,2160],[5050,1770],[5480,2110],[5730,2320],[5960,1960]],
+      [[720,2220],[1050,2110],[1450,2110],[1880,2020],[2320,1930],[2650,1900],[2940,1940],[3160,1990],[3020,2180]],
+      [[2940,1940],[3160,1990],[3300,1630],[3470,1650],[3650,1585],[3735,1450],[3850,1285],[3990,1390],[4070,1530],[4160,1660],[4230,1735],[4295,1810],[4440,1920],[4650,1940],[4880,2020],[5150,2050],[5480,2110],[5730,2320],[5960,1960]],
       [[690,2520],[720,2220],[1050,2110]],
       [[520,2920],[610,2700],[690,2520]],
       [[1880,2020],[1840,2280],[2250,2470],[2650,2320],[3020,2180]],
-      [[3300,1630],[3420,1390],[3650,1570]],
+      [[3300,1630],[3325,1370]],
       [[3300,1630],[3480,1280],[3780,1060],[4140,900]],
-      [[3650,1570],[3950,1400],[4160,1660]],
-      [[4160,1660],[4300,1510],[4440,1390],[4700,1370],[5050,1770]],
-      [[3970,1740],[3970,2020],[4250,2210],[4660,2160]],
-      [[4350,1870],[4540,1970]],
+      [[3735,1450],[3850,1285],[3990,1390]],
+      [[3650,1585],[3690,1640],[3735,1450]],
+      [[3850,1285],[3820,1125]],
+      [[3850,1285],[3915,1190]],
+      [[3990,1390],[4170,1235],[4215,1475],[4160,1660]],
+      [[4215,1475],[4380,1390],[4700,1370],[5050,1770]],
+      [[3970,1850],[4160,1660],[4230,1735],[4250,1945],[4440,1920]],
+      [[4230,1735],[4295,1810]],
+      [[4880,2020],[5050,1770]],
       [[5050,1770],[5250,1520],[5600,1510],[6060,1500],[6350,1260],[6660,1080]],
       [[5960,1960],[6060,1500]],
       [[5480,2110],[5730,2320]]
     ];
 
-    const riverPath = [[4370,970],[4400,1180],[4440,1390],[4380,1620],[4480,1840],[4430,2040],[4540,2290],[4510,2550]];
+    const riverPath = [[4160,930],[4180,1160],[4215,1475],[4145,1650],[4090,1810],[4020,2010],[4100,2290],[4060,2550]];
+    const lakeBiwaPath = [[3390,1110],[3490,1030],[3590,1085],[3675,1220],[3700,1370],[3630,1515],[3540,1570],[3450,1510],[3400,1380],[3375,1230]];
     const landPolygons = [
       [[360,1750],[720,1680],[1110,1840],[1320,2110],[1190,2480],[980,2700],[920,3150],[580,3260],[350,2910],[420,2520],[250,2190]],
       [[980,1880],[1390,1780],[1880,1810],[2320,1680],[2820,1670],[3210,1450],[3570,1250],[3990,1230],[4440,1160],[4860,1260],[5300,1440],[5700,1570],[6160,1470],[6620,1180],[6960,860],[7060,1120],[6840,1430],[6470,1660],[6180,2050],[5840,2390],[5450,2490],[5040,2260],[4680,2360],[4300,2280],[3900,2110],[3500,2200],[3100,2310],[2670,2180],[2240,2240],[1830,2170],[1450,2260],[1120,2140]],
@@ -1068,8 +1101,8 @@
     function pointOnLand(x, y) { return landPolygons.some(polygon => pointInPolygon(x, y, polygon)); }
 
     const player = {
-      x: 3890,
-      y: 1860,
+      x: 4080,
+      y: 1760,
       radius: 24,
       speed: 245,
       hp: 100,
@@ -1112,10 +1145,10 @@
       firearmsSkill: 0,
       navalSkill: 0,
       militarySkill: 1,
-      domain: { agriculture: 44, commerce: 38, army: 320, morale: 68, firearms: 18, ships: 2, gunTech: 1, navalTech: 0, templeRelation: 0 },
+      domain: { agriculture: 44, commerce: 38, army: 320, morale: 68, firearms: 18, horses: 0, ships: 2, gunTech: 1, navalTech: 0, templeRelation: 0 },
       mission: null,
       sideQuest: null,
-      inventory: { rice: 0, firearms: 0, medicine: 1, dokudami: 2, yomogi: 1, specialties: {} },
+      inventory: { rice: 0, firearms: 0, medicine: 1, dokudami: 2, yomogi: 1, specialties: {}, regionalGoods: {} },
       weapon: { id: "uchigatana", name: "無名打刀", atk: 0, type: "katana", speed: 0, stance: "中段" },
       armor: { name: "粗布衣", def: 0 },
       facing: "down",
@@ -1133,6 +1166,7 @@
     let encounterDistance = 0;
     let encounterSafeDistance = 350;
     let travelDayDistance = 0;
+    const TRAVEL_UNITS_PER_DAY = 180;
     let year = 1560;
     let day = 12;
     let month = 5;
@@ -1208,26 +1242,42 @@
     };
 
     const roadNpcs = [
-      { id: "npc-genshiro", companionId: "genshiro", name: "松永源四郎", job: "美濃浪人", faction: "無所属", origin: "美濃國稻葉山城下出身，主家內訌後離散，在諸國尋找值得侍奉之人。", x: 4040, y: 1775, route: [[3970,1740],[4160,1660],[4350,1870],[4540,1970]], routeIndex: 1, routeDir: 1, speed: 52, facing: "right", spriteRow: 0, level: 4, hp: 96, atk: 22, def: 8, affinity: 0, recruitable: true, defeated: false },
-      { id: "npc-yahichi", companionId: "yahichi", name: "林彌七", job: "織田家足輕頭", faction: "織田家", origin: "清洲奉行所配下的足輕頭，負責巡視津島與熱田之間的兵糧道。", x: 4140, y: 1970, route: [[3970,2020],[4250,2210],[4660,2160],[4350,1870]], routeIndex: 0, routeDir: 1, speed: 45, facing: "down", spriteRow: 1, level: 5, hp: 112, atk: 21, def: 12, affinity: 1, recruitable: true, defeated: false },
-      { id: "npc-munetaka", companionId: "munetaka", name: "朝比奈宗孝", job: "今川家使番", faction: "今川家", origin: "駿河朝比奈氏旁支武士，奉命往返鳴海砦與三河，身上可能帶有軍情。", x: 4800, y: 2075, route: [[4660,2160],[5050,1770],[5480,2110]], routeIndex: 0, routeDir: 1, speed: 58, facing: "right", spriteRow: 2, level: 7, hp: 126, atk: 25, def: 12, affinity: -1, recruitable: true, defeated: false }
+      { id: "npc-genshiro", companionId: "genshiro", name: "松永源四郎", job: "美濃浪人", faction: "無所属", origin: "美濃國稻葉山城下出身，主家內訌後離散，在諸國尋找值得侍奉之人。", x: 4050, y: 1580, route: [[3990,1390],[4070,1530],[4160,1660],[4230,1735]], routeIndex: 1, routeDir: 1, speed: 52, facing: "right", spriteRow: 0, level: 4, hp: 96, atk: 22, def: 8, affinity: 0, recruitable: true, defeated: false },
+      { id: "npc-yahichi", companionId: "yahichi", name: "林彌七", job: "織田家足輕頭", faction: "織田家", origin: "清洲奉行所配下的足輕頭，負責巡視津島與熱田之間的兵糧道。", x: 4090, y: 1815, route: [[3970,1850],[4160,1660],[4230,1735],[4250,1945]], routeIndex: 0, routeDir: 1, speed: 45, facing: "down", spriteRow: 1, level: 5, hp: 112, atk: 21, def: 12, affinity: 1, recruitable: true, defeated: false },
+      { id: "npc-munetaka", companionId: "munetaka", name: "朝比奈宗孝", job: "今川家使番", faction: "今川家", origin: "駿河朝比奈氏旁支武士，奉命往返鳴海砦與三河，身上可能帶有軍情。", x: 4580, y: 1870, route: [[4440,1920],[5050,1770],[5480,2110]], routeIndex: 0, routeDir: 1, speed: 58, facing: "right", spriteRow: 2, level: 7, hp: 126, atk: 25, def: 12, affinity: -1, recruitable: true, defeated: false }
     ];
 
     const castleOfficers = [
-      { id:"oda-nobunaga", name:"織田信長", castleId:"kiyosu-castle", faction:"織田家", role:"大名", from:1555, to:1575, martial:88, leadership:96, politics:94, negotiation:91, interest:"南蠻物", advice:"戰場不是只靠勇力。先看道路、兵糧與敵將心氣，再決定從哪裡切開。" },
-      { id:"shibata-katsuie", name:"柴田勝家", castleId:"kiyosu-castle", faction:"織田家", role:"猛將", from:1555, to:1575, martial:93, leadership:90, politics:64, negotiation:54, interest:"美酒", advice:"刀要快，隊伍更要穩。能讓同伴不亂，才算真正的武者。" },
-      { id:"niwa-nagahide", name:"丹羽長秀", castleId:"kiyosu-castle", faction:"織田家", role:"奉行", from:1556, to:1575, martial:75, leadership:84, politics:91, negotiation:82, interest:"名物", advice:"築城、兵糧與道路都不起眼，卻最能決定一場戰爭能走多遠。" },
-      { id:"sakuma-nobumori", name:"佐久間信盛", castleId:"kiyosu-castle", faction:"織田家", role:"宿老", from:1555, to:1575, martial:70, leadership:78, politics:68, negotiation:72, interest:"茶器", advice:"活著守住陣地，也是一種戰功。別為了小名聲丟掉全局。" },
-      { id:"maeda-toshiie", name:"前田利家", castleId:"kiyosu-castle", faction:"織田家", role:"槍之又左", from:1558, to:1575, martial:91, leadership:84, politics:76, negotiation:78, interest:"美酒", advice:"槍尖不能只看眼前一人，還要看他身後的退路。" },
-      { id:"ikeda-tsuneoki", name:"池田恆興", castleId:"kiyosu-castle", faction:"織田家", role:"近習", from:1556, to:1575, martial:82, leadership:83, politics:74, negotiation:77, interest:"名物", advice:"主君身邊的消息傳得最快，也最容易混入假話。" },
-      { id:"mori-yoshinari", name:"森可成", castleId:"kiyosu-castle", faction:"織田家", role:"武將", from:1555, to:1570, martial:89, leadership:86, politics:58, negotiation:61, interest:"兵法", advice:"遇強敵先守住氣勢；一旦退縮，整隊都會跟著散。" },
-      { id:"takigawa-kazumasu", name:"瀧川一益", castleId:"kiyosu-castle", faction:"織田家", role:"鐵砲奉行", from:1558, to:1575, martial:84, leadership:88, politics:76, negotiation:73, interest:"南蠻物", advice:"鐵砲可怕的不只威力，而是讓敵人不敢照原先的路前進。" },
-      { id:"kinoshita-hideyoshi", name:"木下藤吉郎", castleId:"kiyosu-castle", faction:"織田家", role:"足輕組頭", from:1558, to:1575, martial:68, leadership:93, politics:96, negotiation:98, interest:"名物", advice:"先讓對方覺得你有用，再讓他發現少不了你。這就是出世的路。" },
-      { id:"akechi-mitsuhide", name:"明智光秀", castleId:"kiyosu-castle", faction:"織田家", role:"奉行", from:1568, to:1575, martial:80, leadership:90, politics:93, negotiation:92, interest:"茶器", advice:"禮法與鐵砲並不衝突。能理解兩者，才不會被時代拋下。" },
-      { id:"takenaka-hanbei", name:"竹中半兵衛", castleId:"kiyosu-castle", faction:"織田家", role:"軍師", from:1567, to:1575, martial:61, leadership:91, politics:90, negotiation:86, interest:"兵法", advice:"最好的計略不是多巧妙，而是讓敵人以為那是自己的選擇。" },
+      { id:"oda-nobunaga", name:"織田信長", castleId:"kiyosu-castle", faction:"織田家", role:"大名", from:1555, to:1566, martial:88, leadership:96, politics:94, negotiation:91, interest:"南蠻物", advice:"戰場不是只靠勇力。先看道路、兵糧與敵將心氣，再決定從哪裡切開。" },
+      { id:"shibata-katsuie", name:"柴田勝家", castleId:"kiyosu-castle", faction:"織田家", role:"猛將", from:1555, to:1566, martial:93, leadership:90, politics:64, negotiation:54, interest:"美酒", advice:"刀要快，隊伍更要穩。能讓同伴不亂，才算真正的武者。" },
+      { id:"niwa-nagahide", name:"丹羽長秀", castleId:"kiyosu-castle", faction:"織田家", role:"奉行", from:1556, to:1566, martial:75, leadership:84, politics:91, negotiation:82, interest:"名物", advice:"築城、兵糧與道路都不起眼，卻最能決定一場戰爭能走多遠。" },
+      { id:"sakuma-nobumori", name:"佐久間信盛", castleId:"kiyosu-castle", faction:"織田家", role:"宿老", from:1555, to:1566, martial:70, leadership:78, politics:68, negotiation:72, interest:"茶器", advice:"活著守住陣地，也是一種戰功。別為了小名聲丟掉全局。" },
+      { id:"maeda-toshiie", name:"前田利家", castleId:"kiyosu-castle", faction:"織田家", role:"槍之又左", from:1558, to:1566, martial:91, leadership:84, politics:76, negotiation:78, interest:"美酒", advice:"槍尖不能只看眼前一人，還要看他身後的退路。" },
+      { id:"ikeda-tsuneoki", name:"池田恆興", castleId:"kiyosu-castle", faction:"織田家", role:"近習", from:1556, to:1566, martial:82, leadership:83, politics:74, negotiation:77, interest:"名物", advice:"主君身邊的消息傳得最快，也最容易混入假話。" },
+      { id:"mori-yoshinari", name:"森可成", castleId:"kiyosu-castle", faction:"織田家", role:"武將", from:1555, to:1566, martial:89, leadership:86, politics:58, negotiation:61, interest:"兵法", advice:"遇強敵先守住氣勢；一旦退縮，整隊都會跟著散。" },
+      { id:"takigawa-kazumasu", name:"瀧川一益", castleId:"kiyosu-castle", faction:"織田家", role:"鐵砲奉行", from:1558, to:1566, martial:84, leadership:88, politics:76, negotiation:73, interest:"南蠻物", advice:"鐵砲可怕的不只威力，而是讓敵人不敢照原先的路前進。" },
+      { id:"kinoshita-hideyoshi", name:"木下藤吉郎", castleId:"kiyosu-castle", faction:"織田家", role:"足輕組頭", from:1558, to:1566, martial:68, leadership:93, politics:96, negotiation:98, interest:"名物", advice:"先讓對方覺得你有用，再讓他發現少不了你。這就是出世的路。" },
+      { id:"akechi-mitsuhide", name:"明智光秀", castleId:"inabayama", faction:"織田家", role:"奉行", from:1568, to:1575, martial:80, leadership:90, politics:93, negotiation:92, interest:"茶器", advice:"禮法與鐵砲並不衝突。能理解兩者，才不會被時代拋下。" },
+      { id:"takenaka-hanbei", name:"竹中半兵衛", castleId:"inabayama", faction:"羽柴家", role:"軍師", from:1567, to:1575, martial:61, leadership:91, politics:90, negotiation:86, interest:"兵法", advice:"最好的計略不是多巧妙，而是讓敵人以為那是自己的選擇。" },
+      { id:"saito-tatsuoki", name:"齋藤龍興", castleId:"inabayama", faction:"齋藤家", role:"大名", from:1561, to:1566, martial:58, leadership:65, politics:52, negotiation:55, interest:"美酒", advice:"美濃眾各守利益；若不能維繫國人，山城再高也會失去根基。" },
+      { id:"saito-yoshitatsu", name:"齋藤義龍", castleId:"inabayama", faction:"齋藤家", role:"大名", from:1556, to:1561, martial:86, leadership:88, politics:77, negotiation:73, interest:"兵法", advice:"美濃不是一座城，而是眾多國人的利害。先鎮住內部，才能迎擊尾張。" },
+      { id:"takenaka-hanbei-saito", name:"竹中半兵衛", castleId:"inabayama", faction:"齋藤家", role:"軍師", from:1558, to:1566, martial:61, leadership:91, politics:90, negotiation:86, interest:"兵法", advice:"稻葉山城路窄險峻，攻守都要先算水源、曲輪與人心。" },
+      { id:"oda-nobunaga-gifu", name:"織田信長", castleId:"inabayama", faction:"織田家", role:"大名", from:1567, to:1575, martial:88, leadership:97, politics:95, negotiation:92, interest:"南蠻物", advice:"岐阜不是終點。道路、商人與鐵砲會把這座城連向天下。" },
+      { id:"shibata-katsuie-gifu", name:"柴田勝家", castleId:"inabayama", faction:"織田家", role:"猛將", from:1567, to:1575, martial:93, leadership:90, politics:64, negotiation:54, interest:"美酒", advice:"美濃山路多岔口，軍勢不能只顧快，還得守住輜重。" },
+      { id:"niwa-nagahide-gifu", name:"丹羽長秀", castleId:"inabayama", faction:"織田家", role:"奉行", from:1567, to:1575, martial:75, leadership:84, politics:91, negotiation:82, interest:"名物", advice:"新城名要配新道路；整備城下町，才能讓兵與貨都動起來。" },
+      { id:"kinoshita-hideyoshi-gifu", name:"木下藤吉郎", castleId:"inabayama", faction:"織田家", role:"侍大將", from:1567, to:1575, martial:68, leadership:93, politics:96, negotiation:98, interest:"名物", advice:"拿下美濃後，真正的功夫是讓新舊家臣願意在同一張評定席上做事。" },
       { id:"oda-nobunaga-azuchi", name:"織田信長", castleId:"azuchi", faction:"織田家", role:"天下人", from:1576, to:1582, martial:88, leadership:98, politics:96, negotiation:93, interest:"南蠻物", advice:"安土要看的不是一座城，而是通向天下的道路與商流。" },
       { id:"akechi-mitsuhide-azuchi", name:"明智光秀", castleId:"azuchi", faction:"織田家", role:"近畿管領", from:1576, to:1582, martial:82, leadership:93, politics:95, negotiation:94, interest:"茶器", advice:"天下愈接近一統，禮法與怨恨就愈不能忽視。" },
       { id:"hashiba-hideyoshi-azuchi", name:"羽柴秀吉", castleId:"azuchi", faction:"織田家", role:"中國軍團長", from:1576, to:1582, martial:70, leadership:96, politics:98, negotiation:99, interest:"名物", advice:"城攻不下，就先攻人心；人心攻不下，再談別的。" },
+      { id:"rokkaku-yoshikata", name:"六角義賢", castleId:"kannonji", faction:"六角家", role:"大名", from:1555, to:1568, martial:71, leadership:86, politics:85, negotiation:87, interest:"兵法", advice:"近江商路四通八達；若失去國人與街道，再大的山城也會孤立。" },
+      { id:"azai-nagamasa", name:"淺井長政", castleId:"odani", faction:"淺井家", role:"大名", from:1560, to:1573, martial:88, leadership:91, politics:79, negotiation:84, interest:"名物", advice:"北近江夾在朝倉與織田之間，盟約若沒有共同利益，終究只是一張紙。" },
+      { id:"azai-hisamasa", name:"淺井久政", castleId:"odani", faction:"淺井家", role:"前代家督", from:1555, to:1573, martial:66, leadership:75, politics:80, negotiation:83, interest:"茶器", advice:"北國街道上的一場小衝突，也可能改變淺井與朝倉數十年的關係。" },
+      { id:"hashiba-hideyoshi-nagahama", name:"羽柴秀吉", castleId:"nagahama", faction:"織田家", role:"城主", from:1573, to:1576, martial:70, leadership:95, politics:98, negotiation:99, interest:"名物", advice:"新城最先要的不是天守，是願意遷來做生意、打造器物與繳稅的町人。" },
+      { id:"oda-nobukiyo", name:"織田信清", castleId:"inuyama", faction:"犬山織田家", role:"城主", from:1555, to:1564, martial:78, leadership:81, politics:69, negotiation:72, interest:"美酒", advice:"犬山扼住木曾川，守住渡口便能牽動尾張與美濃兩邊兵勢。" },
+      { id:"matsudaira-motoyasu", name:"松平元康", castleId:"okazaki", faction:"松平家", role:"家督", from:1560, to:1566, martial:85, leadership:94, politics:91, negotiation:89, interest:"兵法", advice:"三河眾重義理也記仇；要讓他們同心，主君必須先忍耐別人不能忍的事。" },
+      { id:"tokugawa-ieyasu", name:"德川家康", castleId:"hikuma", faction:"德川家", role:"大名", from:1570, to:1585, martial:85, leadership:96, politics:95, negotiation:93, interest:"兵法", advice:"遠江平野無險可恃，城、砦與援軍道路必須彼此照應。" },
+      { id:"imagawa-yoshimoto", name:"今川義元", castleId:"sunpu", faction:"今川家", role:"大名", from:1555, to:1560, martial:78, leadership:94, politics:96, negotiation:95, interest:"茶器", advice:"海道一弓取靠的不只是兵多；公家禮法、商路與人質同樣是治國之器。" },
+      { id:"imagawa-ujizane", name:"今川氏真", castleId:"sunpu", faction:"今川家", role:"家督", from:1561, to:1568, martial:54, leadership:63, politics:76, negotiation:82, interest:"蹴鞠", advice:"駿府文化繁盛，但戰敗後的家臣人心比城牆更難修補。" },
       { id:"mori-motonari", name:"毛利元就", castleId:"hiroshima", faction:"毛利家", role:"大名", from:1555, to:1571, martial:74, leadership:97, politics:96, negotiation:94, interest:"兵法", advice:"一支箭易折，三支箭難斷；但三人若不同心，箭再多也無用。" },
       { id:"mori-takamoto", name:"毛利隆元", castleId:"hiroshima", faction:"毛利家", role:"家督", from:1555, to:1563, martial:66, leadership:84, politics:91, negotiation:86, interest:"名物", advice:"軍勢能出征，是因為領內有人把帳目與糧道守住。" },
       { id:"mori-terumoto", name:"毛利輝元", castleId:"hiroshima", faction:"毛利家", role:"家督", from:1563, to:1600, martial:62, leadership:82, politics:78, negotiation:83, interest:"茶器", advice:"西國諸將各有心思，統率他們比攻下一城更難。" },
@@ -1814,7 +1864,10 @@
 
     function estimateTravelDays(destination) {
       if (!destination) return 1;
-      return Math.max(1, Math.ceil(Math.hypot(destination.x - player.x, destination.y - player.y) / 1350));
+      const path = buildNavigationPath(destination.x, destination.y);
+      let px = player.x, py = player.y, distance = 0;
+      path.forEach(point => { distance += Math.hypot(point[0] - px, point[1] - py); px = point[0]; py = point[1]; });
+      return Math.max(1, Math.ceil(distance / TRAVEL_UNITS_PER_DAY));
     }
 
     function updateMissionTracker() {
@@ -1864,7 +1917,7 @@
 
     function saveGame(showNotice = false) {
       const snapshot = {
-        version: 5,
+        version: 6,
         player: {
           x: player.x, y: player.y, hp: player.hp, ki: player.ki, gold: player.gold,
           fame: player.fame, infamy: player.infamy, weapon: player.weapon, armor: player.armor,
@@ -1890,10 +1943,11 @@
     function loadGame() {
       try {
         const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
-        if (!saved || ![1, 2, 3, 4, 5].includes(saved.version)) return;
+        if (!saved || ![1, 2, 3, 4, 5, 6].includes(saved.version)) return;
         Object.assign(player, saved.player || {});
-        player.inventory = { rice: 0, firearms: 0, medicine: 1, dokudami: 2, yomogi: 1, ...(player.inventory || {}) };
+        player.inventory = { rice: 0, firearms: 0, medicine: 1, dokudami: 2, yomogi: 1, regionalGoods: {}, ...(player.inventory || {}) };
         player.inventory.specialties = player.inventory.specialties || {};
+        player.inventory.regionalGoods = player.inventory.regionalGoods || {};
         player.officerRelations = player.officerRelations || {};
         player.sideQuest = player.sideQuest || null;
         if (saved.version < 5) {
@@ -1917,7 +1971,7 @@
         player.relicFlags = player.relicFlags || {};
         player.historicalFlags = player.historicalFlags || {};
         player.historicalChoices = Array.isArray(player.historicalChoices) ? player.historicalChoices : [];
-        player.domain = { agriculture: 44, commerce: 38, army: 320, morale: 68, firearms: 18, ships: 2, gunTech: 1, navalTech: 0, templeRelation: 0, ...(player.domain || {}) };
+        player.domain = { agriculture: 44, commerce: 38, army: 320, morale: 68, firearms: 18, horses: 0, ships: 2, gunTech: 1, navalTech: 0, templeRelation: 0, ...(player.domain || {}) };
         if (!player.isRetainer) {
           player.faction = "無";
           player.rank = "浪人";
@@ -1929,6 +1983,10 @@
           day = saved.calendar.day || day;
           month = saved.calendar.month || month;
           weatherIndex = saved.calendar.weatherIndex || 0;
+        }
+        if (saved.version < 6 && Math.hypot(player.x - 3890, player.y - 1860) < 520) {
+          player.x += 190;
+          player.y -= 100;
         }
         if (saved.version < 4) {
           const legacyX = Number(player.x) || 420, legacyY = Number(player.y) || 830;
@@ -1959,7 +2017,7 @@
     function showVisitedTravelMenu() {
       gameState = "SCENE";
       setMode("諸國移動 · 已訪據點");
-      const visited = locations.filter(loc => player.visited.includes(loc.id));
+      const visited = locations.filter(loc => isLocationActive(loc) && player.visited.includes(loc.id));
       if (!visited.length) {
         setMessage("旅人手帳", "尚無已登錄據點。靠近城、町、村、港或神社並調查一次，就會寫入旅人手帳。 ");
         setActions([{ label: "返回大地圖", run: leaveScene }]);
@@ -2061,6 +2119,7 @@
         if (day > 30) { day = 1; month++; }
         if (month > 12) { month = 1; year++; }
       }
+      syncHistoricalLocations();
       checkMissionDeadline();
       collectHistoricalEvents();
       if (historicalEventQueue.length && gameState !== "COMBAT" && gameState !== "GAMBLE" && gameState !== "EVENT") {
@@ -2132,6 +2191,7 @@
       let closest = null;
       let best = Infinity;
       for (const loc of locations) {
+        if (!isLocationActive(loc)) continue;
         const distance = Math.hypot(player.x - loc.x, player.y - loc.y);
         if (distance < loc.radius && distance < best) { closest = loc; best = distance; }
       }
@@ -2169,13 +2229,17 @@
 
     function enterGenericLocation(loc) {
       if (loc.type === "castle") {
+        const supplyAction = regionalGoodsAt(loc.id).length ? [{ label: "城下軍需與地方物產", run: () => enterRegionalMarket(loc) }] : [];
         enterScene(loc.name, "城門番", `${loc.desc} 城中武將會隨年代與勢力變化，可先拜訪、交談或請求切磋。`, [
           { label: `拜訪城內武將（${officersAtCastle(loc.id).length} 人）`, run: () => visitCastleOfficers(loc) },
+          ...supplyAction,
           { label: "在城下宿場歇息 2貫", run: () => townInn(2, () => enterGenericLocation(loc)) }
         ]);
         return;
       }
+      const supplyAction = regionalGoodsAt(loc.id).length ? [{ label: "查看地方物產與軍需", run: () => enterRegionalMarket(loc) }] : [];
       enterScene(loc.name, "旅人手帳", `${loc.desc}【${loc.name}】已登錄為到訪據點，今後可從列表自動導航回到此地。`, [
+        ...supplyAction,
         { label: "打聽當地局勢", run: () => setMessage("當地古老", `${loc.area}近日人馬往來增加。商旅談論著各家軍勢，也提醒你莫在陌生領地隨意拔刀。`) },
         { label: "在宿場休息 2貫", run: () => { if (player.gold < 2) { setMessage("宿場主人", "「沒有宿錢，只能借你屋簷避雨。」"); return; } player.gold -= 2; player.hp = Math.min(player.maxHp, player.hp + 28); advanceDay(); updateHUD(); saveGame(); setMessage("宿場主人", "熱粥與乾淨草席讓你恢復 28 體力，時間推進一日。 "); } },
         { label: "查看已訪據點", run: showVisitedTravelMenu }
@@ -2606,6 +2670,7 @@
 
     function enterMarket() {
       const actions = [
+        { label: "查看津島軍糧與尾張物產", run: () => enterRegionalMarket(locations.find(loc => loc.id === "tsushima")) },
         { label: "購買傷藥 8貫", run: () => buyMedicine("medicine", 8, "傷藥") },
         { label: "購買十藥（どくだみ）3貫", run: () => buyMedicine("dokudami", 3, "十藥·どくだみ") },
         { label: "購買艾草（よもぎ）4貫", run: () => buyMedicine("yomogi", 4, "艾草·よもぎ") },
@@ -2709,6 +2774,135 @@
       }
     }
 
+    const regionalMarketCatalog = {
+      "kiyosu-town": [
+        { id:"owari-cotton", name:"尾張木綿", category:"名產", price:10, kind:"specialty", detail:"尾張平野出產的木棉，適合製作陣羽織、火繩與日用品。" },
+        { id:"kashigusoku", name:"尾張貸具足", category:"護甲", price:42, kind:"armor", armor:{ name:"尾張貸具足", def:9 }, detail:"便於成批配發足輕的胴、籠手與陣笠。" },
+        { id:"owari-ashigaru", name:"尾張足輕募兵 30人", category:"兵力", price:28, kind:"troops", quantity:30, detail:"從城下與近郊徵募並配發基本長槍。" }
+      ],
+      "tsushima": [
+        { id:"tsushima-rice", name:"尾張軍糧 3俵", category:"軍糧", price:15, kind:"rice", quantity:3, detail:"津島水運集散的米俵，戰時價格會上揚。" },
+        { id:"tsushima-salt", name:"知多鹽", category:"名產", price:7, kind:"specialty", detail:"沿海鹽場運來的鹽，是保存軍糧的重要物資。" },
+        { id:"tsushima-cotton", name:"木棉繩索", category:"道具", price:9, kind:"tool", detail:"渡河、築柵與綁縛輜重都用得上。" }
+      ],
+      "inabayama": [
+        { id:"mino-paper", name:"美濃紙", category:"名產", price:11, kind:"specialty", detail:"細韌潔白，奉行文書、密信與軍令常用。" },
+        { id:"mino-ashigaru", name:"美濃足輕募兵 30人", category:"兵力", price:30, kind:"troops", quantity:30, detail:"熟悉長良川與山道的國人足輕。" },
+        { id:"gifu-supply", name:"岐阜兵站工具", category:"道具", price:24, kind:"tool", fromYear:1567, detail:"信長入城後整備的輜重箱、繩索與築陣器具。" }
+      ],
+      "seki": [
+        { id:"seki-katana", name:"關打刀", category:"刀械", price:72, kind:"weapon", weapon:{ id:"seki-katana", name:"關打刀", atk:13, type:"katana", speed:2, stance:"中段" }, detail:"美濃關鍛冶的實戰打刀，鋒利而耐用。" },
+        { id:"seki-kodachi", name:"關小太刀", category:"刀械", price:58, kind:"weapon", weapon:{ id:"seki-kodachi", name:"關小太刀", atk:10, type:"kodachi", speed:8, stance:"低身疾走" }, detail:"短身靈活，適合近身與室內戰。" },
+        { id:"seki-yari", name:"關槍穗", category:"刀械", price:46, kind:"weapon", weapon:{ id:"seki-yari", name:"關十文字槍", atk:12, type:"yari", speed:-1, stance:"長柄突陣" }, detail:"由刀匠鍛造的槍穗，裝柄後可供武士與足輕使用。" }
+      ],
+      "kunitomo": [
+        { id:"kunitomo-teppo", name:"國友火繩槍 5挺", category:"鐵砲", price:75, kind:"firearms", quantity:5, fromYear:1544, detail:"北近江鍛冶眾製作的火繩槍，含通條與基本早合。" },
+        { id:"kunitomo-powder", name:"火藥與早合 10組", category:"道具", price:28, kind:"tool", fromYear:1544, detail:"預先量好的火藥與彈丸，提高鐵砲隊裝填效率。" },
+        { id:"teppo-repair", name:"鐵砲修理工具", category:"道具", price:35, kind:"tool", fromYear:1544, detail:"含火門針、通條與小型銼具，便於行軍中保養。" }
+      ],
+      "osafune": [
+        { id:"bizen-tachi", name:"備前長船太刀", category:"刀械", price:105, kind:"weapon", weapon:{ id:"bizen-tachi", name:"備前長船太刀", atk:16, type:"tachi", speed:-1, stance:"雙手大上段" }, detail:"備前長船系刀工的太刀，刃文華麗而重斬有力。" },
+        { id:"bizen-katana", name:"備前打刀", category:"刀械", price:76, kind:"weapon", weapon:{ id:"bizen-katana", name:"備前打刀", atk:14, type:"katana", speed:1, stance:"正眼" }, detail:"適合步戰的實用備前刀。" },
+        { id:"harima-leather", name:"播磨皮小札", category:"護甲", price:34, kind:"armor", armor:{ name:"播磨皮小札胴", def:7 }, detail:"以皮革和小札製作，重量較輕，方便長途行軍。" }
+      ],
+      "sakai": [
+        { id:"sakai-teppo", name:"堺火繩槍 5挺", category:"鐵砲", price:82, kind:"firearms", quantity:5, fromYear:1545, detail:"堺商人組織生產與流通的火繩槍，價格較高但供應穩定。" },
+        { id:"namban-powder", name:"南蠻硝石與火藥", category:"道具", price:38, kind:"tool", fromYear:1550, detail:"由海路輸入的硝石與配製火藥，是鐵砲軍備的重要瓶頸。" },
+        { id:"namban-armor", name:"南蠻胴具足", category:"護甲", price:190, kind:"armor", fromYear:1575, armor:{ name:"南蠻胴具足", def:16 }, detail:"模仿西洋胸甲製作的重型胴具足，屬晚期稀有軍需。" }
+      ],
+      "kofu": [
+        { id:"kai-horses", name:"甲斐軍馬 10匹", category:"軍馬", price:95, kind:"horses", quantity:10, detail:"適應山國道路的軍馬，適合騎馬武者與傳令。" },
+        { id:"kai-cavalry", name:"甲斐騎馬武者 20人", category:"兵力", price:135, kind:"cavalry", quantity:20, horseQuantity:20, fromYear:1550, detail:"帶馬與具足的騎馬武者，維持費遠高於普通足輕。" }
+      ],
+      "matsumoto": [
+        { id:"shinano-horses", name:"信濃軍馬 10匹", category:"軍馬", price:88, kind:"horses", quantity:10, detail:"信濃山地培育的耐行軍馬，常供甲斐與東國武家採買。" },
+        { id:"shinano-saddle", name:"信濃鞍具", category:"道具", price:32, kind:"tool", detail:"鞍、鐙與馬具的修補套件。" }
+      ],
+      "kyoto": [
+        { id:"kyoto-gusoku", name:"京製胴丸", category:"護甲", price:92, kind:"armor", armor:{ name:"京製胴丸", def:13 }, detail:"京都具足師製作，兼顧武家體面與防護。" },
+        { id:"kyoto-lacquer", name:"京漆器軍配箱", category:"道具", price:24, kind:"tool", detail:"盛放軍配、文書與印判的漆器箱。" }
+      ],
+      "himeji": [
+        { id:"harima-hide", name:"播磨熟皮", category:"道具", price:13, kind:"tool", detail:"可修補皮小札、馬具與刀鞘。" },
+        { id:"harima-ashigaru", name:"播磨足輕募兵 30人", category:"兵力", price:32, kind:"troops", quantity:30, detail:"熟悉中國路的足輕與搬運人夫。" }
+      ],
+      "okazaki": [
+        { id:"mikawa-miso", name:"三河豆味噌", category:"軍糧", price:10, kind:"rice", quantity:1, detail:"耐存放、味道濃厚，適合行軍時補充鹽分。" },
+        { id:"mikawa-ashigaru", name:"三河足輕募兵 30人", category:"兵力", price:34, kind:"troops", quantity:30, detail:"以堅忍聞名的三河武士與足輕。" }
+      ],
+      "hikuma": [
+        { id:"totomi-horses", name:"遠江軍馬 10匹", category:"軍馬", price:92, kind:"horses", quantity:10, detail:"東海道與山間牧地供應的軍馬。" },
+        { id:"hamamatsu-supply", name:"濱松城普請工具", category:"道具", price:25, kind:"tool", fromYear:1570, detail:"修築土壘、柵欄與道路所需的鍬、繩與木工具。" }
+      ],
+      "sunpu": [
+        { id:"suruga-tea", name:"駿河茶", category:"名產", price:16, kind:"specialty", detail:"駿河山麓出產的茶，適合武家贈答與茶席。" },
+        { id:"suruga-gusoku", name:"駿河胴丸", category:"護甲", price:78, kind:"armor", armor:{ name:"駿河胴丸", def:12 }, detail:"今川領具足師製作的胴丸，重視騎射與武家體面。" }
+      ],
+      "hirado": [
+        { id:"hirado-niter", name:"南蠻硝石", category:"道具", price:36, kind:"tool", fromYear:1550, detail:"平戶商路輸入的硝石，可供火藥工房配製。" },
+        { id:"namban-clock", name:"南蠻時計", category:"名產", price:68, kind:"specialty", fromYear:1550, detail:"稀有舶來品，適合贈予喜愛新奇事物的武將。" }
+      ],
+      "nagasaki": [
+        { id:"nagasaki-powder", name:"南蠻火藥 20組", category:"鐵砲", price:64, kind:"firearms", quantity:10, fromYear:1571, detail:"開港後輸入的硝石與火藥，適合補充大規模鐵砲隊。" },
+        { id:"nagasaki-cuirass", name:"舶來胸甲", category:"護甲", price:220, kind:"armor", fromYear:1575, armor:{ name:"舶來胸甲", def:17 }, detail:"少量由葡萄牙船帶來的胸甲，昂貴且供貨不定。" }
+      ],
+      "hakata": [
+        { id:"ming-silk", name:"明國絹", category:"名產", price:32, kind:"specialty", detail:"博多商路流通的高級絹織物。" },
+        { id:"hakata-niter", name:"博多硝石", category:"道具", price:31, kind:"tool", fromYear:1545, detail:"經大陸貿易輸入，是西國火藥生產的重要原料。" }
+      ]
+    };
+
+    function regionalGoodsAt(locationId) {
+      return (regionalMarketCatalog[locationId] || []).filter(item => year >= (item.fromYear || 0) && year <= (item.toYear || 9999));
+    }
+
+    function regionalGoodPrice(item) {
+      return Math.max(1, item.price - Math.max(0, Math.floor((player.negotiation - 50) / 8)));
+    }
+
+    function enterRegionalMarket(loc) {
+      if (!loc) { leaveScene(); return; }
+      const goods = regionalGoodsAt(loc.id);
+      setMode(`${loc.name} · 地方軍需`);
+      setMessage("問屋帳場", `${year} 年可供應 ${goods.length} 種貨物。軍馬 ${player.domain.horses || 0}匹｜鐵砲 ${player.domain.firearms || 0}挺｜兵力 ${player.domain.army || 0}人。產地與年代會決定可買品項。`);
+      setActions([
+        ...goods.map(item => ({ label:`【${item.category}】${item.name} ${regionalGoodPrice(item)}貫`, run:() => buyRegionalGood(loc, item) })),
+        { label:`返回${loc.name}`, run:() => loc.id === "kiyosu-town" ? enterTownHub() : loc.id === "tsushima" ? enterMarket() : enterGenericLocation(loc) }
+      ]);
+    }
+
+    function buyRegionalGood(loc, item) {
+      const price = regionalGoodPrice(item);
+      if (player.gold < price) { setMessage("問屋主人", `「【${item.name}】要 ${price} 貫，軍需不能賒欠。」`); return; }
+      player.gold -= price;
+      player.inventory.regionalGoods[item.id] = (player.inventory.regionalGoods[item.id] || 0) + 1;
+      let result = item.detail;
+      if (item.kind === "weapon") {
+        if (item.weapon.atk > player.weapon.atk) { player.weapon = { ...item.weapon }; result += ` 已換裝，攻擊提升至 +${item.weapon.atk}。`; }
+        else result += " 已收入武具庫。";
+      } else if (item.kind === "armor") {
+        if (item.armor.def > player.armor.def) { player.armor = { ...item.armor }; result += ` 已換裝，防禦提升至 +${item.armor.def}。`; }
+        else result += " 已收入武具庫。";
+      } else if (item.kind === "firearms") {
+        player.inventory.firearms += item.quantity || 1; player.domain.firearms += item.quantity || 1;
+        result += ` 鐵砲存量增加 ${item.quantity || 1} 挺。`;
+      } else if (item.kind === "horses") {
+        player.domain.horses += item.quantity || 1; result += ` 軍馬增加 ${item.quantity || 1} 匹。`;
+      } else if (item.kind === "cavalry") {
+        player.domain.army += item.quantity || 1; player.domain.horses += item.horseQuantity || item.quantity || 1; result += ` 兵力增加 ${item.quantity || 1}、軍馬增加 ${item.horseQuantity || item.quantity || 1}。`;
+      } else if (item.kind === "troops") {
+        player.domain.army += item.quantity || 1; result += ` 兵力增加 ${item.quantity || 1}。`;
+      } else if (item.kind === "rice") {
+        player.inventory.rice += item.quantity || 1; result += ` 軍糧增加 ${item.quantity || 1} 俵。`;
+      } else {
+        player.inventory.specialties[item.id] = (player.inventory.specialties[item.id] || 0) + 1; result += " 已收入行囊。";
+      }
+      sound.play("coin");
+      setMessage("成交", `購得【${item.name}】。${result}`);
+      updateHUD(); saveGame();
+      setActions([{ label:"繼續查看貨單", run:() => enterRegionalMarket(loc) }, { label:"返回大地圖", run:leaveScene }]);
+    }
+
     const specialtyCatalog = [
       { id: "kiyosu-sake", name: "清洲銘酒", price: 8, desc: "適合送給豪爽武將，也能在酒場換取話題。" },
       { id: "seto-bowl", name: "瀨戶燒茶碗", price: 18, desc: "尾張名物，茶人與文治派武將喜愛。" },
@@ -2723,6 +2917,7 @@
       setMessage("清洲町町眾", "武具店的爐火、名物店的招牌與酒館的笑聲沿街相連。這裡不只是買刀，也能蒐集情報、結識同行者與接支線委託。");
       setActions([
         { label: "武具店／鍛冶屋", run: enterForge },
+        { label: "城下軍需（兵力、護甲、地方物產）", run: () => enterRegionalMarket(locations.find(loc => loc.id === "kiyosu-town")) },
         { label: "名物店（贈禮與地方特產）", run: enterSpecialtyShop },
         { label: "酒館（情報、夥伴、支線）", run: enterTavern },
         { label: "藥種屋（傷藥與史實草藥）", run: enterMedicineShop },
@@ -3312,7 +3507,7 @@
         if (relic.art) { revealedItem = relic; revealedKind = relic.art; }
       } else if (!combat.sparring && Math.random() < .38) {
         const isWeapon = Math.random() < .5;
-        const table = isWeapon ? weaponLoot : armorLoot;
+        const table = (isWeapon ? weaponLoot : armorLoot).filter(item => year >= (item.fromYear || 0));
         const item = { ...table[Math.floor(Math.random() * table.length)] };
         if (isWeapon && item.atk > player.weapon.atk) {
           player.weapon = item;
@@ -3423,8 +3618,8 @@
         footstepTimer -= dt;
         if (footstepTimer <= 0) { sound.play("step"); footstepTimer = .42; }
 
-        if (travelDayDistance > 1450) {
-          travelDayDistance = 0;
+        while (travelDayDistance >= TRAVEL_UNITS_PER_DAY) {
+          travelDayDistance -= TRAVEL_UNITS_PER_DAY;
           advanceDay();
           weatherIndex = (weatherIndex + (Math.random() < .7 ? 1 : 2)) % weatherCycle.length;
         }
@@ -3510,11 +3705,12 @@
       }
       ctx.globalAlpha = 1;
 
+      drawLakeBiwa();
       drawMountains();
       drawRiver();
       drawRoads();
       drawForests();
-      locations.forEach(drawLocation);
+      activeLocations().forEach(drawLocation);
       drawRoadNpcs();
       drawNavigationMarker();
       drawPlayer();
@@ -3598,6 +3794,21 @@
         ctx.lineWidth = 2;
         ctx.beginPath(); ctx.moveTo(x - 25, y); ctx.quadraticCurveTo(x, y - 7, x + 25, y); ctx.stroke();
       }
+    }
+
+    function drawLakeBiwa() {
+      ctx.save();
+      ctx.beginPath();
+      lakeBiwaPath.forEach((point, index) => index ? ctx.lineTo(point[0], point[1]) : ctx.moveTo(point[0], point[1]));
+      ctx.closePath();
+      const lake = ctx.createLinearGradient(3400, 1100, 3680, 1510);
+      lake.addColorStop(0, "#3d8f9d"); lake.addColorStop(1, "#285f76");
+      ctx.fillStyle = lake; ctx.fill();
+      ctx.strokeStyle = "rgba(218,226,199,.62)"; ctx.lineWidth = 5; ctx.stroke();
+      ctx.strokeStyle = "rgba(222,240,224,.28)"; ctx.lineWidth = 2;
+      for (let y = 1180; y <= 1450; y += 70) { ctx.beginPath(); ctx.moveTo(3440, y); ctx.quadraticCurveTo(3540, y - 18, 3640, y); ctx.stroke(); }
+      ctx.fillStyle = "rgba(237,229,191,.82)"; ctx.font = '700 17px "DFKai-SB", serif'; ctx.textAlign = "center"; ctx.fillText("琵琶湖", 3540, 1325);
+      ctx.restore();
     }
 
     function drawMountains() {
@@ -3796,11 +4007,14 @@
         polygon.forEach((p, i) => { const px = x + 5 + p[0] / WORLD.w * (w - 10), py = y + 5 + p[1] / WORLD.h * (h - 10); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
         ctx.closePath(); ctx.fillStyle = "#7c8755"; ctx.fill();
       });
+      ctx.beginPath();
+      lakeBiwaPath.forEach((p, i) => { const px = x + 5 + p[0] / WORLD.w * (w - 10), py = y + 5 + p[1] / WORLD.h * (h - 10); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); });
+      ctx.closePath(); ctx.fillStyle = "#3d8395"; ctx.fill();
       ctx.strokeStyle = "rgba(219,193,131,.48)"; ctx.lineWidth = 1;
       roads.forEach(road => { ctx.beginPath(); road.forEach((p, i) => { const px = x + 5 + p[0] / WORLD.w * (w - 10), py = y + 5 + p[1] / WORLD.h * (h - 10); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }); ctx.stroke(); });
       ctx.strokeStyle = "rgba(80,117,136,.75)"; ctx.lineWidth = 5;
       ctx.beginPath(); riverPath.forEach((p, i) => { const px = x + 5 + p[0] / WORLD.w * (w - 10); const py = y + 5 + p[1] / WORLD.h * (h - 10); i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }); ctx.stroke();
-      locations.forEach(loc => {
+      activeLocations().forEach(loc => {
         ctx.fillStyle = player.visited.includes(loc.id) ? "#ffe07b" : "rgba(234,219,176,.5)"; ctx.beginPath(); ctx.arc(x + 5 + loc.x / WORLD.w * (w - 10), y + 5 + loc.y / WORLD.h * (h - 10), player.visited.includes(loc.id) ? 2.6 : 1.7, 0, Math.PI * 2); ctx.fill();
       });
       ctx.fillStyle = "#d64b43"; ctx.beginPath(); ctx.arc(x + 5 + player.x / WORLD.w * (w - 10), y + 5 + player.y / WORLD.h * (h - 10), 3.4, 0, Math.PI * 2); ctx.fill();
@@ -4138,7 +4352,7 @@
         worldX = clamp((sx - mini.x - 5) / (mini.w - 10) * WORLD.w, 0, WORLD.w);
         worldY = clamp((sy - mini.y - 5) / (mini.h - 10) * WORLD.h, 0, WORLD.h);
       }
-      const clickedLocation = locations.find(loc => Math.hypot(loc.x - worldX, loc.y - worldY) < Math.max(90, loc.radius));
+      const clickedLocation = locations.find(loc => isLocationActive(loc) && Math.hypot(loc.x - worldX, loc.y - worldY) < Math.max(90, loc.radius));
       const clickedNpc = roadNpcs.find(npc => !npc.recruited && !npc.defeated && Math.hypot(npc.x - worldX, npc.y - worldY) < 92);
       if (clickedNpc) startAutoTravel(clickedNpc.x, clickedNpc.y, clickedNpc.name, null);
       else if (clickedLocation) startAutoTravel(clickedLocation.x, clickedLocation.y, clickedLocation.name, clickedLocation.id);
@@ -4204,6 +4418,7 @@
     bindTouchControls();
 
     loadGame();
+    syncHistoricalLocations();
     nearbyLocation = findNearbyLocation();
     camera.x = clamp(player.x - VIEW.w / 2, 0, WORLD.w - VIEW.w);
     camera.y = clamp(player.y - VIEW.h / 2, 0, WORLD.h - VIEW.h);
