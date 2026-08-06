@@ -969,6 +969,26 @@
     equipmentItemAtlas.src = "equipment-items-v1.png";
     const heroWeaponAtlas = new Image();
     heroWeaponAtlas.src = "hero-weapons-v1.png";
+    const spriteTrimBounds = {
+      heroDirections: {
+        down: [210, 26, 467, 604], up: [158, 28, 428, 605],
+        left: [177, 21, 477, 576], right: [133, 21, 421, 576]
+      },
+      npcDirections: [
+        [[107,14,293,361],[85,14,265,361],[70,12,261,356],[45,12,235,356]],
+        [[106,10,308,374],[80,8,266,374],[67,2,262,374],[43,2,235,374]],
+        [[108,0,314,357],[79,0,265,351],[61,0,262,349],[43,0,237,352]]
+      ],
+      party: {
+        samurai:[81,31,512,512], ninja:[0,78,512,471], monk:[0,59,511,466],
+        ronin:[16,0,512,459], ashigaru:[0,15,471,456], healer:[87,43,427,461]
+      },
+      heroWeapons: [[98,56,543,670],[0,56,543,672],[0,206,543,666],[0,30,492,674]],
+      battle: {
+        player:[23,56,538,570], ronin:[22,50,543,574],
+        swordmaster:[37,19,627,546], monk:[0,46,585,556]
+      }
+    };
     const hieizanEventCard = new Image();
     hieizanEventCard.src = "event-hieizan-1571-v1.png";
     const teppoEventCard = new Image();
@@ -3938,6 +3958,24 @@
       return true;
     }
 
+    function drawTrimmedAtlasCell(image, columns, rows, column, row, bounds, centerX, groundY, visibleHeight, flipX = false) {
+      if (!image.complete || !image.naturalWidth || !bounds) return false;
+      const cellW = image.naturalWidth / columns, cellH = image.naturalHeight / rows;
+      const sourceX = column * cellW + bounds[0], sourceY = row * cellH + bounds[1];
+      const sourceW = bounds[2] - bounds[0], sourceH = bounds[3] - bounds[1];
+      const scale = visibleHeight / sourceH;
+      const targetW = sourceW * scale, targetH = sourceH * scale;
+      ctx.save();
+      if (flipX) {
+        ctx.translate(centerX, 0); ctx.scale(-1, 1);
+        ctx.drawImage(image, sourceX, sourceY, sourceW, sourceH, -targetW / 2, groundY - targetH, targetW, targetH);
+      } else {
+        ctx.drawImage(image, sourceX, sourceY, sourceW, sourceH, centerX - targetW / 2, groundY - targetH, targetW, targetH);
+      }
+      ctx.restore();
+      return true;
+    }
+
     function directionColumn(direction) { return ({ down: 0, up: 1, left: 2, right: 3 })[direction] ?? 0; }
 
     function drawRoadNpcs() {
@@ -3949,7 +3987,8 @@
         ctx.fillStyle = active ? "rgba(255,205,92,.38)" : "rgba(28,20,14,.35)";
         ctx.beginPath(); ctx.ellipse(0, 5, 31, 10, 0, 0, Math.PI * 2); ctx.fill();
         if (active) { ctx.strokeStyle = "#f1ca62"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 4, 39, 15, 0, 0, Math.PI * 2); ctx.stroke(); }
-        const drawn = drawDirectionalCell(mapNpcDirectionAtlas, 4, 3, directionColumn(npc.facing), npc.spriteRow, -67, -128, 134, 134);
+        const column = directionColumn(npc.facing);
+        const drawn = drawTrimmedAtlasCell(mapNpcDirectionAtlas, 4, 3, column, npc.spriteRow, spriteTrimBounds.npcDirections[npc.spriteRow]?.[column], 0, 5, 124);
         if (!drawn) {
           ctx.fillStyle = npc.spriteRow === 1 ? "#26394a" : npc.spriteRow === 2 ? "#8a7654" : "#51473a";
           ctx.beginPath(); ctx.arc(0, -38, 25, 0, Math.PI * 2); ctx.fill(); ctx.fillRect(-22, -31, 44, 35);
@@ -3979,7 +4018,7 @@
       if (mapHeroDirectionAtlas.complete && mapHeroDirectionAtlas.naturalWidth) {
         const cells = { down: [0,0], up: [1,0], left: [0,1], right: [1,1] };
         const cell = cells[player.facing] || cells.down;
-        drawDirectionalCell(mapHeroDirectionAtlas, 2, 2, cell[0], cell[1], -92, -174, 184, 184);
+        drawTrimmedAtlasCell(mapHeroDirectionAtlas, 2, 2, cell[0], cell[1], spriteTrimBounds.heroDirections[player.facing] || spriteTrimBounds.heroDirections.down, 0, 5, 170);
         ctx.strokeStyle = "rgba(255,226,133,.82)"; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(0, 5, 41, 15, 0, 0, Math.PI * 2); ctx.stroke();
         ctx.restore();
         return;
@@ -4191,14 +4230,12 @@
       if (unit.id === "player" && heroWeaponAtlas.complete && heroWeaponAtlas.naturalWidth) {
         const weaponCells = { katana: 0, tachi: 0, kodachi: 1, yari: 2, yumi: 3 };
         const cell = weaponCells[unit.weaponType] ?? 0;
-        const sw = heroWeaponAtlas.naturalWidth / 4;
-        const sh = heroWeaponAtlas.naturalHeight;
         ctx.save();
         ctx.globalAlpha = unit.hp > 0 ? 1 : .32;
         if (unit.flash > 0) ctx.translate(Math.sin(scenePulse * 58) * 7, 0);
         ctx.shadowColor = "rgba(0,0,0,.62)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 8;
-        ctx.drawImage(heroWeaponAtlas, cell * sw, 0, sw, sh, x, y, size, size);
-        if (unit.flash > 0) { ctx.globalCompositeOperation = "source-atop"; ctx.fillStyle = "rgba(255,235,205,.42)"; ctx.fillRect(x, y, size, size); }
+        drawTrimmedAtlasCell(heroWeaponAtlas, 4, 1, cell, 0, spriteTrimBounds.heroWeapons[cell], x + size / 2, y + size * .96, size * .9);
+        if (unit.flash > 0) { ctx.globalCompositeOperation = "source-atop"; ctx.fillStyle = "rgba(255,235,205,.42)"; ctx.fillRect(x - size * .15, y, size * 1.3, size); }
         ctx.restore();
         return;
       }
@@ -4208,21 +4245,13 @@
       }
       const cells = { samurai: [0, 0], ninja: [1, 0], monk: [2, 0], ronin: [0, 1], ashigaru: [1, 1], healer: [2, 1] };
       const cell = cells[unit.sprite] || (unit.side === "party" ? cells.samurai : cells.ronin);
-      const sw = partyFighterAtlas.naturalWidth / 3;
-      const sh = partyFighterAtlas.naturalHeight / 2;
       ctx.save();
       ctx.globalAlpha = unit.hp > 0 ? 1 : .32;
       if (unit.flash > 0) ctx.translate(Math.sin(scenePulse * 58) * 7, 0);
       ctx.shadowColor = "rgba(0,0,0,.62)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 8;
-      if (unit.side === "party") {
-        ctx.translate(x + size, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(partyFighterAtlas, cell[0] * sw, cell[1] * sh, sw, sh, 0, y, size, size);
-      } else {
-        ctx.drawImage(partyFighterAtlas, cell[0] * sw, cell[1] * sh, sw, sh, x, y, size, size);
-      }
+      drawTrimmedAtlasCell(partyFighterAtlas, 3, 2, cell[0], cell[1], spriteTrimBounds.party[unit.sprite] || spriteTrimBounds.party.ronin, x + size / 2, y + size * .96, size * .88, unit.side === "party");
       if (unit.flash > 0) {
-        ctx.globalCompositeOperation = "source-atop"; ctx.fillStyle = "rgba(255,235,205,.42)"; ctx.fillRect(unit.side === "party" ? 0 : x, y, size, size);
+        ctx.globalCompositeOperation = "source-atop"; ctx.fillStyle = "rgba(255,235,205,.42)"; ctx.fillRect(x - size * .2, y, size * 1.4, size);
       }
       ctx.restore();
     }
@@ -4260,12 +4289,10 @@
       }
       const cells = { player: [0, 0], ronin: [1, 0], swordmaster: [0, 1], monk: [1, 1] };
       const cell = cells[type] || cells.ronin;
-      const sw = battleFighterAtlas.naturalWidth / 2;
-      const sh = battleFighterAtlas.naturalHeight / 2;
       ctx.save();
       if (flash > 0) ctx.translate(Math.sin(scenePulse * 55) * 8, 0);
       ctx.shadowColor = "rgba(0,0,0,.62)"; ctx.shadowBlur = 18; ctx.shadowOffsetY = 9;
-      ctx.drawImage(battleFighterAtlas, cell[0] * sw, cell[1] * sh, sw, sh, x, y, 320, 320);
+      drawTrimmedAtlasCell(battleFighterAtlas, 2, 2, cell[0], cell[1], spriteTrimBounds.battle[type] || spriteTrimBounds.battle.ronin, x + 160, y + 304, 292);
       if (flash > 0) {
         ctx.globalCompositeOperation = "source-atop"; ctx.fillStyle = "rgba(255,235,205,.4)"; ctx.fillRect(x, y, 320, 320);
       }
